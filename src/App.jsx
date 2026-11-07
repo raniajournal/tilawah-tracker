@@ -315,26 +315,20 @@ export default function App() {
     s.meaning.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  // --- HALAMAN LOGIN GLASSMORPHISM BARU ---
   if (!user) {
     return (
       <div className="login-page">
         <div className="login-glass-box">
           <h1 style={{ color: '#1e5441', margin: '0 0 10px 0', fontSize: '2rem' }}>Tilawah Tracker</h1>
-          
           <div style={{ width: '50px', height: '3px', background: '#2b7a5f', margin: '15px auto' }}></div>
-          
           <p className="login-hadith">
             "Bacalah Al-Qur`an, sebab Al-Qur`an akan datang di hari kiamat kelak sebagai pemberi syafaat kepada para pembacanya." <br/>
             <span style={{ fontSize: '0.8rem', color: '#555' }}>— HR Muslim No. 804</span>
           </p>
-          
           <p className="login-motivation">
             Catat progress tilawah Qur'anmu setiap hari dan bangun kebiasaan indah yang mendekatkan hatimu pada-Nya.
           </p>
-          
           <button onClick={handleLogin} className="btn-google">
-            {/* Memanggil logo resmi Google dari server luar agar langsung muncul */}
             <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google Logo" />
             Lanjutkan dengan Google
           </button>
@@ -343,11 +337,20 @@ export default function App() {
     );
   }
 
-  // --- HALAMAN UTAMA APLIKASI ---
   return (
     <div className="app-container">
-      {/* HEADER GLOBAL */}
-      <div className="curved-header">
+      {/* HEADER GLOBAL DENGAN POSISI RELATIF UNTUK TOMBOL LOGOUT */}
+      <div className="curved-header" style={{ position: 'relative' }}>
+        
+        {/* --- INI DIA TOMBOL LOGOUT-NYA --- */}
+        <button 
+          onClick={() => signOut(auth)} 
+          style={{ position: 'absolute', top: '20px', right: '20px', background: 'rgba(255,255,255,0.2)', border: '1px solid rgba(255,255,255,0.4)', color: 'white', padding: '6px 12px', borderRadius: '20px', fontSize: '0.75rem', cursor: 'pointer', backdropFilter: 'blur(5px)' }}
+          title="Keluar dari akun"
+        >
+          Keluar
+        </button>
+
         <h1 style={{ margin: '0 0 10px 0', fontSize: '1.8rem' }}>Tilawah Tracker</h1>
         <h3 style={{ margin: '0', fontWeight: 'normal' }}>Assalamu'alaikum, {user.displayName.split(" ")[0]}!</h3>
         
@@ -375,7 +378,6 @@ export default function App() {
         </div>
       </div>
 
-      {/* TARGET MODAL (TOMBOL DITUKAR POSISINYA) */}
       {showTargetModal && (
          <div className="modal-overlay" onClick={(e) => e.target.className === 'modal-overlay' && setShowTargetModal(false)}>
            <div className="target-modal">
@@ -397,7 +399,6 @@ export default function App() {
                </>
              )}
              <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
-               {/* BATAL DI KIRI (PINK), SIMPAN DI KANAN (HIJAU) */}
                <button onClick={() => setShowTargetModal(false)} className="btn-primary" style={{ flex: 1, background: '#ff9ebd', color: 'white' }}>Batal</button>
                <button onClick={saveTarget} className="btn-primary" style={{ flex: 1 }}>Simpan</button>
              </div>
@@ -405,7 +406,6 @@ export default function App() {
          </div>
        )}
 
-      {/* DASHBOARD TAB */}
       {activeTab === "dashboard" && (
         <>
           <div className="floating-bookmark">
@@ -444,7 +444,6 @@ export default function App() {
         </>
       )}
 
-      {/* STATISTIK TAB */}
       {activeTab === "statistik" && (
         <div style={{ padding: '20px' }}>
           <div className="chart-card">
@@ -497,7 +496,6 @@ export default function App() {
         </div>
       )}
 
-      {/* LOG RIWAYAT TAB (TOTAL AYAT ABU-ABU) */}
       {activeTab === "log" && (
         <div style={{ padding: '20px' }}>
           <h2 style={{ color: '#2b7a5f', margin: '0 0 15px 0' }}>Riwayat Tilawah</h2>
@@ -519,7 +517,6 @@ export default function App() {
                   <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', alignItems: 'center' }}>
                     <span style={{ fontWeight: 'bold', color: '#333' }}>
                       {hist.surahName} 
-                      {/* TAMBAHAN TOTAL AYAT WARNA ABU-ABU */}
                       <span style={{ color: '#aaa', fontWeight: 'normal', fontSize: '0.8rem', marginLeft: '5px' }}>({hist.totalAyahs} ayat)</span>
                     </span>
                     <span className="receipt-note">{hist.note}</span>
@@ -535,14 +532,12 @@ export default function App() {
         </div>
       )}
 
-      {/* BOTTOM NAV */}
       <div className="bottom-nav">
         <button className={`nav-btn ${activeTab === 'dashboard' ? 'active' : ''}`} onClick={() => setActiveTab('dashboard')}><span style={{ fontSize: '1.4rem' }}>🏠</span> Dashboard</button>
         <button className={`nav-btn ${activeTab === 'statistik' ? 'active' : ''}`} onClick={() => setActiveTab('statistik')}><span style={{ fontSize: '1.4rem' }}>📊</span> Statistik</button>
         <button className={`nav-btn ${activeTab === 'log' ? 'active' : ''}`} onClick={() => setActiveTab('log')}><span style={{ fontSize: '1.4rem' }}>📜</span> Riwayat</button>
       </div>
 
-      {/* MODAL SURAH INPUT */}
       {selectedSurah && (
         <div className="modal-overlay" onClick={(e) => e.target.className === 'modal-overlay' && setSelectedSurah(null)}>
           <div className="modal-content">
