@@ -555,3 +555,15 @@ body {
   width: 20px;
   height: 20px;
 }
+/* --- FIX BOOKMARK TERTUTUP HEADER --- */
+.curved-header {
+  position: relative;
+  z-index: 10;
+}
+
+.floating-bookmark {
+  position: relative;
+  z-index: 20; /* Angka lebih besar memaksa bookmark maju ke depan */
+  margin-top: -15px; /* Sedikit overlap dengan header biar estetik */
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1); /* Tambahan bayangan biar makin pop-out */
+}
