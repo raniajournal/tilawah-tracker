@@ -121,7 +121,7 @@ const SURAHS = [
   { id: 114, name: "An-Nas", meaning: "Manusia", ayahs: 6, juz: "Juz 30" }
 ];
 
-onst getProgressBarColor = (percent) => {
+const getProgressBarColor = (percent) => {
   if (percent < 50) return "#fcd34d";
   if (percent < 100) return "#fb923c";
   return "#2b7a5f";
