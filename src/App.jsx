@@ -326,7 +326,7 @@ export default function App() {
             <span style={{ fontSize: '0.8rem', color: '#555' }}>— HR Muslim No. 804</span>
           </p>
           <p className="login-motivation">
-            Catat progress tilawah Qur'anmu setiap hari dan bangun kebiasaan indah yang mendekatkan hatimu pada-Nya.
+            Catat progress tilawah Qur'anmu setiap hari, ayat demi ayat, surat demi surat, dan bangun kebiasaan indah yang mendekatkan hatimu pada-Nya.
           </p>
           <button onClick={handleLogin} className="btn-google">
             <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google Logo" />
