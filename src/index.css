@@ -477,3 +477,81 @@ body {
   font-weight: bold;
   transition: transform 0.2s;
 }
+/* --- HALAMAN LOGIN GLASSMORPHISM --- */
+.login-page {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  /* Default untuk Laptop */
+  background-image: url('/images/pc-bg2.webp');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  padding: 20px;
+}
+
+/* Deteksi Layar HP */
+@media (max-width: 768px) {
+  .login-page {
+    background-image: url('/images/hp-bg2.webp');
+  }
+}
+
+.login-glass-box {
+  background: rgba(255, 255, 255, 0.15); /* Transparan */
+  backdrop-filter: blur(12px); /* Efek Kaca Buram */
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  border-radius: 20px;
+  padding: 40px 30px;
+  width: 90%;
+  max-width: 450px;
+  text-align: center;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+}
+
+.login-hadith {
+  font-size: 0.95rem;
+  font-style: italic;
+  color: #333;
+  line-height: 1.6;
+  margin-bottom: 20px;
+  text-shadow: 0 1px 2px rgba(255,255,255,0.5); /* Supaya teks tetap terbaca */
+}
+
+.login-motivation {
+  font-size: 0.9rem;
+  color: #1e5441;
+  font-weight: bold;
+  margin-bottom: 30px;
+}
+
+/* Desain Tombol Google yang Elegan */
+.btn-google {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  background: white;
+  color: #555;
+  border: none;
+  padding: 12px 25px;
+  border-radius: 25px;
+  font-size: 1rem;
+  font-weight: bold;
+  cursor: pointer;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.btn-google:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(0,0,0,0.1);
+}
+
+.btn-google img {
+  width: 20px;
+  height: 20px;
+}
