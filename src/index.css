@@ -317,3 +317,101 @@ body {
   max-width: 400px;
   color: #333;
 }
+/* --- SEARCH BAR --- */
+.search-container {
+  padding: 0 1.5rem;
+  margin-bottom: 20px;
+}
+.search-input {
+  width: 100%;
+  padding: 12px 20px;
+  border-radius: 15px;
+  border: 1px solid #ddd;
+  background: white;
+  font-size: 0.95rem;
+  font-family: inherit;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.02);
+  outline: none;
+}
+.search-input:focus {
+  border-color: #2b7a5f;
+}
+
+/* --- PERBAIKAN HEATMAP --- */
+.heatmap-box {
+  aspect-ratio: 1;
+  border-radius: 4px;
+  background: #f7f3ec;
+  /* Angka dihilangkan, jadi tidak perlu flex center & text styling */
+  transition: transform 0.2s;
+}
+.heatmap-box:hover {
+  transform: scale(1.1);
+  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+.heatmap-legend {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 5px;
+  font-size: 0.7rem;
+  color: #888;
+  margin-top: 15px;
+}
+.legend-box {
+  width: 12px;
+  height: 12px;
+  border-radius: 2px;
+}
+
+/* --- ACTIVITY LOG (RIWAYAT GLOBAL) --- */
+.filter-toggle {
+  display: flex;
+  background: #f7f3ec;
+  border-radius: 10px;
+  margin-bottom: 15px;
+  overflow: hidden;
+}
+.filter-btn {
+  flex: 1;
+  padding: 8px;
+  border: none;
+  background: transparent;
+  color: #888;
+  font-size: 0.8rem;
+  cursor: pointer;
+  font-weight: bold;
+}
+.filter-btn.active {
+  background: #2b7a5f;
+  color: white;
+}
+.log-card {
+  background: white;
+  border-radius: 12px;
+  padding: 12px 15px;
+  margin-bottom: 10px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-left: 4px solid #2b7a5f;
+}
+.log-info h5 {
+  margin: 0 0 4px 0;
+  color: #333;
+  font-size: 0.95rem;
+}
+.log-info p {
+  margin: 0;
+  color: #888;
+  font-size: 0.75rem;
+}
+.log-badge {
+  background: #e6f2ed;
+  color: #2b7a5f;
+  padding: 5px 10px;
+  border-radius: 8px;
+  font-weight: bold;
+  font-size: 0.8rem;
+}
