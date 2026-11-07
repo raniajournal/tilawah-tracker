@@ -3,7 +3,7 @@ import { auth, db } from "./firebase";
 import { signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "firebase/auth";
 import { doc, setDoc, onSnapshot } from "firebase/firestore";
 
-// DATABASE LENGKAP 114 SURAT AL-QURAN
+// DATABASE 114 SURAT 
 const SURAHS = [
   { id: 1, name: "Al-Fatihah", meaning: "Pembukaan", ayahs: 7, juz: "Juz 1" },
   { id: 2, name: "Al-Baqarah", meaning: "Sapi Betina", ayahs: 286, juz: "Juz 1 - 3" },
@@ -118,7 +118,7 @@ const SURAHS = [
   { id: 111, name: "Al-Lahab", meaning: "Gejolak Api", ayahs: 5, juz: "Juz 30" },
   { id: 112, name: "Al-Ikhlas", meaning: "Ikhlas", ayahs: 4, juz: "Juz 30" },
   { id: 113, name: "Al-Falaq", meaning: "Waktu Subuh", ayahs: 5, juz: "Juz 30" },
-  { id: 114, name: "An-Nas", meaning: "Manusia", ayahs: 6, juz: "Juz 30" },
+  { id: 114, name: "An-Nas", meaning: "Manusia", ayahs: 6, juz: "Juz 30" }
 ];
 
 const getProgressBarColor = (percent) => {
@@ -127,12 +127,19 @@ const getProgressBarColor = (percent) => {
   return "#2b7a5f";
 };
 
+// Fungsi Kalender Asli (Menghasilkan Objek Date Lengkap)
 const getLastNDays = (n) => {
   const dates = [];
+  const dayNames = ["Ming", "Sen", "Sel", "Rab", "Kam", "Jum", "Sab"];
   for (let i = n - 1; i >= 0; i--) {
     const d = new Date();
     d.setDate(d.getDate() - i);
-    dates.push(d.toISOString().split('T')[0]);
+    dates.push({
+      fullDate: d.toISOString().split('T')[0],
+      dayName: dayNames[d.getDay()],
+      dateNum: d.getDate(),
+      monthNum: d.getMonth() + 1
+    });
   }
   return dates;
 };
@@ -140,12 +147,21 @@ const getLastNDays = (n) => {
 export default function App() {
   const [user, setUser] = useState(null);
   const [progress, setProgress] = useState({});
+  const [stats, setStats] = useState({ khatamCount: 1, startDate: new Date().toISOString().split('T')[0] });
+  const [target, setTarget] = useState({ type: 'daily', value: 20 }); 
+  
   const [selectedSurah, setSelectedSurah] = useState(null);
   const [activeTab, setActiveTab] = useState("dashboard");
+  const [showTargetModal, setShowTargetModal] = useState(false);
 
+  // Form States
   const [date, setDate] = useState("");
   const [startAyah, setStartAyah] = useState("");
   const [endAyah, setEndAyah] = useState("");
+  
+  // Target Form States
+  const [tempTargetType, setTempTargetType] = useState("daily");
+  const [tempTargetValue, setTempTargetValue] = useState("");
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
@@ -154,7 +170,10 @@ export default function App() {
         const docRef = doc(db, "users", currentUser.uid);
         onSnapshot(docRef, (docSnap) => {
           if (docSnap.exists()) {
-            setProgress(docSnap.data().progress || {});
+            const data = docSnap.data();
+            setProgress(data.progress || {});
+            setStats(data.stats || { khatamCount: 1, startDate: new Date().toISOString().split('T')[0] });
+            setTarget(data.target || { type: 'daily', value: 20 });
           }
         });
       }
@@ -167,6 +186,7 @@ export default function App() {
     await signInWithPopup(auth, provider);
   };
 
+  // --- LOGIKA PROGRESS & HISTORY ---
   const openSurah = (surah) => {
     setSelectedSurah(surah);
     const surahData = progress[surah.id] || { read: 0, history: [] };
@@ -197,10 +217,7 @@ export default function App() {
       newHistory.unshift({ id: historyId, date, note: `Ayat ${startAyah} - ${endAyah}`, timestamp: currentTime, ayahsAdded });
     }
 
-    const updatedProgress = {
-      ...progress,
-      [selectedSurah.id]: { read: readCount, history: newHistory }
-    };
+    const updatedProgress = { ...progress, [selectedSurah.id]: { read: readCount, history: newHistory } };
     await setDoc(doc(db, "users", user.uid), { progress: updatedProgress }, { merge: true });
   };
 
@@ -208,75 +225,100 @@ export default function App() {
     if (!user) return;
     const currentHistory = progress[surahId]?.history || [];
     const updatedHistory = currentHistory.filter(hist => hist.id !== historyIdToDelete);
-
     let recalculatedReadCount = 0;
     updatedHistory.forEach(hist => {
-        if (hist.note === "Selesai 100%") {
-            recalculatedReadCount = SURAHS.find(s => s.id === surahId).ayahs;
-        } else {
+        if (hist.note === "Selesai 100%") recalculatedReadCount = SURAHS.find(s => s.id === surahId).ayahs;
+        else {
             const match = hist.note.match(/Ayat \d+ - (\d+)/);
-            if (match) {
-                const endAyahInHistory = parseInt(match[1]);
-                if (endAyahInHistory > recalculatedReadCount) {
-                    recalculatedReadCount = endAyahInHistory;
-                }
-            }
+            if (match && parseInt(match[1]) > recalculatedReadCount) recalculatedReadCount = parseInt(match[1]);
         }
     });
 
-    const updatedProgress = {
-      ...progress,
-      [surahId]: { read: recalculatedReadCount, history: updatedHistory }
-    };
+    const updatedProgress = { ...progress, [surahId]: { read: recalculatedReadCount, history: updatedHistory } };
     await setDoc(doc(db, "users", user.uid), { progress: updatedProgress }, { merge: true });
   };
 
-  let latestSurahObj = SURAHS[0];
-  let latestNote = "Belum ada riwayat";
-  let maxTimestamp = 0;
+  // --- LOGIKA TARGET & KHATAM ---
+  const saveTarget = async () => {
+    if (!user) return;
+    const newTarget = { type: tempTargetType, value: tempTargetValue };
+    await setDoc(doc(db, "users", user.uid), { target: newTarget }, { merge: true });
+    setShowTargetModal(false);
+  };
 
-  Object.entries(progress).forEach(([strId, data]) => {
-    if (data.history && data.history.length > 0) {
-      const firstHist = data.history[0];
-      if (firstHist.timestamp && firstHist.timestamp > maxTimestamp) {
-        maxTimestamp = firstHist.timestamp;
-        latestSurahObj = SURAHS.find(s => s.id === parseInt(strId));
-        latestNote = firstHist.note;
-      }
+  const resetKhatam = async () => {
+    if (!user) return;
+    if(window.confirm("Alhamdulillah! Yakin ingin mengulang khataman baru? Progress akan di-reset jadi 0%, tapi riwayat target & khatam bertambah.")) {
+      const newStats = { khatamCount: stats.khatamCount + 1, startDate: new Date().toISOString().split('T')[0] };
+      await setDoc(doc(db, "users", user.uid), { progress: {}, stats: newStats }, { merge: true });
     }
-  });
+  };
 
+  // --- KALKULASI STATISTIK CERDAS ---
   const totalAyahs = 6236;
   const readAyahs = Object.keys(progress).reduce((acc, key) => acc + (progress[key].read || 0), 0);
   const globalPercentage = ((readAyahs / totalAyahs) * 100).toFixed(1);
   const globalBarColor = getProgressBarColor(globalPercentage);
 
+  // Cari Juz Terakhir
+  let latestSurahObj = SURAHS[0];
+  let latestNote = "Belum ada riwayat";
+  let maxTimestamp = 0;
+  Object.entries(progress).forEach(([strId, data]) => {
+    if (data.history && data.history.length > 0) {
+      if (data.history[0].timestamp > maxTimestamp) {
+        maxTimestamp = data.history[0].timestamp;
+        latestSurahObj = SURAHS.find(s => s.id === parseInt(strId));
+        latestNote = data.history[0].note;
+      }
+    }
+  });
+
+  // Kalkulasi Rata-rata Harian
+  const todayDateObj = new Date();
+  const startDateObj = new Date(stats.startDate);
+  const diffTime = Math.abs(todayDateObj - startDateObj);
+  let daysElapsed = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  if (daysElapsed === 0) daysElapsed = 1; 
+  const avgAyahsPerDay = Math.round(readAyahs / daysElapsed);
+
+  // Kalkulator Smart Target
+  let smartTargetText = "";
+  if (target.type === "daily") {
+    smartTargetText = `${target.value} Ayat/hari`;
+  } else if (target.type === "date") {
+    const targetDateObj = new Date(target.value);
+    const timeLeft = Math.ceil((targetDateObj - todayDateObj) / (1000 * 60 * 60 * 24));
+    if (timeLeft > 0) {
+      const ayahsLeft = totalAyahs - readAyahs;
+      const neededPerDay = Math.ceil(ayahsLeft / timeLeft);
+      smartTargetText = `${neededPerDay} Ayat/hari (Deadline: ${target.value})`;
+    } else {
+      smartTargetText = "Tenggat waktu terlewati";
+    }
+  }
+
+  // Rekap Data 7 Hari & 28 Hari (Kalender Asli)
   const dailyStats = {};
   Object.entries(progress).forEach(([strId, data]) => {
-    const surahName = SURAHS.find(s => s.id === parseInt(strId))?.name;
     if (data.history) {
       data.history.forEach(hist => {
-        if (!dailyStats[hist.date]) dailyStats[hist.date] = { ayahs: 0, surahs: new Set() };
-        let ayahsRead = hist.ayahsAdded;
-        if (ayahsRead === undefined) {
-           const match = hist.note.match(/Ayat (\d+) - (\d+)/);
-           ayahsRead = match ? (parseInt(match[2]) - parseInt(match[1]) + 1) : 0;
-        }
-        dailyStats[hist.date].ayahs += ayahsRead;
-        dailyStats[hist.date].surahs.add(surahName);
+        if (!dailyStats[hist.date]) dailyStats[hist.date] = 0;
+        let ayahsRead = hist.ayahsAdded !== undefined ? hist.ayahsAdded : 0;
+        dailyStats[hist.date] += ayahsRead;
       });
     }
   });
 
   const last7Days = getLastNDays(7);
   const last28Days = getLastNDays(28);
-  const maxAyahs7D = Math.max(...last7Days.map(d => dailyStats[d]?.ayahs || 0), 10);
+  const maxAyahs7D = Math.max(...last7Days.map(d => dailyStats[d.fullDate] || 0), 10);
+
 
   if (!user) {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100vh', background: '#f7f3ec' }}>
         <h1 style={{ color: '#2b7a5f' }}>Tilawah Tracker</h1>
-        <p>Catat progress ngaji kamu dengan visual estetik</p>
         <button onClick={handleLogin} className="btn-primary" style={{ width: '200px' }}>Login dengan Google</button>
       </div>
     );
@@ -284,25 +326,86 @@ export default function App() {
 
   return (
     <div className="app-container">
-      {/* ------------------ HEADER GLOBAL (TAMPIL DI SEMUA TAB) ------------------ */}
+      {/* ------------------ HEADER GLOBAL DENGAN KACA ESTETIK ------------------ */}
       <div className="curved-header">
-        <h1 style={{ margin: '0 0 10px 0', fontSize: '2rem' }}>Tilawah Tracker</h1>
-        <p style={{ margin: '0 auto 20px auto', maxWidth: '90%', fontSize: '0.95rem', lineHeight: '1.5', opacity: 0.9 }}>
-          Catat progress tilawahmu ayat per ayat. Semoga Allah memudahkan langkahmu mengkhatamkan Al-Quran.
-        </p>
+        <h1 style={{ margin: '0 0 10px 0', fontSize: '1.8rem' }}>Tilawah Tracker</h1>
         <h3 style={{ margin: '0', fontWeight: 'normal' }}>Assalamu'alaikum, {user.displayName.split(" ")[0]}!</h3>
-        <h1 style={{ fontSize: '3rem', margin: '5px 0' }}>{globalPercentage}%</h1>
-        <div style={{ background: 'rgba(255,255,255,0.2)', display: 'inline-block', padding: '5px 15px', borderRadius: '20px', marginBottom: '10px' }}>
-          🎯 Posisi Saat Ini: <b>{latestSurahObj ? latestSurahObj.juz : "Juz 1"}</b>
+        
+        {/* CONTAINER PEMBATAS ESTETIK */}
+        <div className="glass-stat-card">
+          
+          <div className="stat-row">
+            <span>🗓️ Mulai Khataman:</span>
+            <b>{stats.startDate}</b>
+          </div>
+          <div className="stat-row">
+            <span>🏆 Status:</span>
+            <b>Khatam ke-{stats.khatamCount}</b>
+          </div>
+          <div className="stat-row">
+            <span>📈 Rata-rata:</span>
+            <b>{avgAyahsPerDay} Ayat / hari</b>
+          </div>
+          <div className="stat-row">
+            <span>🎯 Target Harian:</span>
+            <b>{smartTargetText}</b>
+          </div>
+          <div className="stat-row">
+            <span>📌 Posisi Saat Ini:</span>
+            <b>{latestSurahObj ? latestSurahObj.juz : "Juz 1"}</b>
+          </div>
+          
+          <div style={{ textAlign: 'center', marginTop: '15px' }}>
+            <h1 style={{ fontSize: '3rem', margin: '5px 0', color: 'white' }}>{globalPercentage}%</h1>
+            <p style={{ margin: '0 0 10px 0', fontSize: '0.85rem' }}>{readAyahs} / 6.236 Ayat Terselesaikan</p>
+            <div className="header-progress-bg" style={{ width: '100%', margin: '0' }}>
+              <div className="header-progress-fill" style={{ width: `${globalPercentage}%`, background: globalBarColor }}></div>
+            </div>
+          </div>
+          
+          <div style={{ display: 'flex', justifyContent: 'center', gap: '10px', marginTop: '15px' }}>
+            <button onClick={() => { setTempTargetType(target.type); setTempTargetValue(target.value); setShowTargetModal(true); }} style={{ background: 'rgba(255,255,255,0.2)', border: 'none', color: 'white', padding: '5px 15px', borderRadius: '20px', fontSize: '0.8rem', cursor: 'pointer' }}>⚙️ Set Target</button>
+            {globalPercentage === "100.0" && (
+              <button onClick={resetKhatam} style={{ background: '#fcd34d', border: 'none', color: '#2b7a5f', padding: '5px 15px', borderRadius: '20px', fontSize: '0.8rem', fontWeight: 'bold', cursor: 'pointer' }}>🔄 Mulai Baru</button>
+            )}
+          </div>
         </div>
-        <p style={{ margin: '0' }}>Khatam Progress • {readAyahs} / 6.236 Ayat</p>
-        <div className="header-progress-bg">
-          <div className="header-progress-fill" style={{ width: `${globalPercentage}%`, background: globalBarColor }}></div>
-        </div>
-        <button onClick={() => signOut(auth)} style={{ background: 'transparent', border: '1px solid white', color: 'white', padding: '5px 15px', borderRadius: '20px', marginTop: '15px' }}>Logout</button>
       </div>
 
-      {/* ------------------ DASHBOARD ------------------ */}
+      {/* ------------------ MODAL SET TARGET ------------------ */}
+      {showTargetModal && (
+        <div className="modal-overlay" onClick={(e) => e.target.className === 'modal-overlay' && setShowTargetModal(false)}>
+          <div className="target-modal">
+            <h3 style={{ marginTop: 0, color: '#2b7a5f' }}>Pilih Mode Target</h3>
+            
+            <label style={{ display: 'block', margin: '15px 0 5px 0' }}>Tipe Target:</label>
+            <select className="input-field" value={tempTargetType} onChange={(e) => setTempTargetType(e.target.value)}>
+              <option value="daily">1. Target Harian (Micro-habit)</option>
+              <option value="date">2. Target Waktu Khatam (Kalkulator)</option>
+            </select>
+
+            {tempTargetType === "daily" ? (
+              <>
+                <label style={{ display: 'block', margin: '15px 0 5px 0' }}>Jumlah Ayat per Hari:</label>
+                <input type="number" className="input-field" value={tempTargetValue} onChange={(e) => setTempTargetValue(e.target.value)} placeholder="Contoh: 20" />
+              </>
+            ) : (
+              <>
+                <label style={{ display: 'block', margin: '15px 0 5px 0' }}>Tanggal Ingin Khatam:</label>
+                <input type="date" className="input-field" value={tempTargetValue} onChange={(e) => setTempTargetValue(e.target.value)} />
+                <p style={{ fontSize: '0.75rem', color: '#888' }}>*Sistem akan otomatis menghitung berapa ayat yang harus kamu baca setiap harinya agar tepat waktu.</p>
+              </>
+            )}
+            
+            <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
+              <button onClick={saveTarget} className="btn-primary" style={{ flex: 1 }}>Simpan Target</button>
+              <button onClick={() => setShowTargetModal(false)} className="btn-primary" style={{ flex: 1, background: '#ccc' }}>Batal</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ------------------ DASHBOARD (114 SURAT) ------------------ */}
       {activeTab === "dashboard" && (
         <>
           <div className="floating-bookmark">
@@ -317,27 +420,14 @@ export default function App() {
             {SURAHS.map((surah) => {
               const surahProgress = progress[surah.id]?.read || 0;
               const percent = Math.round((surahProgress / surah.ayahs) * 100);
-              const barColor = getProgressBarColor(percent);
-              const isKhatam = percent === 100;
-              
               return (
                 <div key={surah.id} className="paper-cut-card" onClick={() => openSurah(surah)} style={{ position: 'relative' }}>
-                  {isKhatam && (
-                    <div style={{ position: 'absolute', top: '-10px', right: '-10px', background: '#2b7a5f', color: 'white', padding: '5px 10px', borderRadius: '20px', fontSize: '0.7rem', fontWeight: 'bold', zIndex: 10 }}>✨ Khatam</div>
-                  )}
-                  <div style={{ position: 'absolute', top: '10px', left: '10px', background: 'rgba(255,255,255,0.8)', color: '#888', padding: '2px 6px', borderRadius: '5px', fontSize: '0.65rem', fontWeight: 'bold' }}>
-                    {surah.juz}
-                  </div>
-
-                  {/* Memanggil gambar langsung karena semua 114 sudah ada */}
+                  {percent === 100 && <div style={{ position: 'absolute', top: '-10px', right: '-10px', background: '#2b7a5f', color: 'white', padding: '5px 10px', borderRadius: '20px', fontSize: '0.7rem', fontWeight: 'bold', zIndex: 10 }}>✨ Khatam</div>}
+                  <div style={{ position: 'absolute', top: '10px', left: '10px', background: 'rgba(255,255,255,0.8)', color: '#888', padding: '2px 6px', borderRadius: '5px', fontSize: '0.65rem', fontWeight: 'bold' }}>{surah.juz}</div>
                   <img src={`/images/${String(surah.id).padStart(2, '0')}.webp`} alt={surah.name} className="surah-image" />
-                  
                   <h4 style={{ margin: '5px 0 0 0' }}>{surah.id}. {surah.name}</h4>
                   <p style={{ fontSize: '0.75rem', color: '#666', fontStyle: 'italic', margin: '0 0 8px 0' }}>"{surah.meaning}"</p>
-                  
-                  <div className="progress-bar-bg" style={{ height: '6px', margin: '0 0 5px 0' }}>
-                    <div className="progress-bar-fill" style={{ width: `${percent}%`, background: barColor }}></div>
-                  </div>
+                  <div className="progress-bar-bg" style={{ height: '6px', margin: '0 0 5px 0' }}><div className="progress-bar-fill" style={{ width: `${percent}%`, background: getProgressBarColor(percent) }}></div></div>
                   <p style={{ fontSize: '0.8rem', margin: 0, color: '#888' }}>{percent}% ({surahProgress}/{surah.ayahs})</p>
                 </div>
               );
@@ -346,16 +436,17 @@ export default function App() {
         </>
       )}
 
-      {/* ------------------ STATISTIK ------------------ */}
+      {/* ------------------ STATISTIK (KALENDER ASLI) ------------------ */}
       {activeTab === "statistik" && (
         <div style={{ padding: '20px' }}>
-          <h2 style={{ color: '#2b7a5f', margin: '0 0 10px 0' }}>Statistik Tilawah</h2>
-          <p style={{ color: '#666', fontSize: '0.9rem', marginBottom: '20px' }}>Pantau konsistensi ibadahmu di sini.</p>
+          <h2 style={{ color: '#2b7a5f', margin: '0 0 10px 0' }}>Statistik Harian</h2>
+          
+          {/* Kalender 7 Hari Terakhir */}
           <div className="chart-card">
-            <h4 style={{ margin: '0 0 10px 0', color: '#333' }}>Pencapaian 7 Hari Terakhir</h4>
-            <div className="chart-container">
-              {last7Days.map((d, index) => {
-                const ayahs = dailyStats[d]?.ayahs || 0;
+            <h4 style={{ margin: '0 0 15px 0', color: '#333' }}>Pencapaian 7 Hari Terakhir</h4>
+            <div className="chart-container" style={{ height: '140px' }}>
+              {last7Days.map((dObj, index) => {
+                const ayahs = dailyStats[dObj.fullDate] || 0;
                 const barHeight = Math.max((ayahs / maxAyahs7D) * 100, 5);
                 return (
                   <div key={index} className="bar-wrapper">
@@ -363,40 +454,41 @@ export default function App() {
                     <div className="bar-bg">
                       <div className="bar-fill" style={{ height: `${ayahs > 0 ? barHeight : 0}%` }}></div>
                     </div>
-                    <span style={{ fontSize: '0.65rem', color: '#888', marginTop: '5px' }}>{d.split('-')[2]}</span>
+                    {/* Menampilkan Hari dan Tanggal Asli */}
+                    <div className="date-label">
+                      <b>{dObj.dayName}</b><br/>{dObj.dateNum}/{dObj.monthNum}
+                    </div>
                   </div>
                 );
               })}
             </div>
-            <div style={{ marginTop: '15px', padding: '10px', background: '#f7f3ec', borderRadius: '10px', fontSize: '0.85rem' }}>
-              <b>Dibaca Hari Ini: </b> 
-              {dailyStats[new Date().toISOString().split('T')[0]]?.surahs.size > 0 
-                ? Array.from(dailyStats[new Date().toISOString().split('T')[0]].surahs).join(", ") 
-                : "Belum ada. Yuk, tilawah!"}
-            </div>
           </div>
 
+          {/* Heatmap 28 Hari Asli */}
           <div className="chart-card">
-            <h4 style={{ margin: '0 0 10px 0', color: '#333' }}>Jejak Konsistensi (28 Hari)</h4>
+            <h4 style={{ margin: '0 0 10px 0', color: '#333' }}>Kalender Konsistensi (28 Hari)</h4>
             <div className="heatmap-grid">
-              {last28Days.map((d, index) => {
-                const ayahs = dailyStats[d]?.ayahs || 0;
+              {last28Days.map((dObj, index) => {
+                const ayahs = dailyStats[dObj.fullDate] || 0;
                 let bgColor = "#f7f3ec";
                 if (ayahs > 0 && ayahs <= 10) bgColor = "#c2dfd1";
                 if (ayahs > 10 && ayahs <= 50) bgColor = "#2b7a5f";
                 if (ayahs > 50) bgColor = "#1e5441";
+                
                 return (
-                  <div key={index} className="heatmap-box" style={{ background: bgColor }} title={`${d}: ${ayahs} Ayat`}>
-                    {ayahs > 0 && "✓"}
+                  <div key={index} className="heatmap-box" style={{ background: bgColor }} title={`${dObj.fullDate}: ${ayahs} Ayat`}>
+                    {/* Angka ayat persis di dalam kotak */}
+                    {ayahs > 0 ? ayahs : dObj.dateNum}
                   </div>
                 );
               })}
             </div>
+            <p style={{ fontSize: '0.7rem', color: '#888', marginTop: '10px', textAlign: 'center' }}>*Angka di dalam kotak adalah jumlah ayat yang dibaca</p>
           </div>
         </div>
       )}
 
-      {/* ------------------ BOTTOM NAV ------------------ */}
+      {/* ------------------ BOTTOM NAV & MODAL INPUT (TETAP SAMA) ------------------ */}
       <div className="bottom-nav">
         <button className={`nav-btn ${activeTab === 'dashboard' ? 'active' : ''}`} onClick={() => setActiveTab('dashboard')}>
           <span style={{ fontSize: '1.5rem' }}>🏠</span> Dashboard
@@ -406,7 +498,6 @@ export default function App() {
         </button>
       </div>
 
-      {/* ------------------ MODAL POP-UP ------------------ */}
       {selectedSurah && (
         <div className="modal-overlay" onClick={(e) => e.target.className === 'modal-overlay' && setSelectedSurah(null)}>
           <div className="modal-content">
@@ -414,52 +505,22 @@ export default function App() {
             <div style={{ textAlign: 'center', marginBottom: '15px' }}>
               <img src={`/images/${String(selectedSurah.id).padStart(2, '0')}.webp`} alt={selectedSurah.name} style={{ width: '80px', height: '80px', borderRadius: '15px', objectFit: 'contain', marginBottom: '10px' }} />
               <h2 style={{ margin: '0', color: '#2b7a5f' }}>{selectedSurah.name}</h2>
-              <p style={{ margin: '5px 0 0 0', color: '#666', fontStyle: 'italic' }}>"{selectedSurah.meaning}"</p>
-              <div style={{ display: 'inline-block', background: '#e2e8f0', color: '#555', padding: '3px 10px', borderRadius: '10px', fontSize: '0.8rem', marginTop: '5px', fontWeight: 'bold' }}>
-                {selectedSurah.juz}
-              </div>
+              <div style={{ display: 'inline-block', background: '#e2e8f0', color: '#555', padding: '3px 10px', borderRadius: '10px', fontSize: '0.8rem', marginTop: '5px', fontWeight: 'bold' }}>{selectedSurah.juz}</div>
             </div>
-            
-            <div className="progress-bar-bg">
-              <div className="progress-bar-fill" style={{ width: `${(progress[selectedSurah.id]?.read || 0) / selectedSurah.ayahs * 100}%`, background: getProgressBarColor((progress[selectedSurah.id]?.read || 0) / selectedSurah.ayahs * 100) }}></div>
-            </div>
-            <p style={{ textAlign: 'center', fontSize: '0.8rem', color: '#888' }}>{progress[selectedSurah.id]?.read || 0} dari {selectedSurah.ayahs} Ayat terselesaikan</p>
-
+            <div className="progress-bar-bg"><div className="progress-bar-fill" style={{ width: `${(progress[selectedSurah.id]?.read || 0) / selectedSurah.ayahs * 100}%`, background: getProgressBarColor((progress[selectedSurah.id]?.read || 0) / selectedSurah.ayahs * 100) }}></div></div>
             <div style={{ marginTop: '20px' }}>
-              <label>Tanggal:</label>
-              <input type="date" className="input-field" value={date} onChange={(e) => setDate(e.target.value)} />
-              <div style={{ display: 'flex', gap: '10px' }}>
-                <div style={{ flex: 1 }}>
-                  <label>Dari Ayat:</label>
-                  <input type="number" className="input-field" value={startAyah} onChange={(e) => setStartAyah(e.target.value)} />
-                </div>
-                <div style={{ flex: 1 }}>
-                  <label>Sampai Ayat:</label>
-                  <input type="number" className="input-field" value={endAyah} onChange={(e) => setEndAyah(e.target.value)} />
-                </div>
-              </div>
+              <label>Tanggal:</label><input type="date" className="input-field" value={date} onChange={(e) => setDate(e.target.value)} />
+              <div style={{ display: 'flex', gap: '10px' }}><div style={{ flex: 1 }}><label>Dari Ayat:</label><input type="number" className="input-field" value={startAyah} onChange={(e) => setStartAyah(e.target.value)} /></div><div style={{ flex: 1 }}><label>Sampai Ayat:</label><input type="number" className="input-field" value={endAyah} onChange={(e) => setEndAyah(e.target.value)} /></div></div>
               <button onClick={() => saveTracking(false)} className="btn-primary">Simpan Progress</button>
               <button onClick={() => saveTracking(true)} className="btn-gold" style={{ background: '#2b7a5f' }}>Tandai Selesai 100%</button>
             </div>
-
             <div style={{ marginTop: '20px', borderTop: '1px solid #eee', paddingTop: '10px' }}>
               <h4>Riwayat Surat Ini</h4>
               <ul style={{ paddingLeft: '0', listStyleType: 'none', margin: '0' }}>
                 {(progress[selectedSurah.id]?.history || []).map((hist, i) => (
                   <li key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderBottom: '1px solid #f0f0f0', fontSize: '0.9rem', color: '#555' }}>
-                    <div>
-                      <span style={{ color: '#888', marginRight: '10px' }}>{hist.date}</span>
-                      <b>{hist.note}</b>
-                    </div>
-                    {hist.id && (
-                      <button 
-                        onClick={() => deleteHistory(hist.id, selectedSurah.id)}
-                        style={{ background: 'none', border: 'none', color: '#e53e3e', cursor: 'pointer', padding: '5px', borderRadius: '5px' }}
-                        title="Hapus riwayat ini"
-                      >
-                        🗑️
-                      </button>
-                    )}
+                    <div><span style={{ color: '#888', marginRight: '10px' }}>{hist.date}</span><b>{hist.note}</b></div>
+                    {hist.id && <button onClick={() => deleteHistory(hist.id, selectedSurah.id)} style={{ background: 'none', border: 'none', color: '#e53e3e', cursor: 'pointer', padding: '5px' }}>🗑️</button>}
                   </li>
                 ))}
               </ul>
