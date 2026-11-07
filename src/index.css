@@ -415,3 +415,65 @@ body {
   font-weight: bold;
   font-size: 0.8rem;
 }
+/* --- DESAIN STRUK NOTA UNTUK RIWAYAT --- */
+.receipt-container {
+  background: #faf9f5;
+  border: 2px dashed #d1cbbd;
+  border-radius: 8px;
+  padding: 10px 15px;
+  margin-top: 10px;
+  max-height: 250px;
+  overflow-y: auto;
+  box-shadow: inset 0 0 10px rgba(0,0,0,0.02);
+}
+.receipt-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 0;
+  border-bottom: 1px dashed #d1cbbd;
+  font-family: 'Courier New', Courier, monospace; /* Font ala struk */
+}
+.receipt-item:last-child {
+  border-bottom: none;
+}
+.receipt-date {
+  color: #888;
+  display: block;
+  font-size: 0.75rem;
+  margin-bottom: 3px;
+  font-family: sans-serif;
+}
+.receipt-note {
+  color: #2b7a5f;
+  font-weight: bold;
+  font-size: 0.95rem;
+}
+
+/* --- PERBAIKAN TOMBOL X & HEATMAP --- */
+.close-btn {
+  position: absolute;
+  top: 10px;
+  right: 15px;
+  font-size: 2.5rem; /* Diperbesar! */
+  font-weight: bold;
+  color: #aaa;
+  cursor: pointer;
+  background: none;
+  border: none;
+  line-height: 1;
+}
+.close-btn:hover {
+  color: #e53e3e;
+}
+.heatmap-box {
+  aspect-ratio: 1;
+  border-radius: 4px;
+  background: #f7f3ec;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.65rem;
+  font-weight: bold;
+  transition: transform 0.2s;
+}
