@@ -193,7 +193,6 @@ export default function App() {
     setDate(new Date().toISOString().split('T')[0]);
   };
 
-  // --- LOGIKA PROGRESS TERBARU (AUTO 100%) ---
   const saveTracking = async (isComplete = false) => {
     if (!user) return;
     let readCount = progress[selectedSurah.id]?.read || 0;
@@ -205,7 +204,6 @@ export default function App() {
     const end = parseInt(endAyah);
     const start = parseInt(startAyah);
 
-    // Otomatis Selesai 100% jika ayat akhir sama dengan total ayat
     if (isComplete || end === selectedSurah.ayahs) {
       ayahsAdded = isComplete ? (selectedSurah.ayahs - readCount) : ((end - start) + 1);
       if(ayahsAdded < 0) ayahsAdded = 0;
@@ -223,12 +221,9 @@ export default function App() {
     await setDoc(doc(db, "users", user.uid), { progress: updatedProgress }, { merge: true });
   };
 
-  // --- LOGIKA HAPUS JURUS AMPUH (MENGGUNAKAN URUTAN/INDEX) ---
   const deleteHistory = async (indexToDelete, surahId) => {
     if (!user) return;
     const currentHistory = progress[surahId]?.history || [];
-    
-    // Memotong baris tepat di nomor urut yang diklik, mengabaikan ada ID atau tidak!
     const updatedHistory = currentHistory.filter((_, idx) => idx !== indexToDelete);
     
     let recalculatedReadCount = 0;
@@ -293,7 +288,7 @@ export default function App() {
       const surah = SURAHS.find(s => s.id === parseInt(strId));
       if (data.history && surah) {
         data.history.forEach(hist => {
-          all.push({ ...hist, surahName: surah.name, surahId: surah.id });
+          all.push({ ...hist, surahName: surah.name, surahId: surah.id, totalAyahs: surah.ayahs });
         });
       }
     });
@@ -320,15 +315,35 @@ export default function App() {
     s.meaning.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  // --- HALAMAN LOGIN GLASSMORPHISM BARU ---
   if (!user) {
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100vh', background: '#f7f3ec' }}>
-        <h1 style={{ color: '#2b7a5f' }}>Tilawah Tracker</h1>
-        <button onClick={handleLogin} className="btn-primary" style={{ width: '200px' }}>Login dengan Google</button>
+      <div className="login-page">
+        <div className="login-glass-box">
+          <h1 style={{ color: '#1e5441', margin: '0 0 10px 0', fontSize: '2rem' }}>Tilawah Tracker</h1>
+          
+          <div style={{ width: '50px', height: '3px', background: '#2b7a5f', margin: '15px auto' }}></div>
+          
+          <p className="login-hadith">
+            "Bacalah Al-Qur`an, sebab Al-Qur`an akan datang di hari kiamat kelak sebagai pemberi syafaat kepada para pembacanya." <br/>
+            <span style={{ fontSize: '0.8rem', color: '#555' }}>— HR Muslim No. 804</span>
+          </p>
+          
+          <p className="login-motivation">
+            Catat progress tilawah Qur'anmu setiap hari dan bangun kebiasaan indah yang mendekatkan hatimu pada-Nya.
+          </p>
+          
+          <button onClick={handleLogin} className="btn-google">
+            {/* Memanggil logo resmi Google dari server luar agar langsung muncul */}
+            <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google Logo" />
+            Lanjutkan dengan Google
+          </button>
+        </div>
       </div>
     );
   }
 
+  // --- HALAMAN UTAMA APLIKASI ---
   return (
     <div className="app-container">
       {/* HEADER GLOBAL */}
@@ -360,7 +375,7 @@ export default function App() {
         </div>
       </div>
 
-      {/* TARGET MODAL */}
+      {/* TARGET MODAL (TOMBOL DITUKAR POSISINYA) */}
       {showTargetModal && (
          <div className="modal-overlay" onClick={(e) => e.target.className === 'modal-overlay' && setShowTargetModal(false)}>
            <div className="target-modal">
@@ -382,8 +397,9 @@ export default function App() {
                </>
              )}
              <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
-               <button onClick={saveTarget} className="btn-primary" style={{ flex: 1 }}>Simpan Target</button>
+               {/* BATAL DI KIRI (PINK), SIMPAN DI KANAN (HIJAU) */}
                <button onClick={() => setShowTargetModal(false)} className="btn-primary" style={{ flex: 1, background: '#ff9ebd', color: 'white' }}>Batal</button>
+               <button onClick={saveTarget} className="btn-primary" style={{ flex: 1 }}>Simpan</button>
              </div>
            </div>
          </div>
@@ -481,7 +497,7 @@ export default function App() {
         </div>
       )}
 
-      {/* LOG RIWAYAT TAB (DESAIN STRUK NOTA) */}
+      {/* LOG RIWAYAT TAB (TOTAL AYAT ABU-ABU) */}
       {activeTab === "log" && (
         <div style={{ padding: '20px' }}>
           <h2 style={{ color: '#2b7a5f', margin: '0 0 15px 0' }}>Riwayat Tilawah</h2>
@@ -501,7 +517,11 @@ export default function App() {
                     </span>
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', alignItems: 'center' }}>
-                    <span style={{ fontWeight: 'bold', color: '#333' }}>{hist.surahName}</span>
+                    <span style={{ fontWeight: 'bold', color: '#333' }}>
+                      {hist.surahName} 
+                      {/* TAMBAHAN TOTAL AYAT WARNA ABU-ABU */}
+                      <span style={{ color: '#aaa', fontWeight: 'normal', fontSize: '0.8rem', marginLeft: '5px' }}>({hist.totalAyahs} ayat)</span>
+                    </span>
                     <span className="receipt-note">{hist.note}</span>
                   </div>
                 </div>
@@ -533,7 +553,6 @@ export default function App() {
               <p style={{ margin: '5px 0 0 0', color: '#666', fontStyle: 'italic' }}>"{selectedSurah.meaning}"</p>
               <div style={{ display: 'inline-block', background: '#e2e8f0', color: '#555', padding: '3px 10px', borderRadius: '10px', fontSize: '0.8rem', marginTop: '5px', fontWeight: 'bold' }}>{selectedSurah.juz}</div>
               
-              {/* Info Progress Besar & Total Ayat */}
               <h3 style={{ margin: '15px 0 5px 0', color: '#2b7a5f', fontSize: '1.5rem' }}>
                 {Math.round(((progress[selectedSurah.id]?.read || 0) / selectedSurah.ayahs) * 100)}% 
                 <span style={{ fontSize: '0.9rem', color: '#888', fontWeight: 'normal', marginLeft: '8px' }}>
@@ -561,7 +580,6 @@ export default function App() {
                       <span className="receipt-date">{hist.date}</span>
                       <span className="receipt-note">{hist.note}</span>
                     </div>
-                    {/* HAPUS BERDASARKAN URUTAN (i) - Dijamin 100% Bisa! */}
                     <button onClick={() => deleteHistory(i, selectedSurah.id)} style={{ background: 'none', border: 'none', color: '#e53e3e', cursor: 'pointer', fontSize: '1.2rem', padding: '5px' }} title="Hapus">
                       🗑️
                     </button>
