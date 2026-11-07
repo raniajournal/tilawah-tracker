@@ -3,6 +3,7 @@ import { auth, db } from "./firebase";
 import { signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "firebase/auth";
 import { doc, setDoc, onSnapshot } from "firebase/firestore";
 
+// DATABASE LENGKAP 114 SURAT AL-QURAN
 const SURAHS = [
   { id: 1, name: "Al-Fatihah", meaning: "Pembukaan", ayahs: 7, juz: "Juz 1" },
   { id: 2, name: "Al-Baqarah", meaning: "Sapi Betina", ayahs: 286, juz: "Juz 1 - 3" },
@@ -24,6 +25,100 @@ const SURAHS = [
   { id: 18, name: "Al-Kahf", meaning: "Penghuni Gua", ayahs: 110, juz: "Juz 15 - 16" },
   { id: 19, name: "Maryam", meaning: "Siti Maryam", ayahs: 98, juz: "Juz 16" },
   { id: 20, name: "Taha", meaning: "Ta Ha", ayahs: 135, juz: "Juz 16" },
+  { id: 21, name: "Al-Anbiya", meaning: "Nabi-Nabi", ayahs: 112, juz: "Juz 17" },
+  { id: 22, name: "Al-Hajj", meaning: "Haji", ayahs: 78, juz: "Juz 17" },
+  { id: 23, name: "Al-Mu'minun", meaning: "Orang-Orang Mukmin", ayahs: 118, juz: "Juz 18" },
+  { id: 24, name: "An-Nur", meaning: "Cahaya", ayahs: 64, juz: "Juz 18" },
+  { id: 25, name: "Al-Furqan", meaning: "Pembeda", ayahs: 77, juz: "Juz 18 - 19" },
+  { id: 26, name: "Asy-Syu'ara'", meaning: "Para Penyair", ayahs: 227, juz: "Juz 19" },
+  { id: 27, name: "An-Naml", meaning: "Semut", ayahs: 93, juz: "Juz 19 - 20" },
+  { id: 28, name: "Al-Qasas", meaning: "Kisah-Kisah", ayahs: 88, juz: "Juz 20" },
+  { id: 29, name: "Al-'Ankabut", meaning: "Laba-Laba", ayahs: 69, juz: "Juz 20 - 21" },
+  { id: 30, name: "Ar-Rum", meaning: "Bangsa Romawi", ayahs: 60, juz: "Juz 21" },
+  { id: 31, name: "Luqman", meaning: "Luqman", ayahs: 34, juz: "Juz 21" },
+  { id: 32, name: "As-Sajdah", meaning: "Sujud", ayahs: 30, juz: "Juz 21" },
+  { id: 33, name: "Al-Ahzab", meaning: "Golongan Bersekutu", ayahs: 73, juz: "Juz 21 - 22" },
+  { id: 34, name: "Saba'", meaning: "Kaum Saba'", ayahs: 54, juz: "Juz 22" },
+  { id: 35, name: "Fatir", meaning: "Pencipta", ayahs: 45, juz: "Juz 22" },
+  { id: 36, name: "Yasin", meaning: "Ya Sin", ayahs: 83, juz: "Juz 22 - 23" },
+  { id: 37, name: "As-Saffat", meaning: "Barisan-Barisan", ayahs: 182, juz: "Juz 23" },
+  { id: 38, name: "Sad", meaning: "Sad", ayahs: 88, juz: "Juz 23" },
+  { id: 39, name: "Az-Zumar", meaning: "Rombongan-Rombongan", ayahs: 75, juz: "Juz 23 - 24" },
+  { id: 40, name: "Ghafir", meaning: "Yang Mengampuni", ayahs: 85, juz: "Juz 24" },
+  { id: 41, name: "Fussilat", meaning: "Yang Dijelaskan", ayahs: 54, juz: "Juz 24 - 25" },
+  { id: 42, name: "Asy-Syura", meaning: "Musyawarah", ayahs: 53, juz: "Juz 25" },
+  { id: 43, name: "Az-Zukhruf", meaning: "Perhiasan", ayahs: 89, juz: "Juz 25" },
+  { id: 44, name: "Ad-Dukhan", meaning: "Kabut", ayahs: 59, juz: "Juz 25" },
+  { id: 45, name: "Al-Jasiyah", meaning: "Yang Berlutut", ayahs: 37, juz: "Juz 25" },
+  { id: 46, name: "Al-Ahqaf", meaning: "Bukit Pasir", ayahs: 35, juz: "Juz 26" },
+  { id: 47, name: "Muhammad", meaning: "Nabi Muhammad", ayahs: 38, juz: "Juz 26" },
+  { id: 48, name: "Al-Fath", meaning: "Kemenangan", ayahs: 29, juz: "Juz 26" },
+  { id: 49, name: "Al-Hujurat", meaning: "Kamar-Kamar", ayahs: 18, juz: "Juz 26" },
+  { id: 50, name: "Qaf", meaning: "Qaf", ayahs: 45, juz: "Juz 26" },
+  { id: 51, name: "Az-Zariyat", meaning: "Angin Menerbangkan", ayahs: 60, juz: "Juz 26 - 27" },
+  { id: 52, name: "At-Tur", meaning: "Bukit", ayahs: 49, juz: "Juz 27" },
+  { id: 53, name: "An-Najm", meaning: "Bintang", ayahs: 62, juz: "Juz 27" },
+  { id: 54, name: "Al-Qamar", meaning: "Bulan", ayahs: 55, juz: "Juz 27" },
+  { id: 55, name: "Ar-Rahman", meaning: "Yang Maha Pengasih", ayahs: 78, juz: "Juz 27" },
+  { id: 56, name: "Al-Waqi'ah", meaning: "Hari Kiamat", ayahs: 96, juz: "Juz 27" },
+  { id: 57, name: "Al-Hadid", meaning: "Besi", ayahs: 29, juz: "Juz 27" },
+  { id: 58, name: "Al-Mujadilah", meaning: "Gugatan", ayahs: 22, juz: "Juz 28" },
+  { id: 59, name: "Al-Hasyr", meaning: "Pengusiran", ayahs: 24, juz: "Juz 28" },
+  { id: 60, name: "Al-Mumtahanah", meaning: "Wanita yang Diuji", ayahs: 13, juz: "Juz 28" },
+  { id: 61, name: "As-Saff", meaning: "Barisan", ayahs: 14, juz: "Juz 28" },
+  { id: 62, name: "Al-Jumu'ah", meaning: "Hari Jumat", ayahs: 11, juz: "Juz 28" },
+  { id: 63, name: "Al-Munafiqun", meaning: "Orang Munafik", ayahs: 11, juz: "Juz 28" },
+  { id: 64, name: "At-Tagabun", meaning: "Hari Penampakan", ayahs: 18, juz: "Juz 28" },
+  { id: 65, name: "At-Talaq", meaning: "Talak", ayahs: 12, juz: "Juz 28" },
+  { id: 66, name: "At-Tahrim", meaning: "Pengharaman", ayahs: 12, juz: "Juz 28" },
+  { id: 67, name: "Al-Mulk", meaning: "Kerajaan", ayahs: 30, juz: "Juz 29" },
+  { id: 68, name: "Al-Qalam", meaning: "Pena", ayahs: 52, juz: "Juz 29" },
+  { id: 69, name: "Al-Haqqah", meaning: "Hari Kiamat", ayahs: 52, juz: "Juz 29" },
+  { id: 70, name: "Al-Ma'arij", meaning: "Tempat Naik", ayahs: 44, juz: "Juz 29" },
+  { id: 71, name: "Nuh", meaning: "Nabi Nuh", ayahs: 28, juz: "Juz 29" },
+  { id: 72, name: "Al-Jinn", meaning: "Jin", ayahs: 28, juz: "Juz 29" },
+  { id: 73, name: "Al-Muzzammil", meaning: "Orang Berselimut", ayahs: 20, juz: "Juz 29" },
+  { id: 74, name: "Al-Muddassir", meaning: "Orang Berkemul", ayahs: 56, juz: "Juz 29" },
+  { id: 75, name: "Al-Qiyamah", meaning: "Hari Kiamat", ayahs: 40, juz: "Juz 29" },
+  { id: 76, name: "Al-Insan", meaning: "Manusia", ayahs: 31, juz: "Juz 29" },
+  { id: 77, name: "Al-Mursalat", meaning: "Malaikat Utusan", ayahs: 50, juz: "Juz 29" },
+  { id: 78, name: "An-Naba'", meaning: "Berita Besar", ayahs: 40, juz: "Juz 30" },
+  { id: 79, name: "An-Nazi'at", meaning: "Malaikat Mencabut", ayahs: 46, juz: "Juz 30" },
+  { id: 80, name: "'Abasa", meaning: "Bermuka Masam", ayahs: 42, juz: "Juz 30" },
+  { id: 81, name: "At-Takwir", meaning: "Menggulung", ayahs: 29, juz: "Juz 30" },
+  { id: 82, name: "Al-Infitar", meaning: "Terbelah", ayahs: 19, juz: "Juz 30" },
+  { id: 83, name: "Al-Mutaffifin", meaning: "Orang Curang", ayahs: 36, juz: "Juz 30" },
+  { id: 84, name: "Al-Insyiqaq", meaning: "Terbelah", ayahs: 25, juz: "Juz 30" },
+  { id: 85, name: "Al-Buruj", meaning: "Gugusan Bintang", ayahs: 22, juz: "Juz 30" },
+  { id: 86, name: "At-Tariq", meaning: "Datang Malam Hari", ayahs: 17, juz: "Juz 30" },
+  { id: 87, name: "Al-A'la", meaning: "Paling Tinggi", ayahs: 19, juz: "Juz 30" },
+  { id: 88, name: "Al-Gasyiyah", meaning: "Hari Kiamat", ayahs: 26, juz: "Juz 30" },
+  { id: 89, name: "Al-Fajr", meaning: "Fajar", ayahs: 30, juz: "Juz 30" },
+  { id: 90, name: "Al-Balad", meaning: "Negeri", ayahs: 20, juz: "Juz 30" },
+  { id: 91, name: "Asy-Syams", meaning: "Matahari", ayahs: 15, juz: "Juz 30" },
+  { id: 92, name: "Al-Lail", meaning: "Malam", ayahs: 21, juz: "Juz 30" },
+  { id: 93, name: "Ad-Duha", meaning: "Waktu Duha", ayahs: 11, juz: "Juz 30" },
+  { id: 94, name: "Asy-Syarh", meaning: "Melapangkan", ayahs: 8, juz: "Juz 30" },
+  { id: 95, name: "At-Tin", meaning: "Buah Tin", ayahs: 8, juz: "Juz 30" },
+  { id: 96, name: "Al-'Alaq", meaning: "Segumpal Darah", ayahs: 19, juz: "Juz 30" },
+  { id: 97, name: "Al-Qadr", meaning: "Kemuliaan", ayahs: 5, juz: "Juz 30" },
+  { id: 98, name: "Al-Bayyinah", meaning: "Bukti Nyata", ayahs: 8, juz: "Juz 30" },
+  { id: 99, name: "Az-Zalzalah", meaning: "Kegoncangan", ayahs: 8, juz: "Juz 30" },
+  { id: 100, name: "Al-'Adiyat", meaning: "Kuda Berlari", ayahs: 11, juz: "Juz 30" },
+  { id: 101, name: "Al-Qari'ah", meaning: "Hari Kiamat", ayahs: 11, juz: "Juz 30" },
+  { id: 102, name: "At-Takasur", meaning: "Bermegah-megahan", ayahs: 8, juz: "Juz 30" },
+  { id: 103, name: "Al-'Asr", meaning: "Masa", ayahs: 3, juz: "Juz 30" },
+  { id: 104, name: "Al-Humazah", meaning: "Pengumpat", ayahs: 9, juz: "Juz 30" },
+  { id: 105, name: "Al-Fil", meaning: "Gajah", ayahs: 5, juz: "Juz 30" },
+  { id: 106, name: "Quraisy", meaning: "Suku Quraisy", ayahs: 4, juz: "Juz 30" },
+  { id: 107, name: "Al-Ma'un", meaning: "Barang Berguna", ayahs: 7, juz: "Juz 30" },
+  { id: 108, name: "Al-Kausar", meaning: "Nikmat Berlimpah", ayahs: 3, juz: "Juz 30" },
+  { id: 109, name: "Al-Kafirun", meaning: "Orang Kafir", ayahs: 6, juz: "Juz 30" },
+  { id: 110, name: "An-Nasr", meaning: "Pertolongan", ayahs: 3, juz: "Juz 30" },
+  { id: 111, name: "Al-Lahab", meaning: "Gejolak Api", ayahs: 5, juz: "Juz 30" },
+  { id: 112, name: "Al-Ikhlas", meaning: "Ikhlas", ayahs: 4, juz: "Juz 30" },
+  { id: 113, name: "Al-Falaq", meaning: "Waktu Subuh", ayahs: 5, juz: "Juz 30" },
+  { id: 114, name: "An-Nas", meaning: "Manusia", ayahs: 6, juz: "Juz 30" },
 ];
 
 const getProgressBarColor = (percent) => {
@@ -82,14 +177,10 @@ export default function App() {
 
   const saveTracking = async (isComplete = false) => {
     if (!user) return;
-    
     let readCount = progress[selectedSurah.id]?.read || 0;
     let newHistory = progress[selectedSurah.id]?.history || [];
     const currentTime = Date.now();
     let ayahsAdded = 0; 
-    
-    // Fitur PINTAR: Menambahkan ID unik (berbasis timestamp) untuk tiap riwayat
-    // Ini krusial agar kita bisa menghapus item yang spesifik nantinya
     const historyId = currentTime.toString(); 
 
     if (isComplete) {
@@ -110,19 +201,14 @@ export default function App() {
       ...progress,
       [selectedSurah.id]: { read: readCount, history: newHistory }
     };
-
     await setDoc(doc(db, "users", user.uid), { progress: updatedProgress }, { merge: true });
   };
 
-  // Fungsi BARU: Hapus Riwayat
   const deleteHistory = async (historyIdToDelete, surahId) => {
     if (!user) return;
-
-    // Filter riwayat yang tidak sama dengan ID yang mau dihapus
     const currentHistory = progress[surahId]?.history || [];
     const updatedHistory = currentHistory.filter(hist => hist.id !== historyIdToDelete);
 
-    // Hitung ulang 'readCount' maksimum yang tersisa dari sisa riwayat
     let recalculatedReadCount = 0;
     updatedHistory.forEach(hist => {
         if (hist.note === "Selesai 100%") {
@@ -142,10 +228,8 @@ export default function App() {
       ...progress,
       [surahId]: { read: recalculatedReadCount, history: updatedHistory }
     };
-
     await setDoc(doc(db, "users", user.uid), { progress: updatedProgress }, { merge: true });
   };
-
 
   let latestSurahObj = SURAHS[0];
   let latestNote = "Belum ada riwayat";
@@ -173,13 +257,11 @@ export default function App() {
     if (data.history) {
       data.history.forEach(hist => {
         if (!dailyStats[hist.date]) dailyStats[hist.date] = { ayahs: 0, surahs: new Set() };
-        
         let ayahsRead = hist.ayahsAdded;
         if (ayahsRead === undefined) {
            const match = hist.note.match(/Ayat (\d+) - (\d+)/);
            ayahsRead = match ? (parseInt(match[2]) - parseInt(match[1]) + 1) : 0;
         }
-
         dailyStats[hist.date].ayahs += ayahsRead;
         dailyStats[hist.date].surahs.add(surahName);
       });
@@ -202,26 +284,27 @@ export default function App() {
 
   return (
     <div className="app-container">
+      {/* ------------------ HEADER GLOBAL (TAMPIL DI SEMUA TAB) ------------------ */}
+      <div className="curved-header">
+        <h1 style={{ margin: '0 0 10px 0', fontSize: '2rem' }}>Tilawah Tracker</h1>
+        <p style={{ margin: '0 auto 20px auto', maxWidth: '90%', fontSize: '0.95rem', lineHeight: '1.5', opacity: 0.9 }}>
+          Catat progress tilawahmu ayat per ayat. Semoga Allah memudahkan langkahmu mengkhatamkan Al-Quran.
+        </p>
+        <h3 style={{ margin: '0', fontWeight: 'normal' }}>Assalamu'alaikum, {user.displayName.split(" ")[0]}!</h3>
+        <h1 style={{ fontSize: '3rem', margin: '5px 0' }}>{globalPercentage}%</h1>
+        <div style={{ background: 'rgba(255,255,255,0.2)', display: 'inline-block', padding: '5px 15px', borderRadius: '20px', marginBottom: '10px' }}>
+          🎯 Posisi Saat Ini: <b>{latestSurahObj ? latestSurahObj.juz : "Juz 1"}</b>
+        </div>
+        <p style={{ margin: '0' }}>Khatam Progress • {readAyahs} / 6.236 Ayat</p>
+        <div className="header-progress-bg">
+          <div className="header-progress-fill" style={{ width: `${globalPercentage}%`, background: globalBarColor }}></div>
+        </div>
+        <button onClick={() => signOut(auth)} style={{ background: 'transparent', border: '1px solid white', color: 'white', padding: '5px 15px', borderRadius: '20px', marginTop: '15px' }}>Logout</button>
+      </div>
+
       {/* ------------------ DASHBOARD ------------------ */}
       {activeTab === "dashboard" && (
         <>
-          <div className="curved-header">
-            <h1 style={{ margin: '0 0 10px 0', fontSize: '2rem' }}>Tilawah Tracker</h1>
-            <p style={{ margin: '0 auto 20px auto', maxWidth: '90%', fontSize: '0.95rem', lineHeight: '1.5', opacity: 0.9 }}>
-              Catat progress tilawahmu ayat per ayat. Semoga Allah memudahkan langkahmu mengkhatamkan Al-Quran.
-            </p>
-            <h3 style={{ margin: '0', fontWeight: 'normal' }}>Assalamu'alaikum, {user.displayName.split(" ")[0]}!</h3>
-            <h1 style={{ fontSize: '3rem', margin: '5px 0' }}>{globalPercentage}%</h1>
-            <div style={{ background: 'rgba(255,255,255,0.2)', display: 'inline-block', padding: '5px 15px', borderRadius: '20px', marginBottom: '10px' }}>
-              🎯 Posisi Saat Ini: <b>{latestSurahObj ? latestSurahObj.juz : "Juz 1"}</b>
-            </div>
-            <p style={{ margin: '0' }}>Khatam Progress • {readAyahs} / 6.236 Ayat</p>
-            <div className="header-progress-bg">
-              <div className="header-progress-fill" style={{ width: `${globalPercentage}%`, background: globalBarColor }}></div>
-            </div>
-            <button onClick={() => signOut(auth)} style={{ background: 'transparent', border: '1px solid white', color: 'white', padding: '5px 15px', borderRadius: '20px', marginTop: '15px' }}>Logout</button>
-          </div>
-
           <div className="floating-bookmark">
             <div>
               <h4 style={{ margin: 0, color: '#2b7a5f' }}>Lanjut {latestSurahObj ? latestSurahObj.name : "Baca"}</h4>
@@ -246,11 +329,9 @@ export default function App() {
                     {surah.juz}
                   </div>
 
-                  {surah.id <= 20 ? (
-                    <img src={`/images/${String(surah.id).padStart(2, '0')}.webp`} alt={surah.name} className="surah-image" />
-                  ) : (
-                    <div className="surah-image" style={{ background: '#e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.8rem', color: '#888' }}>Icon</div>
-                  )}
+                  {/* Memanggil gambar langsung karena semua 114 sudah ada */}
+                  <img src={`/images/${String(surah.id).padStart(2, '0')}.webp`} alt={surah.name} className="surah-image" />
+                  
                   <h4 style={{ margin: '5px 0 0 0' }}>{surah.id}. {surah.name}</h4>
                   <p style={{ fontSize: '0.75rem', color: '#666', fontStyle: 'italic', margin: '0 0 8px 0' }}>"{surah.meaning}"</p>
                   
@@ -268,8 +349,8 @@ export default function App() {
       {/* ------------------ STATISTIK ------------------ */}
       {activeTab === "statistik" && (
         <div style={{ padding: '20px' }}>
-          <h2 style={{ color: '#2b7a5f', marginTop: '10px' }}>Statistik Tilawah</h2>
-          <p style={{ color: '#666', fontSize: '0.9rem' }}>Pantau konsistensi ibadahmu di sini.</p>
+          <h2 style={{ color: '#2b7a5f', margin: '0 0 10px 0' }}>Statistik Tilawah</h2>
+          <p style={{ color: '#666', fontSize: '0.9rem', marginBottom: '20px' }}>Pantau konsistensi ibadahmu di sini.</p>
           <div className="chart-card">
             <h4 style={{ margin: '0 0 10px 0', color: '#333' }}>Pencapaian 7 Hari Terakhir</h4>
             <div className="chart-container">
@@ -325,17 +406,13 @@ export default function App() {
         </button>
       </div>
 
-      {/* ------------------ MODAL POP-UP (DENGAN TONG SAMPAH) ------------------ */}
+      {/* ------------------ MODAL POP-UP ------------------ */}
       {selectedSurah && (
         <div className="modal-overlay" onClick={(e) => e.target.className === 'modal-overlay' && setSelectedSurah(null)}>
           <div className="modal-content">
             <button className="close-btn" onClick={() => setSelectedSurah(null)}>&times;</button>
             <div style={{ textAlign: 'center', marginBottom: '15px' }}>
-              {selectedSurah.id <= 20 ? (
-                <img src={`/images/${String(selectedSurah.id).padStart(2, '0')}.webp`} alt={selectedSurah.name} style={{ width: '80px', height: '80px', borderRadius: '15px', objectFit: 'contain', marginBottom: '10px' }} />
-              ) : (
-                <div style={{ width: '80px', height: '80px', background: '#e2e8f0', borderRadius: '15px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.8rem', color: '#888', marginBottom: '10px', margin: '0 auto' }}>Icon</div>
-              )}
+              <img src={`/images/${String(selectedSurah.id).padStart(2, '0')}.webp`} alt={selectedSurah.name} style={{ width: '80px', height: '80px', borderRadius: '15px', objectFit: 'contain', marginBottom: '10px' }} />
               <h2 style={{ margin: '0', color: '#2b7a5f' }}>{selectedSurah.name}</h2>
               <p style={{ margin: '5px 0 0 0', color: '#666', fontStyle: 'italic' }}>"{selectedSurah.meaning}"</p>
               <div style={{ display: 'inline-block', background: '#e2e8f0', color: '#555', padding: '3px 10px', borderRadius: '10px', fontSize: '0.8rem', marginTop: '5px', fontWeight: 'bold' }}>
@@ -374,7 +451,6 @@ export default function App() {
                       <span style={{ color: '#888', marginRight: '10px' }}>{hist.date}</span>
                       <b>{hist.note}</b>
                     </div>
-                    {/* Tombol Hapus (Tong Sampah) */}
                     {hist.id && (
                       <button 
                         onClick={() => deleteHistory(hist.id, selectedSurah.id)}
