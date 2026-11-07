@@ -150,12 +150,11 @@ export default function App() {
   const [target, setTarget] = useState({ type: 'daily', value: 20 }); 
   
   const [selectedSurah, setSelectedSurah] = useState(null);
-  const [activeTab, setActiveTab] = useState("dashboard"); // dashboard | statistik | log
+  const [activeTab, setActiveTab] = useState("dashboard"); 
   const [showTargetModal, setShowTargetModal] = useState(false);
   
-  // NEW: State untuk Search dan Filter Riwayat
   const [searchQuery, setSearchQuery] = useState("");
-  const [historyFilter, setHistoryFilter] = useState("7"); // "7" atau "30"
+  const [historyFilter, setHistoryFilter] = useState("7"); 
 
   const [date, setDate] = useState("");
   const [startAyah, setStartAyah] = useState("");
@@ -220,10 +219,12 @@ export default function App() {
     await setDoc(doc(db, "users", user.uid), { progress: updatedProgress }, { merge: true });
   };
 
+  // Logika Tong Sampah Pintar (Mendeteksi ID atau Timestamp lama)
   const deleteHistory = async (historyIdToDelete, surahId) => {
     if (!user) return;
     const currentHistory = progress[surahId]?.history || [];
-    const updatedHistory = currentHistory.filter(hist => hist.id !== historyIdToDelete);
+    const updatedHistory = currentHistory.filter(hist => (hist.id || hist.timestamp) !== historyIdToDelete);
+    
     let recalculatedReadCount = 0;
     updatedHistory.forEach(hist => {
         if (hist.note === "Selesai 100%") recalculatedReadCount = SURAHS.find(s => s.id === surahId).ayahs;
@@ -280,7 +281,6 @@ export default function App() {
     smartTargetText = timeLeft > 0 ? `${Math.ceil((totalAyahs - readAyahs) / timeLeft)} Ayat/hari (Deadline: ${target.value})` : "Tenggat waktu terlewati";
   }
 
-  // --- OLAH DATA RIWAYAT (GLOBAL HISTORY) ---
   const allGlobalHistory = useMemo(() => {
     let all = [];
     Object.entries(progress).forEach(([strId, data]) => {
@@ -291,17 +291,15 @@ export default function App() {
         });
       }
     });
-    return all.sort((a, b) => b.timestamp - a.timestamp); // Urutkan dari yang terbaru
+    return all.sort((a, b) => b.timestamp - a.timestamp); 
   }, [progress]);
 
-  // Filter 7 / 30 Hari
   const filteredGlobalHistory = useMemo(() => {
     const limitDate = new Date();
     limitDate.setDate(limitDate.getDate() - parseInt(historyFilter));
     return allGlobalHistory.filter(h => new Date(h.date) >= limitDate);
   }, [allGlobalHistory, historyFilter]);
 
-  // --- OLAH DATA HEATMAP ---
   const dailyStats = {};
   allGlobalHistory.forEach(hist => {
     if (!dailyStats[hist.date]) dailyStats[hist.date] = 0;
@@ -311,7 +309,6 @@ export default function App() {
   const last28Days = getLastNDays(28);
   const maxAyahs7D = Math.max(...last7Days.map(d => dailyStats[d.fullDate] || 0), 10);
 
-  // Pencarian Surat
   const filteredSurahs = SURAHS.filter(s => 
     s.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
     s.meaning.toLowerCase().includes(searchQuery.toLowerCase())
@@ -357,6 +354,7 @@ export default function App() {
         </div>
       </div>
 
+      {/* TARGET MODAL (TOMBOL BATAL PINK) */}
       {showTargetModal && (
          <div className="modal-overlay" onClick={(e) => e.target.className === 'modal-overlay' && setShowTargetModal(false)}>
            <div className="target-modal">
@@ -379,7 +377,8 @@ export default function App() {
              )}
              <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
                <button onClick={saveTarget} className="btn-primary" style={{ flex: 1 }}>Simpan Target</button>
-               <button onClick={() => setShowTargetModal(false)} className="btn-primary" style={{ flex: 1, background: '#ccc' }}>Batal</button>
+               {/* Tombol Merah Muda */}
+               <button onClick={() => setShowTargetModal(false)} className="btn-primary" style={{ flex: 1, background: '#ff9ebd', color: 'white' }}>Batal</button>
              </div>
            </div>
          </div>
@@ -388,14 +387,20 @@ export default function App() {
       {/* DASHBOARD TAB */}
       {activeTab === "dashboard" && (
         <>
+          {/* MUNCULIN LAGI BOOKMARK + ICON 🔖 */}
+          <div className="floating-bookmark">
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <span style={{ fontSize: '1.5rem' }}>🔖</span>
+              <div>
+                <h4 style={{ margin: 0, color: '#2b7a5f' }}>Lanjut {latestSurahObj ? latestSurahObj.name : "Baca"}</h4>
+                <p style={{ margin: 0, fontSize: '0.9rem', color: '#666' }}>{latestNote}</p>
+              </div>
+            </div>
+            <button onClick={() => openSurah(latestSurahObj)} className="btn-primary" style={{ width: 'auto' }}>Buka</button>
+          </div>
+
           <div className="search-container">
-            <input 
-              type="text" 
-              className="search-input" 
-              placeholder="🔍 Cari nama surat atau artinya..." 
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
+            <input type="text" className="search-input" placeholder="🔍 Cari nama surat atau artinya..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: '20px', padding: '0 1.5rem 1rem 1.5rem' }}>
@@ -445,20 +450,21 @@ export default function App() {
             <div className="heatmap-grid">
               {last28Days.map((dObj, index) => {
                 const ayahs = dailyStats[dObj.fullDate] || 0;
-                let bgColor = "#ebedf0"; // Abu-abu kosong
-                if (ayahs > 0 && ayahs <= 15) bgColor = "#c2dfd1"; // Hijau sangat muda
-                else if (ayahs > 15 && ayahs <= 40) bgColor = "#7ebc9f"; // Hijau muda
-                else if (ayahs > 40 && ayahs <= 80) bgColor = "#2b7a5f"; // Hijau utama
-                else if (ayahs > 80) bgColor = "#1e5441"; // Hijau gelap
+                let bgColor = "#ebedf0";
+                let textColor = "#888"; // Warna teks default (abu-abu)
+                
+                if (ayahs > 0 && ayahs <= 15) { bgColor = "#c2dfd1"; textColor = "#2b7a5f"; }
+                else if (ayahs > 15 && ayahs <= 40) { bgColor = "#7ebc9f"; textColor = "white"; }
+                else if (ayahs > 40 && ayahs <= 80) { bgColor = "#2b7a5f"; textColor = "white"; }
+                else if (ayahs > 80) { bgColor = "#1e5441"; textColor = "white"; }
                 
                 return (
-                  <div key={index} className="heatmap-box" style={{ background: bgColor }} title={`${dObj.fullDate}: ${ayahs} Ayat`}>
-                    {/* Bersih dari angka, biarkan warna berbicara */}
+                  <div key={index} className="heatmap-box" style={{ background: bgColor, color: textColor }} title={`${dObj.fullDate}: ${ayahs} Ayat`}>
+                    {dObj.dateNum} {/* Munculin Angka Tanggal Asli */}
                   </div>
                 );
               })}
             </div>
-            {/* LEGENDA WARNA */}
             <div className="heatmap-legend">
               <span>Sedikit</span>
               <div className="legend-box" style={{ background: '#ebedf0' }}></div>
@@ -472,27 +478,23 @@ export default function App() {
         </div>
       )}
 
-      {/* NEW: LOG RIWAYAT TAB */}
+      {/* LOG RIWAYAT TAB */}
       {activeTab === "log" && (
         <div style={{ padding: '20px' }}>
           <h2 style={{ color: '#2b7a5f', margin: '0 0 15px 0' }}>Riwayat Tilawah</h2>
-          
           <div className="filter-toggle">
             <button className={`filter-btn ${historyFilter === "7" ? "active" : ""}`} onClick={() => setHistoryFilter("7")}>7 Hari Terakhir</button>
             <button className={`filter-btn ${historyFilter === "30" ? "active" : ""}`} onClick={() => setHistoryFilter("30")}>30 Hari Terakhir</button>
           </div>
-
           <div style={{ paddingBottom: '30px' }}>
             {filteredGlobalHistory.length > 0 ? (
               filteredGlobalHistory.map(hist => (
-                <div key={hist.id} className="log-card">
+                <div key={hist.id || hist.timestamp} className="log-card">
                   <div className="log-info">
                     <h5>{hist.surahName}</h5>
                     <p>🗓️ {hist.date} • {hist.note}</p>
                   </div>
-                  <div className="log-badge">
-                    +{hist.ayahsAdded || 0} Ayat
-                  </div>
+                  <div className="log-badge">+{hist.ayahsAdded || 0} Ayat</div>
                 </div>
               ))
             ) : (
@@ -506,15 +508,9 @@ export default function App() {
 
       {/* BOTTOM NAV */}
       <div className="bottom-nav">
-        <button className={`nav-btn ${activeTab === 'dashboard' ? 'active' : ''}`} onClick={() => setActiveTab('dashboard')}>
-          <span style={{ fontSize: '1.4rem' }}>🏠</span> Dashboard
-        </button>
-        <button className={`nav-btn ${activeTab === 'statistik' ? 'active' : ''}`} onClick={() => setActiveTab('statistik')}>
-          <span style={{ fontSize: '1.4rem' }}>📊</span> Statistik
-        </button>
-        <button className={`nav-btn ${activeTab === 'log' ? 'active' : ''}`} onClick={() => setActiveTab('log')}>
-          <span style={{ fontSize: '1.4rem' }}>📜</span> Riwayat
-        </button>
+        <button className={`nav-btn ${activeTab === 'dashboard' ? 'active' : ''}`} onClick={() => setActiveTab('dashboard')}><span style={{ fontSize: '1.4rem' }}>🏠</span> Dashboard</button>
+        <button className={`nav-btn ${activeTab === 'statistik' ? 'active' : ''}`} onClick={() => setActiveTab('statistik')}><span style={{ fontSize: '1.4rem' }}>📊</span> Statistik</button>
+        <button className={`nav-btn ${activeTab === 'log' ? 'active' : ''}`} onClick={() => setActiveTab('log')}><span style={{ fontSize: '1.4rem' }}>📜</span> Riwayat</button>
       </div>
 
       {/* MODAL SURAH INPUT */}
@@ -525,25 +521,40 @@ export default function App() {
             <div style={{ textAlign: 'center', marginBottom: '15px' }}>
               <img src={`/images/${String(selectedSurah.id).padStart(2, '0')}.webp`} alt={selectedSurah.name} style={{ width: '80px', height: '80px', borderRadius: '15px', objectFit: 'contain', marginBottom: '10px' }} />
               <h2 style={{ margin: '0', color: '#2b7a5f' }}>{selectedSurah.name}</h2>
+              {/* Tambahan Arti Surat di dalam Modal */}
+              <p style={{ margin: '5px 0 0 0', color: '#666', fontStyle: 'italic' }}>"{selectedSurah.meaning}"</p>
               <div style={{ display: 'inline-block', background: '#e2e8f0', color: '#555', padding: '3px 10px', borderRadius: '10px', fontSize: '0.8rem', marginTop: '5px', fontWeight: 'bold' }}>{selectedSurah.juz}</div>
             </div>
+            
             <div className="progress-bar-bg"><div className="progress-bar-fill" style={{ width: `${(progress[selectedSurah.id]?.read || 0) / selectedSurah.ayahs * 100}%`, background: getProgressBarColor((progress[selectedSurah.id]?.read || 0) / selectedSurah.ayahs * 100) }}></div></div>
+            
             <div style={{ marginTop: '20px' }}>
               <label>Tanggal:</label><input type="date" className="input-field" value={date} onChange={(e) => setDate(e.target.value)} />
               <div style={{ display: 'flex', gap: '10px' }}><div style={{ flex: 1 }}><label>Dari Ayat:</label><input type="number" className="input-field" value={startAyah} onChange={(e) => setStartAyah(e.target.value)} /></div><div style={{ flex: 1 }}><label>Sampai Ayat:</label><input type="number" className="input-field" value={endAyah} onChange={(e) => setEndAyah(e.target.value)} /></div></div>
               <button onClick={() => saveTracking(false)} className="btn-primary">Simpan Progress</button>
               <button onClick={() => saveTracking(true)} className="btn-gold" style={{ background: '#2b7a5f' }}>Tandai Selesai 100%</button>
             </div>
+            
             <div style={{ marginTop: '20px', borderTop: '1px solid #eee', paddingTop: '10px' }}>
-              <h4>Riwayat Surat Ini</h4>
-              <ul style={{ paddingLeft: '0', listStyleType: 'none', margin: '0' }}>
+              <h4 style={{ marginBottom: '5px' }}>Riwayat Surat Ini</h4>
+              
+              {/* BENTUK STRUK NOTA */}
+              <div className="receipt-container">
                 {(progress[selectedSurah.id]?.history || []).map((hist, i) => (
-                  <li key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderBottom: '1px solid #f0f0f0', fontSize: '0.9rem', color: '#555' }}>
-                    <div><span style={{ color: '#888', marginRight: '10px' }}>{hist.date}</span><b>{hist.note}</b></div>
-                    {hist.id && <button onClick={() => deleteHistory(hist.id, selectedSurah.id)} style={{ background: 'none', border: 'none', color: '#e53e3e', cursor: 'pointer', padding: '5px' }}>🗑️</button>}
-                  </li>
+                  <div key={hist.id || hist.timestamp} className="receipt-item">
+                    <div>
+                      <span className="receipt-date">{hist.date}</span>
+                      <span className="receipt-note">{hist.note}</span>
+                    </div>
+                    {/* Pakai ID atau Timestamp biar data lama tetap bisa dihapus */}
+                    {(hist.id || hist.timestamp) && (
+                      <button onClick={() => deleteHistory(hist.id || hist.timestamp, selectedSurah.id)} style={{ background: 'none', border: 'none', color: '#e53e3e', cursor: 'pointer', fontSize: '1.1rem' }} title="Hapus">
+                        🗑️
+                      </button>
+                    )}
+                  </div>
                 ))}
-              </ul>
+              </div>
             </div>
           </div>
         </div>
