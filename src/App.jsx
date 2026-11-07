@@ -127,7 +127,6 @@ const getProgressBarColor = (percent) => {
   return "#2b7a5f";
 };
 
-// Fungsi Kalender Asli (Menghasilkan Objek Date Lengkap)
 const getLastNDays = (n) => {
   const dates = [];
   const dayNames = ["Ming", "Sen", "Sel", "Rab", "Kam", "Jum", "Sab"];
@@ -151,15 +150,16 @@ export default function App() {
   const [target, setTarget] = useState({ type: 'daily', value: 20 }); 
   
   const [selectedSurah, setSelectedSurah] = useState(null);
-  const [activeTab, setActiveTab] = useState("dashboard");
+  const [activeTab, setActiveTab] = useState("dashboard"); // dashboard | statistik | log
   const [showTargetModal, setShowTargetModal] = useState(false);
+  
+  // NEW: State untuk Search dan Filter Riwayat
+  const [searchQuery, setSearchQuery] = useState("");
+  const [historyFilter, setHistoryFilter] = useState("7"); // "7" atau "30"
 
-  // Form States
   const [date, setDate] = useState("");
   const [startAyah, setStartAyah] = useState("");
   const [endAyah, setEndAyah] = useState("");
-  
-  // Target Form States
   const [tempTargetType, setTempTargetType] = useState("daily");
   const [tempTargetValue, setTempTargetValue] = useState("");
 
@@ -186,7 +186,6 @@ export default function App() {
     await signInWithPopup(auth, provider);
   };
 
-  // --- LOGIKA PROGRESS & HISTORY ---
   const openSurah = (surah) => {
     setSelectedSurah(surah);
     const surahData = progress[surah.id] || { read: 0, history: [] };
@@ -233,12 +232,10 @@ export default function App() {
             if (match && parseInt(match[1]) > recalculatedReadCount) recalculatedReadCount = parseInt(match[1]);
         }
     });
-
     const updatedProgress = { ...progress, [surahId]: { read: recalculatedReadCount, history: updatedHistory } };
     await setDoc(doc(db, "users", user.uid), { progress: updatedProgress }, { merge: true });
   };
 
-  // --- LOGIKA TARGET & KHATAM ---
   const saveTarget = async () => {
     if (!user) return;
     const newTarget = { type: tempTargetType, value: tempTargetValue };
@@ -248,72 +245,77 @@ export default function App() {
 
   const resetKhatam = async () => {
     if (!user) return;
-    if(window.confirm("Alhamdulillah! Yakin ingin mengulang khataman baru? Progress akan di-reset jadi 0%, tapi riwayat target & khatam bertambah.")) {
+    if(window.confirm("Alhamdulillah! Yakin ingin mengulang khataman baru? Progress akan di-reset jadi 0%.")) {
       const newStats = { khatamCount: stats.khatamCount + 1, startDate: new Date().toISOString().split('T')[0] };
       await setDoc(doc(db, "users", user.uid), { progress: {}, stats: newStats }, { merge: true });
     }
   };
 
-  // --- KALKULASI STATISTIK CERDAS ---
   const totalAyahs = 6236;
   const readAyahs = Object.keys(progress).reduce((acc, key) => acc + (progress[key].read || 0), 0);
   const globalPercentage = ((readAyahs / totalAyahs) * 100).toFixed(1);
-  const globalBarColor = getProgressBarColor(globalPercentage);
 
-  // Cari Juz Terakhir
   let latestSurahObj = SURAHS[0];
   let latestNote = "Belum ada riwayat";
   let maxTimestamp = 0;
   Object.entries(progress).forEach(([strId, data]) => {
-    if (data.history && data.history.length > 0) {
-      if (data.history[0].timestamp > maxTimestamp) {
+    if (data.history && data.history.length > 0 && data.history[0].timestamp > maxTimestamp) {
         maxTimestamp = data.history[0].timestamp;
         latestSurahObj = SURAHS.find(s => s.id === parseInt(strId));
         latestNote = data.history[0].note;
-      }
     }
   });
 
-  // Kalkulasi Rata-rata Harian
   const todayDateObj = new Date();
   const startDateObj = new Date(stats.startDate);
-  const diffTime = Math.abs(todayDateObj - startDateObj);
-  let daysElapsed = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-  if (daysElapsed === 0) daysElapsed = 1; 
+  let daysElapsed = Math.ceil(Math.abs(todayDateObj - startDateObj) / (1000 * 60 * 60 * 24)) || 1;
   const avgAyahsPerDay = Math.round(readAyahs / daysElapsed);
 
-  // Kalkulator Smart Target
   let smartTargetText = "";
   if (target.type === "daily") {
     smartTargetText = `${target.value} Ayat/hari`;
   } else if (target.type === "date") {
     const targetDateObj = new Date(target.value);
     const timeLeft = Math.ceil((targetDateObj - todayDateObj) / (1000 * 60 * 60 * 24));
-    if (timeLeft > 0) {
-      const ayahsLeft = totalAyahs - readAyahs;
-      const neededPerDay = Math.ceil(ayahsLeft / timeLeft);
-      smartTargetText = `${neededPerDay} Ayat/hari (Deadline: ${target.value})`;
-    } else {
-      smartTargetText = "Tenggat waktu terlewati";
-    }
+    smartTargetText = timeLeft > 0 ? `${Math.ceil((totalAyahs - readAyahs) / timeLeft)} Ayat/hari (Deadline: ${target.value})` : "Tenggat waktu terlewati";
   }
 
-  // Rekap Data 7 Hari & 28 Hari (Kalender Asli)
-  const dailyStats = {};
-  Object.entries(progress).forEach(([strId, data]) => {
-    if (data.history) {
-      data.history.forEach(hist => {
-        if (!dailyStats[hist.date]) dailyStats[hist.date] = 0;
-        let ayahsRead = hist.ayahsAdded !== undefined ? hist.ayahsAdded : 0;
-        dailyStats[hist.date] += ayahsRead;
-      });
-    }
-  });
+  // --- OLAH DATA RIWAYAT (GLOBAL HISTORY) ---
+  const allGlobalHistory = useMemo(() => {
+    let all = [];
+    Object.entries(progress).forEach(([strId, data]) => {
+      const surah = SURAHS.find(s => s.id === parseInt(strId));
+      if (data.history && surah) {
+        data.history.forEach(hist => {
+          all.push({ ...hist, surahName: surah.name, surahId: surah.id });
+        });
+      }
+    });
+    return all.sort((a, b) => b.timestamp - a.timestamp); // Urutkan dari yang terbaru
+  }, [progress]);
 
+  // Filter 7 / 30 Hari
+  const filteredGlobalHistory = useMemo(() => {
+    const limitDate = new Date();
+    limitDate.setDate(limitDate.getDate() - parseInt(historyFilter));
+    return allGlobalHistory.filter(h => new Date(h.date) >= limitDate);
+  }, [allGlobalHistory, historyFilter]);
+
+  // --- OLAH DATA HEATMAP ---
+  const dailyStats = {};
+  allGlobalHistory.forEach(hist => {
+    if (!dailyStats[hist.date]) dailyStats[hist.date] = 0;
+    dailyStats[hist.date] += (hist.ayahsAdded || 0);
+  });
   const last7Days = getLastNDays(7);
   const last28Days = getLastNDays(28);
   const maxAyahs7D = Math.max(...last7Days.map(d => dailyStats[d.fullDate] || 0), 10);
 
+  // Pencarian Surat
+  const filteredSurahs = SURAHS.filter(s => 
+    s.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+    s.meaning.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   if (!user) {
     return (
@@ -326,40 +328,23 @@ export default function App() {
 
   return (
     <div className="app-container">
-      {/* ------------------ HEADER GLOBAL DENGAN KACA ESTETIK ------------------ */}
+      {/* HEADER GLOBAL */}
       <div className="curved-header">
         <h1 style={{ margin: '0 0 10px 0', fontSize: '1.8rem' }}>Tilawah Tracker</h1>
         <h3 style={{ margin: '0', fontWeight: 'normal' }}>Assalamu'alaikum, {user.displayName.split(" ")[0]}!</h3>
         
-        {/* CONTAINER PEMBATAS ESTETIK */}
         <div className="glass-stat-card">
-          
-          <div className="stat-row">
-            <span>🗓️ Mulai Khataman:</span>
-            <b>{stats.startDate}</b>
-          </div>
-          <div className="stat-row">
-            <span>🏆 Status:</span>
-            <b>Khatam ke-{stats.khatamCount}</b>
-          </div>
-          <div className="stat-row">
-            <span>📈 Rata-rata:</span>
-            <b>{avgAyahsPerDay} Ayat / hari</b>
-          </div>
-          <div className="stat-row">
-            <span>🎯 Target Harian:</span>
-            <b>{smartTargetText}</b>
-          </div>
-          <div className="stat-row">
-            <span>📌 Posisi Saat Ini:</span>
-            <b>{latestSurahObj ? latestSurahObj.juz : "Juz 1"}</b>
-          </div>
+          <div className="stat-row"><span>🗓️ Mulai Khataman:</span><b>{stats.startDate}</b></div>
+          <div className="stat-row"><span>🏆 Status:</span><b>Khatam ke-{stats.khatamCount}</b></div>
+          <div className="stat-row"><span>📈 Rata-rata:</span><b>{avgAyahsPerDay} Ayat / hari</b></div>
+          <div className="stat-row"><span>🎯 Target Harian:</span><b>{smartTargetText}</b></div>
+          <div className="stat-row"><span>📌 Posisi Saat Ini:</span><b>{latestSurahObj ? latestSurahObj.juz : "Juz 1"}</b></div>
           
           <div style={{ textAlign: 'center', marginTop: '15px' }}>
             <h1 style={{ fontSize: '3rem', margin: '5px 0', color: 'white' }}>{globalPercentage}%</h1>
-            <p style={{ margin: '0 0 10px 0', fontSize: '0.85rem' }}>{readAyahs} / 6.236 Ayat Terselesaikan</p>
+            <p style={{ margin: '0 0 10px 0', fontSize: '0.85rem' }}>{readAyahs} / 6.236 Ayat</p>
             <div className="header-progress-bg" style={{ width: '100%', margin: '0' }}>
-              <div className="header-progress-fill" style={{ width: `${globalPercentage}%`, background: globalBarColor }}></div>
+              <div className="header-progress-fill" style={{ width: `${globalPercentage}%`, background: getProgressBarColor(globalPercentage) }}></div>
             </div>
           </div>
           
@@ -372,52 +357,49 @@ export default function App() {
         </div>
       </div>
 
-      {/* ------------------ MODAL SET TARGET ------------------ */}
       {showTargetModal && (
-        <div className="modal-overlay" onClick={(e) => e.target.className === 'modal-overlay' && setShowTargetModal(false)}>
-          <div className="target-modal">
-            <h3 style={{ marginTop: 0, color: '#2b7a5f' }}>Pilih Mode Target</h3>
-            
-            <label style={{ display: 'block', margin: '15px 0 5px 0' }}>Tipe Target:</label>
-            <select className="input-field" value={tempTargetType} onChange={(e) => setTempTargetType(e.target.value)}>
-              <option value="daily">1. Target Harian (Micro-habit)</option>
-              <option value="date">2. Target Waktu Khatam (Kalkulator)</option>
-            </select>
+         <div className="modal-overlay" onClick={(e) => e.target.className === 'modal-overlay' && setShowTargetModal(false)}>
+           <div className="target-modal">
+             <h3 style={{ marginTop: 0, color: '#2b7a5f' }}>Pilih Mode Target</h3>
+             <label style={{ display: 'block', margin: '15px 0 5px 0' }}>Tipe Target:</label>
+             <select className="input-field" value={tempTargetType} onChange={(e) => setTempTargetType(e.target.value)}>
+               <option value="daily">1. Target Harian (Micro-habit)</option>
+               <option value="date">2. Target Waktu Khatam (Kalkulator)</option>
+             </select>
+             {tempTargetType === "daily" ? (
+               <>
+                 <label style={{ display: 'block', margin: '15px 0 5px 0' }}>Jumlah Ayat per Hari:</label>
+                 <input type="number" className="input-field" value={tempTargetValue} onChange={(e) => setTempTargetValue(e.target.value)} />
+               </>
+             ) : (
+               <>
+                 <label style={{ display: 'block', margin: '15px 0 5px 0' }}>Tanggal Ingin Khatam:</label>
+                 <input type="date" className="input-field" value={tempTargetValue} onChange={(e) => setTempTargetValue(e.target.value)} />
+               </>
+             )}
+             <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
+               <button onClick={saveTarget} className="btn-primary" style={{ flex: 1 }}>Simpan Target</button>
+               <button onClick={() => setShowTargetModal(false)} className="btn-primary" style={{ flex: 1, background: '#ccc' }}>Batal</button>
+             </div>
+           </div>
+         </div>
+       )}
 
-            {tempTargetType === "daily" ? (
-              <>
-                <label style={{ display: 'block', margin: '15px 0 5px 0' }}>Jumlah Ayat per Hari:</label>
-                <input type="number" className="input-field" value={tempTargetValue} onChange={(e) => setTempTargetValue(e.target.value)} placeholder="Contoh: 20" />
-              </>
-            ) : (
-              <>
-                <label style={{ display: 'block', margin: '15px 0 5px 0' }}>Tanggal Ingin Khatam:</label>
-                <input type="date" className="input-field" value={tempTargetValue} onChange={(e) => setTempTargetValue(e.target.value)} />
-                <p style={{ fontSize: '0.75rem', color: '#888' }}>*Sistem akan otomatis menghitung berapa ayat yang harus kamu baca setiap harinya agar tepat waktu.</p>
-              </>
-            )}
-            
-            <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
-              <button onClick={saveTarget} className="btn-primary" style={{ flex: 1 }}>Simpan Target</button>
-              <button onClick={() => setShowTargetModal(false)} className="btn-primary" style={{ flex: 1, background: '#ccc' }}>Batal</button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ------------------ DASHBOARD (114 SURAT) ------------------ */}
+      {/* DASHBOARD TAB */}
       {activeTab === "dashboard" && (
         <>
-          <div className="floating-bookmark">
-            <div>
-              <h4 style={{ margin: 0, color: '#2b7a5f' }}>Lanjut {latestSurahObj ? latestSurahObj.name : "Baca"}</h4>
-              <p style={{ margin: 0, fontSize: '0.9rem', color: '#666' }}>{latestNote}</p>
-            </div>
-            <button onClick={() => openSurah(latestSurahObj)} className="btn-primary" style={{ width: 'auto' }}>Buka</button>
+          <div className="search-container">
+            <input 
+              type="text" 
+              className="search-input" 
+              placeholder="🔍 Cari nama surat atau artinya..." 
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: '20px', padding: '0 1.5rem 1rem 1.5rem' }}>
-            {SURAHS.map((surah) => {
+            {filteredSurahs.map((surah) => {
               const surahProgress = progress[surah.id]?.read || 0;
               const percent = Math.round((surahProgress / surah.ayahs) * 100);
               return (
@@ -432,16 +414,15 @@ export default function App() {
                 </div>
               );
             })}
+            {filteredSurahs.length === 0 && <p style={{ textAlign: 'center', gridColumn: '1 / -1', color: '#888' }}>Surat tidak ditemukan.</p>}
           </div>
         </>
       )}
 
-      {/* ------------------ STATISTIK (KALENDER ASLI) ------------------ */}
+      {/* STATISTIK TAB */}
       {activeTab === "statistik" && (
         <div style={{ padding: '20px' }}>
-          <h2 style={{ color: '#2b7a5f', margin: '0 0 10px 0' }}>Statistik Harian</h2>
           
-          {/* Kalender 7 Hari Terakhir */}
           <div className="chart-card">
             <h4 style={{ margin: '0 0 15px 0', color: '#333' }}>Pencapaian 7 Hari Terakhir</h4>
             <div className="chart-container" style={{ height: '140px' }}>
@@ -451,53 +432,92 @@ export default function App() {
                 return (
                   <div key={index} className="bar-wrapper">
                     <span style={{ fontSize: '0.7rem', color: '#2b7a5f', fontWeight: 'bold' }}>{ayahs > 0 ? ayahs : ''}</span>
-                    <div className="bar-bg">
-                      <div className="bar-fill" style={{ height: `${ayahs > 0 ? barHeight : 0}%` }}></div>
-                    </div>
-                    {/* Menampilkan Hari dan Tanggal Asli */}
-                    <div className="date-label">
-                      <b>{dObj.dayName}</b><br/>{dObj.dateNum}/{dObj.monthNum}
-                    </div>
+                    <div className="bar-bg"><div className="bar-fill" style={{ height: `${ayahs > 0 ? barHeight : 0}%` }}></div></div>
+                    <div className="date-label"><b>{dObj.dayName}</b><br/>{dObj.dateNum}/{dObj.monthNum}</div>
                   </div>
                 );
               })}
             </div>
           </div>
 
-          {/* Heatmap 28 Hari Asli */}
           <div className="chart-card">
             <h4 style={{ margin: '0 0 10px 0', color: '#333' }}>Kalender Konsistensi (28 Hari)</h4>
             <div className="heatmap-grid">
               {last28Days.map((dObj, index) => {
                 const ayahs = dailyStats[dObj.fullDate] || 0;
-                let bgColor = "#f7f3ec";
-                if (ayahs > 0 && ayahs <= 10) bgColor = "#c2dfd1";
-                if (ayahs > 10 && ayahs <= 50) bgColor = "#2b7a5f";
-                if (ayahs > 50) bgColor = "#1e5441";
+                let bgColor = "#ebedf0"; // Abu-abu kosong
+                if (ayahs > 0 && ayahs <= 15) bgColor = "#c2dfd1"; // Hijau sangat muda
+                else if (ayahs > 15 && ayahs <= 40) bgColor = "#7ebc9f"; // Hijau muda
+                else if (ayahs > 40 && ayahs <= 80) bgColor = "#2b7a5f"; // Hijau utama
+                else if (ayahs > 80) bgColor = "#1e5441"; // Hijau gelap
                 
                 return (
                   <div key={index} className="heatmap-box" style={{ background: bgColor }} title={`${dObj.fullDate}: ${ayahs} Ayat`}>
-                    {/* Angka ayat persis di dalam kotak */}
-                    {ayahs > 0 ? ayahs : dObj.dateNum}
+                    {/* Bersih dari angka, biarkan warna berbicara */}
                   </div>
                 );
               })}
             </div>
-            <p style={{ fontSize: '0.7rem', color: '#888', marginTop: '10px', textAlign: 'center' }}>*Angka di dalam kotak adalah jumlah ayat yang dibaca</p>
+            {/* LEGENDA WARNA */}
+            <div className="heatmap-legend">
+              <span>Sedikit</span>
+              <div className="legend-box" style={{ background: '#ebedf0' }}></div>
+              <div className="legend-box" style={{ background: '#c2dfd1' }}></div>
+              <div className="legend-box" style={{ background: '#7ebc9f' }}></div>
+              <div className="legend-box" style={{ background: '#2b7a5f' }}></div>
+              <div className="legend-box" style={{ background: '#1e5441' }}></div>
+              <span>Banyak</span>
+            </div>
           </div>
         </div>
       )}
 
-      {/* ------------------ BOTTOM NAV & MODAL INPUT (TETAP SAMA) ------------------ */}
+      {/* NEW: LOG RIWAYAT TAB */}
+      {activeTab === "log" && (
+        <div style={{ padding: '20px' }}>
+          <h2 style={{ color: '#2b7a5f', margin: '0 0 15px 0' }}>Riwayat Tilawah</h2>
+          
+          <div className="filter-toggle">
+            <button className={`filter-btn ${historyFilter === "7" ? "active" : ""}`} onClick={() => setHistoryFilter("7")}>7 Hari Terakhir</button>
+            <button className={`filter-btn ${historyFilter === "30" ? "active" : ""}`} onClick={() => setHistoryFilter("30")}>30 Hari Terakhir</button>
+          </div>
+
+          <div style={{ paddingBottom: '30px' }}>
+            {filteredGlobalHistory.length > 0 ? (
+              filteredGlobalHistory.map(hist => (
+                <div key={hist.id} className="log-card">
+                  <div className="log-info">
+                    <h5>{hist.surahName}</h5>
+                    <p>🗓️ {hist.date} • {hist.note}</p>
+                  </div>
+                  <div className="log-badge">
+                    +{hist.ayahsAdded || 0} Ayat
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div style={{ textAlign: 'center', color: '#888', marginTop: '30px' }}>
+                <p>Belum ada riwayat tilawah di periode ini.</p>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* BOTTOM NAV */}
       <div className="bottom-nav">
         <button className={`nav-btn ${activeTab === 'dashboard' ? 'active' : ''}`} onClick={() => setActiveTab('dashboard')}>
-          <span style={{ fontSize: '1.5rem' }}>🏠</span> Dashboard
+          <span style={{ fontSize: '1.4rem' }}>🏠</span> Dashboard
         </button>
         <button className={`nav-btn ${activeTab === 'statistik' ? 'active' : ''}`} onClick={() => setActiveTab('statistik')}>
-          <span style={{ fontSize: '1.5rem' }}>📊</span> Statistik
+          <span style={{ fontSize: '1.4rem' }}>📊</span> Statistik
+        </button>
+        <button className={`nav-btn ${activeTab === 'log' ? 'active' : ''}`} onClick={() => setActiveTab('log')}>
+          <span style={{ fontSize: '1.4rem' }}>📜</span> Riwayat
         </button>
       </div>
 
+      {/* MODAL SURAH INPUT */}
       {selectedSurah && (
         <div className="modal-overlay" onClick={(e) => e.target.className === 'modal-overlay' && setSelectedSurah(null)}>
           <div className="modal-content">
