@@ -248,7 +248,25 @@ export default function App() {
   const resetKhatam = async () => {
     if (!user) return;
     if(window.confirm("Alhamdulillah! Yakin ingin mengulang khataman baru? Progress akan di-reset jadi 0%.")) {
-      const newStats = { khatamCount: stats.khatamCount + 1, startDate: new Date().toISOString().split('T')[0] };
+      const todayDate = new Date().toISOString().split('T')[0];
+      
+      // Bungkus data riwayat khatam yang baru selesai
+      const newKhatamRecord = {
+        khatamKe: stats.khatamCount,
+        startDate: stats.startDate,
+        endDate: todayDate
+      };
+      
+      // Ambil riwayat khatam lama (kalau ada)
+      const existingHistory = stats.khatamHistory || [];
+
+      // Buat status baru (Mulai khatam selanjutnya, simpan riwayatnya)
+      const newStats = { 
+        khatamCount: stats.khatamCount + 1, 
+        startDate: todayDate, 
+        khatamHistory: [newKhatamRecord, ...existingHistory]
+      };
+      
       await setDoc(doc(db, "users", user.uid), { progress: {}, stats: newStats }, { merge: true });
     }
   };
@@ -499,6 +517,61 @@ export default function App() {
       {activeTab === "log" && (
         <div style={{ padding: '20px' }}>
           <h2 style={{ color: '#2b7a5f', margin: '0 0 15px 0' }}>Riwayat Tilawah</h2>
+          {/* LOG RIWAYAT TAB (TOTAL AYAT ABU-ABU + RIWAYAT KHATAMAN) */}
+      {activeTab === "log" && (
+        <div style={{ padding: '20px' }}>
+          <h2 style={{ color: '#2b7a5f', margin: '0 0 15px 0' }}>Riwayat Tilawah</h2>
+
+          {/* --- TAMPILAN RIWAYAT KHATAM --- */}
+          {stats.khatamHistory && stats.khatamHistory.length > 0 && (
+            <div style={{ marginBottom: '25px' }}>
+              <h4 style={{ color: '#fb923c', margin: '0 0 10px 0', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                ✨ <span>Catatan Khatam</span>
+              </h4>
+              <div className="receipt-container" style={{ padding: '10px 15px' }}>
+                {stats.khatamHistory.map((kh, idx) => (
+                  <div key={idx} className="receipt-item" style={{ borderBottom: '1px dashed #d1cbbd', paddingBottom: '8px', marginBottom: '8px' }}>
+                    <div style={{ fontWeight: 'bold', color: '#2b7a5f', fontSize: '0.9rem' }}>🏆 Khatam ke-{kh.khatamKe}</div>
+                    <div style={{ fontSize: '0.75rem', color: '#666' }}>{kh.startDate} s/d {kh.endDate}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+          {/* -------------------------------- */}
+
+          <div className="filter-toggle">
+            <button className={`filter-btn ${historyFilter === "7" ? "active" : ""}`} onClick={() => setHistoryFilter("7")}>7 Hari Terakhir</button>
+            <button className={`filter-btn ${historyFilter === "30" ? "active" : ""}`} onClick={() => setHistoryFilter("30")}>30 Hari Terakhir</button>
+          </div>
+          
+          <div className="receipt-container" style={{ maxHeight: 'none', paddingBottom: '20px', marginBottom: '80px' }}>
+            {filteredGlobalHistory.length > 0 ? (
+              filteredGlobalHistory.map((hist, i) => (
+                <div key={i} className="receipt-item" style={{ flexDirection: 'column', alignItems: 'flex-start' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', marginBottom: '5px' }}>
+                    <span className="receipt-date">{hist.date}</span>
+                    <span style={{ fontSize: '0.75rem', fontWeight: 'bold', color: '#2b7a5f', background: '#e6f2ed', padding: '2px 8px', borderRadius: '5px' }}>
+                      +{hist.ayahsAdded || 0} Ayat
+                    </span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', alignItems: 'center' }}>
+                    <span style={{ fontWeight: 'bold', color: '#333' }}>
+                      {hist.surahName} 
+                      <span style={{ color: '#aaa', fontWeight: 'normal', fontSize: '0.8rem', marginLeft: '5px' }}>({hist.totalAyahs} ayat)</span>
+                    </span>
+                    <span className="receipt-note">{hist.note}</span>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div style={{ textAlign: 'center', color: '#888', marginTop: '10px', padding: '20px' }}>
+                <p>Belum ada riwayat tilawah di periode ini.</p>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
           <div className="filter-toggle">
             <button className={`filter-btn ${historyFilter === "7" ? "active" : ""}`} onClick={() => setHistoryFilter("7")}>7 Hari Terakhir</button>
             <button className={`filter-btn ${historyFilter === "30" ? "active" : ""}`} onClick={() => setHistoryFilter("30")}>30 Hari Terakhir</button>
