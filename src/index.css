@@ -601,83 +601,97 @@ body {
 
 .zone-section {
   position: relative;
-  padding: 50px 20px 80px 20px;
-  border-bottom-left-radius: 50% 10%; /* Bikin efek lengkung bukit */
-  border-bottom-right-radius: 50% 10%;
-  margin-bottom: -50px; /* Bikin bukitnya tumpang tindih */
-  z-index: 1;
+  padding: 40px 0 20px 0; /* Diperkecil */
+  margin-top: -30px; /* Bikin bukitnya tumpang tindih secara vertikal */
 }
 
-/* Warna dan Tumpukan (Z-index dari atas ke bawah mengecil) */
-.zone-dawn { background-color: #fcd34d; z-index: 10; }    /* Kuning Pagi */
-.zone-palm { background-color: #fb923c; z-index: 9; padding-top: 80px;}    /* Oranye/Peach */
-.zone-lantern { background-color: #fca5a5; z-index: 8; padding-top: 80px;} /* Pink/Merah Muda */
-.zone-starry { background-color: #1e3a8a; z-index: 7; padding-bottom: 120px; padding-top: 80px;} /* Navy Malam */
+/* Transisi warna zona berjenjang */
+.zone-dawn { background-color: #fcd34d; z-index: 10; padding-top: 20px; }
+.zone-palm { background-color: #4ade80; z-index: 9; }
+.zone-lantern { background-color: #f43f5e; z-index: 8; }
+.zone-starry { background-color: #1e3a8a; z-index: 7; padding-bottom: 80px; }
+
+/* Gelombang (Wave SVG) pembatas antar zona */
+.wave-divider {
+  position: absolute;
+  top: -35px; /* Menutupi area transisi bukit sebelumnya */
+  left: 0;
+  width: 100%;
+  z-index: 2;
+  filter: drop-shadow(0 -5px 8px rgba(0,0,0,0.15)); /* Bayangan paper-cut */
+}
+.wave-svg {
+  width: 100%;
+  height: 40px; /* Ukuran proporsional gelombang */
+  display: block;
+}
 
 /* Judul Zona */
 .zone-header {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 15px;
-  margin-bottom: 40px;
+  gap: 12px;
+  margin: 20px 0 30px 0;
+  position: relative;
+  z-index: 10;
 }
 .zone-icon {
   background: rgba(255,255,255,0.3);
-  padding: 10px;
+  padding: 8px;
   border-radius: 12px;
   font-size: 1.5rem;
   box-shadow: 0 4px 10px rgba(0,0,0,0.1);
 }
 .zone-title {
-  font-size: 1.2rem;
+  font-size: 1.1rem;
   font-weight: 900;
   letter-spacing: 2px;
-  color: #9a3412; /* Warna teks kuning gelap */
+  color: #9a3412;
   margin: 0;
   text-shadow: 1px 1px 0 rgba(255,255,255,0.4);
 }
 .zone-starry .zone-title { color: #fcd34d; text-shadow: none; }
 
-/* --- JALUR ZIG-ZAG PUTUS-PUTUS --- */
-.journey-path {
+/* --- JALUR PETA MELIUK (ZIG-ZAG OTOMATIS) --- */
+.journey-path-container {
   position: relative;
+  width: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;
+  margin-top: 10px;
 }
 
-/* Garis putus-putus utama yang mengalir di tengah */
-.journey-path::before {
-  content: '';
+/* Garis Bezier Penghubung Titik SVG */
+.dashed-path-svg {
   position: absolute;
-  top: 35px;
-  bottom: 35px;
-  left: 50%;
-  width: 4px;
-  transform: translateX(-50%);
-  background: repeating-linear-gradient(to bottom, rgba(255,255,255,0.8), rgba(255,255,255,0.8) 10px, transparent 10px, transparent 20px);
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
   z-index: 0;
+  pointer-events: none;
 }
 
 .juz-node-wrapper {
   position: relative;
   width: 100%;
   display: flex;
-  margin: 20px 0;
+  margin: 10px 0; /* JARAK DIKECILKAN */
+  height: 60px; /* JARAK DIKECILKAN */
   z-index: 1;
 }
 
-/* Posisi Node Meliuk-liuk */
-.pos-left { justify-content: flex-start; padding-left: 15%; }
-.pos-center { justify-content: center; }
-.pos-right { justify-content: flex-end; padding-right: 15%; }
+/* Posisi Kiri dan Kanan bergantian */
+.pos-left { justify-content: flex-start; padding-left: 25%; }
+.pos-right { justify-content: flex-end; padding-right: 25%; }
 
-/* --- CINCIN DAN NOMOR JUZ --- */
+/* --- LINGKARAN NODE JUZ --- */
 .juz-node-circle {
   position: relative;
-  width: 70px;
-  height: 70px;
+  width: 60px; /* Ukuran cincin dikecilkan */
+  height: 60px;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -691,43 +705,61 @@ body {
 }
 
 .node-content {
-  width: 52px;
-  height: 52px;
+  width: 48px;
+  height: 48px;
   background: white;
   border-radius: 50%;
   display: flex;
   justify-content: center;
   align-items: center;
+  position: relative;
   z-index: 2;
   box-shadow: inset 0 2px 5px rgba(0,0,0,0.1);
 }
 
 .juz-number {
-  font-size: 1.5rem;
+  font-size: 1.3rem;
   font-weight: 900;
   color: #2b7a5f;
+  transition: color 0.3s;
 }
 
-.lock-icon { font-size: 1.5rem; opacity: 0.8; filter: grayscale(100%); }
+/* OVERLAY GEMBOK TERKUNCI (FOG OF WAR) */
+.lock-overlay {
+  position: absolute;
+  bottom: -4px;
+  right: -4px;
+  background: white;
+  border-radius: 50%;
+  width: 22px;
+  height: 22px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 0.75rem;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  z-index: 5;
+}
 
-.juz-node-circle.locked .node-content { background-color: #e5e7eb; }
+.juz-node-circle.locked .node-content { background-color: #f3f4f6; }
+.juz-node-circle.locked .juz-number { color: #9ca3af; } /* Angka jadi abu-abu */
 .juz-node-circle.completed .node-content { background-color: #fef08a; }
 .juz-node-circle.completed .juz-number { color: #b45309; }
 
-/* BURUNG ORIGAMI 3D (ASLI) */
+/* --- MASKOT BURUNG ORIGAMI 3D --- */
 .origami-bird {
   position: absolute;
   right: -25px;
-  top: -30px;
-  width: 55px;
-  height: 55px;
-  filter: drop-shadow(0 8px 10px rgba(0,0,0,0.4));
-  animation: floatingBird 2.5s ease-in-out infinite;
+  top: -25px;
+  width: 45px;
+  height: 45px;
+  filter: drop-shadow(0 6px 6px rgba(0,0,0,0.3));
+  animation: floatingOrigami 2s ease-in-out infinite;
   z-index: 100;
 }
 
-@keyframes floatingBird {
+@keyframes floatingOrigami {
   0% { transform: translateY(0) rotate(0deg); }
-  50% { transform: translateY(-12px) rotate(-8deg); }
+  50% { transform: translateY(-8px) rotate(-5deg); }
   100% { transform: translateY(0) rotate(0deg); }
 }
