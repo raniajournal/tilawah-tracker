@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from "react";
 import { auth, db } from "./firebase";
 import { signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "firebase/auth";
 import { doc, setDoc, onSnapshot } from "firebase/firestore";
+import { JUZ_DATA, getJuzFromSurahAndAyah, calculateJuzProgress } from "./juzUtils";
 
 // DATABASE 114 SURAT 
 const SURAHS = [
@@ -161,6 +162,15 @@ export default function App() {
   const [endAyah, setEndAyah] = useState("");
   const [tempTargetType, setTempTargetType] = useState("daily");
   const [tempTargetValue, setTempTargetValue] = useState("");
+  const [journeyMode, setJourneyMode] = useState("FREE"); 
+  const [activeJuz, setActiveJuz] = useState(1);
+  const [juzProgress, setJuzProgress] = useState(
+    Array.from({ length: 30 }, (_, i) => ({
+      juz: i + 1,
+      ayatRead: 0,
+      isCompleted: false
+    }))
+  );
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
@@ -173,6 +183,9 @@ export default function App() {
             setProgress(data.progress || {});
             setStats(data.stats || { khatamCount: 1, startDate: new Date().toISOString().split('T')[0] });
             setTarget(data.target || { type: 'daily', value: 20 });
+            if (data.journeyMode) setJourneyMode(data.journeyMode);
+            if (data.activeJuz) setActiveJuz(data.activeJuz);
+            if (data.juzProgress) setJuzProgress(data.juzProgress);
           }
         });
       }
@@ -217,7 +230,55 @@ export default function App() {
       newHistory.unshift({ id: historyId, date, note: `Ayat ${startAyah} - ${endAyah}`, timestamp: currentTime, ayahsAdded });
     }
 
-    const updatedProgress = { ...progress, [selectedSurah.id]: { read: readCount, history: newHistory } };
+    const updatedProgress = { ...progress, [selectedSurah.id]: { read: readCount, history: newHistory } };   
+    // --- TAMBAHKAN LOGIKA QURAN JOURNEY DI SINI ---
+    let updatedJuzProgress = [...juzProgress];
+    let newActiveJuz = activeJuz;
+
+    // Hanya proses jika ada ayat yang ditambah
+    if (ayahsAdded > 0) {
+      // Cari target ujung ayat yang dibaca
+      const targetEnd = isComplete ? selectedSurah.ayahs : parseInt(endAyah);
+      const targetJuzData = getJuzFromSurahAndAyah(selectedSurah.id, targetEnd);
+      
+      if (targetJuzData) {
+        const targetJuzNumber = targetJuzData.juz;
+        const targetIndex = targetJuzNumber - 1;
+        
+        // Hitung penambahan ayat ke Juz tersebut
+        const currentAyatRead = updatedJuzProgress[targetIndex].ayatRead;
+        const maxAyat = JUZ_DATA[targetIndex].totalAyahs;
+        const updatedAyatRead = Math.min(currentAyatRead + ayahsAdded, maxAyat);
+        
+        updatedJuzProgress[targetIndex] = {
+          ...updatedJuzProgress[targetIndex],
+          ayatRead: updatedAyatRead,
+          isCompleted: updatedAyatRead === maxAyat
+        };
+
+        // Atur pergerakan burung origami
+        if (journeyMode === 'FREE') {
+          newActiveJuz = targetJuzNumber; // Langsung loncat
+        } else {
+          // Linear: Cari juz pertama yang belum selesai
+          const firstUnfinished = updatedJuzProgress.find(j => !j.isCompleted);
+          newActiveJuz = firstUnfinished ? firstUnfinished.juz : 30;
+        }
+        
+        setJuzProgress(updatedJuzProgress);
+        setActiveJuz(newActiveJuz);
+      }
+    }
+    // --- AKHIR LOGIKA QURAN JOURNEY ---
+
+    // UBAH BARIS SETDOC MBUN MENJADI SEPERTI INI AGAR DATA PETA IKUT TERSIMPAN:
+    await setDoc(doc(db, "users", user.uid), { 
+      progress: updatedProgress,
+      journeyMode: journeyMode,
+      activeJuz: newActiveJuz,
+      juzProgress: updatedJuzProgress
+    }, { merge: true });
+  };
     await setDoc(doc(db, "users", user.uid), { progress: updatedProgress }, { merge: true });
   };
 
@@ -255,6 +316,20 @@ export default function App() {
         startDate: stats.startDate,
         endDate: todayDate
       };
+      // --- BUAT ARRAY JUZ KOSONG UNTUK RESET ---
+      const resetJuzMap = Array.from({ length: 30 }, (_, i) => ({
+        juz: i + 1, ayatRead: 0, isCompleted: false
+      }));
+
+      // UBAH BARIS SETDOC MBUN MENJADI SEPERTI INI:
+      await setDoc(doc(db, "users", user.uid), { 
+        progress: {}, 
+        stats: newStats,
+        activeJuz: 1, // Burung kembali ke Juz 1
+        juzProgress: resetJuzMap // Peta di-reset jadi abu-abu
+      }, { merge: true });
+    }
+  };
       
       const existingHistory = stats.khatamHistory || [];
 
@@ -566,6 +641,7 @@ export default function App() {
       <div className="bottom-nav">
         <button className={`nav-btn ${activeTab === 'dashboard' ? 'active' : ''}`} onClick={() => setActiveTab('dashboard')}><span style={{ fontSize: '1.4rem' }}>🏠</span> Dashboard</button>
         <button className={`nav-btn ${activeTab === 'statistik' ? 'active' : ''}`} onClick={() => setActiveTab('statistik')}><span style={{ fontSize: '1.4rem' }}>📊</span> Statistik</button>
+        <button className={`nav-btn ${activeTab === 'peta' ? 'active' : ''}`} onClick={() => setActiveTab('peta')}><span style={{ fontSize: '1.4rem' }}>🗺️</span> Journey</button>
         <button className={`nav-btn ${activeTab === 'log' ? 'active' : ''}`} onClick={() => setActiveTab('log')}><span style={{ fontSize: '1.4rem' }}>📜</span> Riwayat</button>
       </div>
 
