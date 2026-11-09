@@ -71,7 +71,7 @@ const SURAHS = [
   { id: 64, name: "At-Tagabun", meaning: "Hari Penampakan", ayahs: 18, juz: "Juz 28" },
   { id: 65, name: "At-Talaq", meaning: "Talak", ayahs: 12, juz: "Juz 28" },
   { id: 66, name: "At-Tahrim", meaning: "Pengharaman", ayahs: 12, juz: "Juz 28" },
-  { id: 67, name: "Al-Mulk", meaning: "Kerajaan", ayahs: 30, juz: "Juz 29" },
+  { id: 67, name: "Al-Mulk", Kerajaan: "Kerajaan", ayahs: 30, juz: "Juz 29" },
   { id: 68, name: "Al-Qalam", meaning: "Pena", ayahs: 52, juz: "Juz 29" },
   { id: 69, name: "Al-Haqqah", meaning: "Hari Kiamat", ayahs: 52, juz: "Juz 29" },
   { id: 70, name: "Al-Ma'arij", meaning: "Tempat Naik", ayahs: 44, juz: "Juz 29" },
@@ -143,13 +143,28 @@ const getLastNDays = (n) => {
   return dates;
 };
 
-// DATA 4 ZONA TEMA
+// DATA 4 ZONA TEMA (Update Kode Warna Bukit)
 const ZONES = [
-  { id: 1, title: "THE DAWN SPRINGS", icon: "🌅", startJuz: 1, endJuz: 5, bgClass: "zone-dawn" },
-  { id: 2, title: "THE PALM VALLEY", icon: "🌴", startJuz: 6, endJuz: 15, bgClass: "zone-palm" },
-  { id: 3, title: "THE LANTERN TRAIL", icon: "🏮", startJuz: 16, endJuz: 25, bgClass: "zone-lantern" },
-  { id: 4, title: "THE STARRY SKY", icon: "✨", startJuz: 26, endJuz: 30, bgClass: "zone-starry" }
+  { id: 1, title: "THE DAWN SPRINGS", icon: "🌅", startJuz: 1, endJuz: 5, bgClass: "zone-dawn", waveColor: "#fcd34d" },
+  { id: 2, title: "THE PALM VALLEY", icon: "🌴", startJuz: 6, endJuz: 15, bgClass: "zone-palm", waveColor: "#4ade80" },
+  { id: 3, title: "THE LANTERN TRAIL", icon: "🏮", startJuz: 16, endJuz: 25, bgClass: "zone-lantern", waveColor: "#f43f5e" },
+  { id: 4, title: "THE STARRY SKY", icon: "✨", startJuz: 26, endJuz: 30, bgClass: "zone-starry", waveColor: "#1e3a8a" }
 ];
+
+// FUNGSI MEMBUAT JALUR MELIUK (BEZIER CURVE SVG) OTOMATIS
+const generateDashedPath = (count) => {
+  if (count <= 1) return "";
+  let d = `M 25 40 `; // Mulai dari titik kiri atas
+  for(let i=1; i<count; i++) {
+    const prevX = (i-1) % 2 === 0 ? 25 : 75;
+    const x = i % 2 === 0 ? 25 : 75;
+    const prevY = (i-1) * 80 + 40;
+    const y = i * 80 + 40;
+    // Menggunakan kurva kubik untuk membentuk garis melengkung "S" yang estetik
+    d += `C ${prevX} ${prevY + 30}, ${x} ${y - 30}, ${x} ${y} `;
+  }
+  return d;
+};
 
 export default function App() {
   const [user, setUser] = useState(null);
@@ -172,7 +187,7 @@ export default function App() {
   const [journeyMode, setJourneyMode] = useState("FREE"); 
   const [activeJuz, setActiveJuz] = useState(1);
 
-  // OTAK KALKULASI JUZ YANG SUDAH DIPERBAIKI
+  // OTAK KALKULASI JUZ
   const juzProgress = useMemo(() => {
     const newJuzMap = Array.from({ length: 30 }, (_, i) => ({
       juz: i + 1, ayatRead: 0, isCompleted: false
@@ -311,7 +326,6 @@ export default function App() {
       const newKhatamRecord = { khatamKe: stats.khatamCount, startDate: stats.startDate, endDate: todayDate };
       const existingHistory = stats.khatamHistory || [];
       const newStats = { khatamCount: stats.khatamCount + 1, startDate: todayDate, khatamHistory: [newKhatamRecord, ...existingHistory] };
-
       await setDoc(doc(db, "users", user.uid), { progress: {}, stats: newStats, activeJuz: 1 }, { merge: true });
     }
   };
@@ -390,7 +404,7 @@ export default function App() {
 
   return (
     <div className="app-container">
-      {/* HEADER TETAP SAMA */}
+      {/* HEADER DASHBOARD */}
       <div className="curved-header" style={{ position: 'relative' }}>
         <button onClick={() => signOut(auth)} style={{ position: 'absolute', top: '20px', right: '20px', background: 'rgba(255,255,255,0.2)', border: '1px solid rgba(255,255,255,0.4)', color: 'white', padding: '6px 12px', borderRadius: '20px', fontSize: '0.75rem', cursor: 'pointer', backdropFilter: 'blur(5px)' }} title="Keluar">Keluar</button>
         <h1 style={{ margin: '0 0 10px 0', fontSize: '1.8rem' }}>Tilawah Tracker</h1>
@@ -471,7 +485,7 @@ export default function App() {
       )}
 
       {/* ============================================== */}
-      {/* QURAN JOURNEY MAP (DESAIN BARU)                */}
+      {/* QURAN JOURNEY MAP (DUOLINGO STYLE)           */}
       {/* ============================================== */}
       {activeTab === "peta" && (
         <div className="map-container">
@@ -486,61 +500,78 @@ export default function App() {
 
           <div className="journey-zones-wrapper">
             {ZONES.map((zone, zIndex) => {
-              // Ambil data Juz yang hanya ada di zona ini
               const zoneJuzData = juzProgress.filter(j => j.juz >= zone.startJuz && j.juz <= zone.endJuz);
+              const nodeCount = zoneJuzData.length;
               
+              // Total tinggi area garis penghubung berdasarkan jumlah titik (jarak diperkecil jadi 80px per titik)
+              const svgHeight = nodeCount * 80;
+
               return (
                 <div key={zone.id} className={`zone-section ${zone.bgClass}`}>
                   
-                  {/* TITLE ZONA (Tampil persis seperti mockup) */}
+                  {/* BUKIT ORGANIK PAPER-CUT (GELOMBANG SVG) */}
+                  {zIndex > 0 && (
+                    <div className="wave-divider">
+                      <svg viewBox="0 0 1440 120" preserveAspectRatio="none" className="wave-svg">
+                        <path fill={zone.waveColor} d="M0,32L80,48C160,64,320,96,480,90.7C640,85,800,43,960,37.3C1120,32,1280,64,1360,80L1440,96L1440,120L0,120Z" />
+                      </svg>
+                    </div>
+                  )}
+
                   <div className="zone-header">
                     <div className="zone-icon">{zone.icon}</div>
                     <h2 className="zone-title">{zone.title}</h2>
                   </div>
 
-                  <div className="journey-path">
+                  <div className="journey-path-container" style={{ position: 'relative', width: '100%', paddingBottom: '30px' }}>
+                    
+                    {/* GARIS PUTUS-PUTUS MELIUK (BEZIER CURVE OTOMATIS) */}
+                    <svg className="dashed-path-svg" viewBox={`0 0 100 ${svgHeight}`} preserveAspectRatio="none">
+                       <path d={generateDashedPath(nodeCount)} fill="none" stroke="rgba(255,255,255,0.7)" strokeWidth="1.5" strokeDasharray="3 3" vectorEffect="non-scaling-stroke" />
+                    </svg>
+
                     {zoneJuzData.map((juz, index) => {
                       const totalAyah = JUZ_DATA[juz.juz - 1].totalAyahs;
                       const progressData = calculateJuzProgress(juz.ayatRead, totalAyah);
                       const isLocked = journeyMode === 'LINEAR' && juz.juz > displayActiveJuz;
                       
-                      // Pola Meliuk-liuk: Kiri -> Tengah -> Kanan -> Tengah
-                      const positions = ['pos-left', 'pos-center', 'pos-right', 'pos-center'];
-                      const positionClass = positions[index % 4];
+                      // Pola Meliuk: Kiri - Kanan
+                      const positionClass = index % 2 === 0 ? 'pos-left' : 'pos-right';
                       
-                      // Menghitung panjang garis oranye SVG untuk cincin (Maks = 188px)
+                      // Menghitung panjang garis cincin oranye (Maks = 176px)
                       const completedQuarters = progressData.quarters.filter(Boolean).length;
-                      const dashOffset = 188 - (completedQuarters * 47); 
+                      const dashOffset = 176 - (completedQuarters * 44); 
 
                       return (
                         <div key={juz.juz} className={`juz-node-wrapper ${positionClass}`}>
                           <div className={`juz-node-circle ${isLocked ? 'locked' : ''} ${juz.isCompleted ? 'completed' : ''}`}>
                             
-                            {/* CINCIN SVG BERSEGMEN */}
+                            {/* CINCIN SVG PROGRES */}
                             {!isLocked && (
-                                <svg width="70" height="70" viewBox="0 0 70 70" className="progress-svg">
-                                  {/* Cincin Putus-putus Dasar (Putih transparan) */}
-                                  <circle cx="35" cy="35" r="30" fill="white" stroke="rgba(255,255,255,0.7)" strokeWidth="4" strokeDasharray="42 5" transform="rotate(-90 35 35)" />
-                                  {/* Cincin Oranye Aktif */}
-                                  <circle cx="35" cy="35" r="30" fill="none" stroke="#f59e0b" strokeWidth="6" strokeDasharray="188" strokeDashoffset={dashOffset} strokeLinecap="round" transform="rotate(-90 35 35)" style={{transition: 'stroke-dashoffset 1s ease'}}/>
+                                <svg width="60" height="60" viewBox="0 0 60 60" className="progress-svg">
+                                  <circle cx="30" cy="30" r="28" fill="white" stroke="rgba(255,255,255,0.6)" strokeWidth="4" strokeDasharray="39 5" transform="rotate(-90 30 30)" />
+                                  <circle cx="30" cy="30" r="28" fill="none" stroke="#f59e0b" strokeWidth="4" strokeDasharray="176" strokeDashoffset={dashOffset} strokeLinecap="round" transform="rotate(-90 30 30)" style={{transition: 'stroke-dashoffset 1s ease'}}/>
                                 </svg>
                             )}
 
-                            {/* ISI TENGAH LINGKARAN */}
+                            {/* ANGKA TENGAH + IKON GEMBOK (JIKA DIKUNCI) */}
                             <div className="node-content">
-                                {isLocked ? <span className="lock-icon">🔒</span> : <span className="juz-number">{juz.juz}</span>}
+                                <span className="juz-number">{juz.juz}</span>
+                                {isLocked && (
+                                  <div className="lock-overlay">🔒</div>
+                                )}
                             </div>
                             
-                            {/* BURUNG ORIGAMI 3D */}
+                            {/* BURUNG ORIGAMI 3D (ASLI) */}
                             {displayActiveJuz === juz.juz && !juz.isCompleted && (
                               <div className="origami-bird" title="Posisi Anda Saat Ini">
-                                <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                  <path d="M32 20L44 8L38 24L32 20Z" fill="#FEF08A"/>
-                                  <path d="M32 20L20 8L26 24L32 20Z" fill="#FDE047"/>
-                                  <path d="M32 20L26 24L32 40L38 24L32 20Z" fill="#FACC15"/>
-                                  <path d="M32 40L26 24L12 28L32 40Z" fill="#EAB308"/>
-                                  <path d="M32 40L38 24L52 28L32 40Z" fill="#CA8A04"/>
-                                  <path d="M32 40L16 56L24 44L32 40Z" fill="#A16207"/>
+                                <svg viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+                                  <polygon fill="#fde047" points="394.6,183.3 226,306.9 285.4,117.7"/>
+                                  <polygon fill="#facc15" points="394.6,183.3 496.1,232.7 226,306.9"/>
+                                  <polygon fill="#eab308" points="226,306.9 148.9,252.3 35.5,233.1"/>
+                                  <polygon fill="#ca8a04" points="226,306.9 313.2,465 313.2,351"/>
+                                  <polygon fill="#a16207" points="226,306.9 176.6,393 216.5,335.7"/>
+                                  <polygon fill="#fef08a" points="226,306.9 285.4,117.7 148.9,252.3"/>
                                 </svg>
                               </div>
                             )}
