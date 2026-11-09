@@ -234,7 +234,7 @@ export default function App() {
   };
 
   const toggleJourneyMode = async (mode) => {
-    setJourneyMode(mode);
+    setJourneyMode(mode); // Update state lokal seketika
     if (!user) return;
     await setDoc(doc(db, "users", user.uid), { journeyMode: mode }, { merge: true });
   };
@@ -445,6 +445,14 @@ export default function App() {
       {/* HALAMAN QURAN JOURNEY (PETA OASIS 30 JUZ) */}
       {activeTab === "peta" && (
         <div className="map-container">
+          {/* Latar Belakang Bukit Bertumpuk */}
+          <div className="hills-background">
+             <div className="hill hill-1"></div>
+             <div className="hill hill-2"></div>
+             <div className="hill hill-3"></div>
+             <div className="hill hill-4"></div>
+          </div>
+          
           <div className="mode-toggle-box">
             <h3 style={{ margin: '0 0 5px 0', color: '#1e5441' }}>Pengaturan Peta Oasis</h3>
             <p style={{ margin: 0, fontSize: '0.8rem', color: '#666' }}>Pilih gaya petualanganmu hari ini</p>
@@ -454,66 +462,175 @@ export default function App() {
             </div>
           </div>
 
-          <div className="paper-cut-stack">
-            {juzProgress.map((juz) => {
-              let themeClass = "theme-dawn";
-              let themeName = "The Dawn Springs 🌅";
-              if (juz.juz >= 6 && juz.juz <= 15) { themeClass = "theme-palm"; themeName = "The Palm Valley 🌴"; }
-              else if (juz.juz >= 16 && juz.juz <= 25) { themeClass = "theme-lantern"; themeName = "The Lantern Trail 🏮"; }
-              else if (juz.juz >= 26) { themeClass = "theme-starry"; themeName = "The Starry Sky ✨"; }
-
+          <div className="journey-path">
+            {juzProgress.map((juz, index) => {
               const totalAyahInThisJuz = JUZ_DATA[juz.juz - 1].totalAyahs;
               const progressData = calculateJuzProgress(juz.ayatRead, totalAyahInThisJuz);
               const isLocked = journeyMode === 'LINEAR' && juz.juz > displayActiveJuz;
+              
+              // Menentukan posisi (kiri, kanan, tengah) untuk efek liuk
+              const positions = ['left', 'center', 'right', 'center'];
+              const positionClass = `pos-${positions[index % 4]}`;
+
+              // Menghitung derajat untuk cincin progres (1/4 = 90deg, 2/4 = 180deg, dst)
+              const completedQuarters = progressData.quarters.filter(Boolean).length;
+              const progressDegrees = completedQuarters * 90;
 
               return (
-                <div key={juz.juz} className={`juz-node ${themeClass} ${isLocked ? 'locked' : ''} ${juz.isCompleted ? 'completed' : ''}`}>
-                  <div className="node-number-circle">{juz.juz}</div>
-                  <div style={{ flex: 1 }}>
-                    <h4 style={{ margin: '0 0 2px 0' }}>Oasis {juz.juz}</h4>
-                    <p style={{ margin: 0, fontSize: '0.75rem', opacity: 0.8 }}>{themeName} • {juz.ayatRead}/{totalAyahInThisJuz} Ayat</p>
-                    <div className="quarter-dots">
-                      {[0, 1, 2, 3].map((qIdx) => (<div key={qIdx} className={`dot ${progressData.quarters[qIdx] ? 'filled' : ''}`}></div>))}
+                <div key={juz.juz} className={`juz-node-wrapper ${positionClass}`}>
+                  <div className={`juz-node-circle ${isLocked ? 'locked' : ''} ${juz.isCompleted ? 'completed' : ''}`}>
+                    {/* Cincin Progres */}
+                    <div 
+                      className="progress-ring" 
+                      style={{ 
+                        background: `conic-gradient(#2b7a5f ${progressDegrees}deg, transparent 0)` 
+                      }}
+                    ></div>
+                    
+                    {/* Konten Dalam Lingkaran */}
+                    <div className="node-content">
+                        {isLocked ? (
+                            <span className="lock-icon">🔒</span>
+                        ) : (
+                            <span className="juz-number">{juz.juz}</span>
+                        )}
                     </div>
+                    
+                     {/* Mascot Burung */}
+                    {displayActiveJuz === juz.juz && !juz.isCompleted && (
+                      <div className="origami-bird" title="Posisi Anda Saat Ini">
+                        <svg viewBox="0 0 24 24" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+                          <path d="M22,12 c-2-4.7-5.8-7.6-10-7.6 S4.1,7.3,2.1,12 a1,1,0,0,0,0,.8 c2.1,4.7,5.9,7.6,10,7.6 s7.9-2.9,9.9-7.6 A1,1,0,0,0,22,12 Z M12,18 c-3.2,0-6.2-2.3-7.9-6 C5.8,8.3,8.8,6,12,6 s6.2,2.3,7.9,6 C18.2,15.7,15.2,18,12,18 Z" fill="#2b7a5f"/>
+                          <path d="M12,8 a4,4,0,1,0,4,4 A4,4,0,0,0,12,8 Zm0,6 a2,2,0,1,1,2-2 A2,2,0,0,1,12,14 Z" fill="#fcd34d"/>
+                        </svg>
+                      </div>
+                    )}
                   </div>
-
-                  {/* BURUNG ORIGAMI RENDER LANGSUNG (ANTI-BUG) */}
-                  {displayActiveJuz === juz.juz && !juz.isCompleted && (
-                    <div className="origami-bird" title="Posisi Anda Saat Ini">
-                      <svg viewBox="0 0 24 24" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M22,12 c-2-4.7-5.8-7.6-10-7.6 S4.1,7.3,2.1,12 a1,1,0,0,0,0,.8 c2.1,4.7,5.9,7.6,10,7.6 s7.9-2.9,9.9-7.6 A1,1,0,0,0,22,12 Z M12,18 c-3.2,0-6.2-2.3-7.9-6 C5.8,8.3,8.8,6,12,6 s6.2,2.3,7.9,6 C18.2,15.7,15.2,18,12,18 Z" fill="#2b7a5f"/>
-                        <path d="M12,8 a4,4,0,1,0,4,4 A4,4,0,0,0,12,8 Zm0,6 a2,2,0,1,1,2-2 A2,2,0,0,1,12,14 Z" fill="#fcd34d"/>
-                      </svg>
-                    </div>
-                  )}
-                  {juz.juz === 30 && displayActiveJuz === 30 && juz.isCompleted && (
-                     <div className="origami-bird" style={{ filter: 'hue-rotate(90deg)' }} title="Alhamdulillah Khatam!">
-                      <svg viewBox="0 0 24 24" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M22,12 c-2-4.7-5.8-7.6-10-7.6 S4.1,7.3,2.1,12 a1,1,0,0,0,0,.8 c2.1,4.7,5.9,7.6,10,7.6 s7.9-2.9,9.9-7.6 A1,1,0,0,0,22,12 Z M12,18 c-3.2,0-6.2-2.3-7.9-6 C5.8,8.3,8.8,6,12,6 s6.2,2.3,7.9,6 C18.2,15.7,15.2,18,12,18 Z" fill="#fcd34d"/>
-                        <path d="M12,8 a4,4,0,1,0,4,4 A4,4,0,0,0,12,8 Zm0,6 a2,2,0,1,1,2-2 A2,2,0,0,1,12,14 Z" fill="#ffffff"/>
-                      </svg>
-                     </div>
-                  )}
                 </div>
               );
             })}
           </div>
-          <div style={{ textAlign: 'center', marginTop: '40px', color: '#888', fontSize: '0.8rem', fontStyle: 'italic' }}>~ Perjalanan 30 Juz ~</div>
+          <div style={{ textAlign: 'center', marginTop: '40px', color: '#888', fontSize: '0.8rem', fontStyle: 'italic', position: 'relative', zIndex: 10 }}>~ Perjalanan 30 Juz ~</div>
         </div>
       )}
 
-      {/* HALAMAN STATISTIK DAN LOG DIPOTONG SEDIKIT DEMI KEBERSIHAN KODE */}
-      {activeTab === "statistik" && <div style={{ padding: '20px', textAlign: 'center' }}><p>Halaman Statistik...</p></div>}
-      {activeTab === "log" && <div style={{ padding: '20px', textAlign: 'center' }}><p>Halaman Riwayat...</p></div>}
+      {/* HALAMAN STATISTIK DAN LOG DIKEMBALIKAN */}
+      {activeTab === "statistik" && (
+        <div style={{ padding: '20px' }}>
+          <div className="chart-card">
+            <h4 style={{ margin: '0 0 15px 0', color: '#333' }}>Pencapaian 7 Hari Terakhir</h4>
+            <div className="chart-container" style={{ height: '140px' }}>
+              {last7Days.map((dObj, index) => {
+                const ayahs = dailyStats[dObj.fullDate] || 0;
+                const barHeight = Math.max((ayahs / maxAyahs7D) * 100, 5);
+                return (
+                  <div key={index} className="bar-wrapper">
+                    <span style={{ fontSize: '0.7rem', color: '#2b7a5f', fontWeight: 'bold' }}>{ayahs > 0 ? ayahs : ''}</span>
+                    <div className="bar-bg"><div className="bar-fill" style={{ height: `${ayahs > 0 ? barHeight : 0}%` }}></div></div>
+                    <div className="date-label"><b>{dObj.dayName}</b><br/>{dObj.dateNum}/{dObj.monthNum}</div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="chart-card">
+            <h4 style={{ margin: '0 0 10px 0', color: '#333' }}>Kalender Konsistensi (28 Hari)</h4>
+            <div className="heatmap-grid">
+              {last28Days.map((dObj, index) => {
+                const ayahs = dailyStats[dObj.fullDate] || 0;
+                let bgColor = "#ebedf0";
+                let textColor = "#888"; 
+                
+                if (ayahs > 0 && ayahs <= 15) { bgColor = "#c2dfd1"; textColor = "#2b7a5f"; }
+                else if (ayahs > 15 && ayahs <= 40) { bgColor = "#7ebc9f"; textColor = "white"; }
+                else if (ayahs > 40 && ayahs <= 80) { bgColor = "#2b7a5f"; textColor = "white"; }
+                else if (ayahs > 80) { bgColor = "#1e5441"; textColor = "white"; }
+                
+                return (
+                  <div key={index} className="heatmap-box" style={{ background: bgColor, color: textColor }} title={`${dObj.fullDate}: ${ayahs} Ayat`}>
+                    {dObj.dateNum}
+                  </div>
+                );
+              })}
+            </div>
+            <div className="heatmap-legend">
+              <span>Sedikit</span>
+              <div className="legend-box" style={{ background: '#ebedf0' }}></div>
+              <div className="legend-box" style={{ background: '#c2dfd1' }}></div>
+              <div className="legend-box" style={{ background: '#7ebc9f' }}></div>
+              <div className="legend-box" style={{ background: '#2b7a5f' }}></div>
+              <div className="legend-box" style={{ background: '#1e5441' }}></div>
+              <span>Banyak</span>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {activeTab === "log" && (
+        <div style={{ padding: '20px' }}>
+          <h2 style={{ color: '#2b7a5f', margin: '0 0 15px 0' }}>Riwayat Tilawah</h2>
+
+          {stats.khatamHistory && stats.khatamHistory.length > 0 && (
+            <div style={{ marginBottom: '25px' }}>
+              <h4 style={{ color: '#fb923c', margin: '0 0 10px 0', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                ✨ <span>Catatan Khatam</span>
+              </h4>
+              <div className="receipt-container" style={{ padding: '10px 15px' }}>
+                {stats.khatamHistory.map((kh, idx) => (
+                  <div key={idx} className="receipt-item" style={{ borderBottom: '1px dashed #d1cbbd', paddingBottom: '8px', marginBottom: '8px' }}>
+                    <div style={{ fontWeight: 'bold', color: '#2b7a5f', fontSize: '0.9rem' }}>🏆 Khatam ke-{kh.khatamKe}</div>
+                    <div style={{ fontSize: '0.75rem', color: '#666' }}>{kh.startDate} s/d {kh.endDate}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <div className="filter-toggle">
+            <button className={`filter-btn ${historyFilter === "7" ? "active" : ""}`} onClick={() => setHistoryFilter("7")}>7 Hari Terakhir</button>
+            <button className={`filter-btn ${historyFilter === "30" ? "active" : ""}`} onClick={() => setHistoryFilter("30")}>30 Hari Terakhir</button>
+          </div>
+          
+          <div className="receipt-container" style={{ maxHeight: 'none', paddingBottom: '20px', marginBottom: '80px' }}>
+            {filteredGlobalHistory.length > 0 ? (
+              filteredGlobalHistory.map((hist, i) => (
+                <div key={i} className="receipt-item" style={{ flexDirection: 'column', alignItems: 'flex-start' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', marginBottom: '5px' }}>
+                    <span className="receipt-date">{hist.date}</span>
+                    <span style={{ fontSize: '0.75rem', fontWeight: 'bold', color: '#2b7a5f', background: '#e6f2ed', padding: '2px 8px', borderRadius: '5px' }}>
+                      +{hist.ayahsAdded || 0} Ayat
+                    </span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', alignItems: 'center' }}>
+                    <span style={{ fontWeight: 'bold', color: '#333' }}>
+                      {hist.surahName} 
+                      <span style={{ color: '#aaa', fontWeight: 'normal', fontSize: '0.8rem', marginLeft: '5px' }}>({hist.totalAyahs} ayat)</span>
+                    </span>
+                    <span className="receipt-note">{hist.note}</span>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div style={{ textAlign: 'center', color: '#888', marginTop: '10px', padding: '20px' }}>
+                <p>Belum ada riwayat tilawah di periode ini.</p>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       <div className="bottom-nav">
         <button className={`nav-btn ${activeTab === 'dashboard' ? 'active' : ''}`} onClick={() => setActiveTab('dashboard')}><span style={{ fontSize: '1.4rem' }}>🏠</span> Dashboard</button>
+        <button className={`nav-btn ${activeTab === 'statistik' ? 'active' : ''}`} onClick={() => setActiveTab('statistik')}><span style={{ fontSize: '1.4rem' }}>📊</span> Statistik</button>
         <button className={`nav-btn ${activeTab === 'peta' ? 'active' : ''}`} onClick={() => setActiveTab('peta')}><span style={{ fontSize: '1.4rem' }}>🗺️</span> Journey</button>
+        <button className={`nav-btn ${activeTab === 'log' ? 'active' : ''}`} onClick={() => setActiveTab('log')}><span style={{ fontSize: '1.4rem' }}>📜</span> Riwayat</button>
       </div>
 
-      {selectedSurah && (
+      {/* SISA MODAL SURAH */}
+       {selectedSurah && (
         <div className="modal-overlay" onClick={(e) => e.target.className === 'modal-overlay' && setSelectedSurah(null)}>
-          <div className="-content">
+          <div className="modal-content">
             <button className="close-btn" onClick={() => setSelectedSurah(null)}>&times;</button>
             <div style={{ textAlign: 'center', marginBottom: '15px' }}>
               <img src={`/images/${String(selectedSurah.id).padStart(2, '0')}.webp`} alt={selectedSurah.name} style={{ width: '80px', height: '80px', borderRadius: '15px', objectFit: 'contain', marginBottom: '10px' }} />
