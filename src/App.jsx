@@ -371,7 +371,7 @@ export default function App() {
           
           <div style={{ display: 'flex', justifyContent: 'center', gap: '10px', marginTop: '15px' }}>
             <button onClick={() => { setTempTargetType(target.type); setTempTargetValue(target.value); setShowTargetModal(true); }} style={{ background: 'rgba(255,255,255,0.2)', border: 'none', color: 'white', padding: '5px 15px', borderRadius: '20px', fontSize: '0.8rem', cursor: 'pointer' }}>⚙️ Set Target</button>
-            {globalPercentage === "100.0" && (
+            {globalPercentage === "0.0" && (
               <button onClick={resetKhatam} style={{ background: '#fcd34d', border: 'none', color: '#2b7a5f', padding: '5px 15px', borderRadius: '20px', fontSize: '0.8rem', fontWeight: 'bold', cursor: 'pointer' }}>🔄 Mulai Baru</button>
             )}
           </div>
