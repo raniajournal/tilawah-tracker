@@ -584,6 +584,90 @@ export default function App() {
         </div>
       )}
 
+      {/* HALAMAN QURAN JOURNEY (PETA OASIS 30 JUZ)           */}
+      {/* ==================================================== */}
+      {activeTab === "peta" && (
+        <div className="map-container">
+          
+          <div className="mode-toggle-box">
+            <h3 style={{ margin: '0 0 5px 0', color: '#1e5441' }}>Pengaturan Peta Oasis</h3>
+            <p style={{ margin: 0, fontSize: '0.8rem', color: '#666' }}>Pilih gaya petualanganmu hari ini</p>
+            <div className="mode-buttons">
+              <button 
+                className={`btn-mode ${journeyMode === 'LINEAR' ? 'active' : ''}`}
+                onClick={() => toggleJourneyMode('LINEAR')}
+              >
+                ⛺ Ekspedisi Linear
+              </button>
+              <button 
+                className={`btn-mode ${journeyMode === 'FREE' ? 'active' : ''}`}
+                onClick={() => toggleJourneyMode('FREE')}
+              >
+                🦅 Jelajah Bebas
+              </button>
+            </div>
+          </div>
+
+          <div className="paper-cut-stack">
+            {juzProgress.map((juz) => {
+              // 1. Tentukan Tema Berdasarkan Nomor Juz
+              let themeClass = "theme-dawn";
+              let themeName = "The Dawn Springs 🌅";
+              if (juz.juz >= 6 && juz.juz <= 15) { themeClass = "theme-palm"; themeName = "The Palm Valley 🌴"; }
+              else if (juz.juz >= 16 && juz.juz <= 25) { themeClass = "theme-lantern"; themeName = "The Lantern Trail 🏮"; }
+              else if (juz.juz >= 26) { themeClass = "theme-starry"; themeName = "The Starry Sky ✨"; }
+
+              // 2. Hitung Progress 1/4 menggunakan Utils
+              const totalAyahInThisJuz = JUZ_DATA[juz.juz - 1].totalAyahs;
+              const progressData = calculateJuzProgress(juz.ayatRead, totalAyahInThisJuz);
+              
+              // 3. Cek Status Kunci (Linear Mode)
+              // Kalau Linear, dan ada Juz SEBELUMNYA yang belum selesai, maka Juz ini kekunci
+              const isLocked = journeyMode === 'LINEAR' && juz.juz > activeJuz;
+
+              return (
+                <div 
+                  key={juz.juz} 
+                  className={`juz-node ${themeClass} ${isLocked ? 'locked' : ''} ${juz.isCompleted ? 'completed' : ''}`}
+                >
+                  <div className="node-number-circle">
+                    {juz.juz}
+                  </div>
+                  
+                  <div style={{ flex: 1 }}>
+                    <h4 style={{ margin: '0 0 2px 0' }}>Oasis {juz.juz}</h4>
+                    <p style={{ margin: 0, fontSize: '0.75rem', opacity: 0.8 }}>
+                      {themeName} • {juz.ayatRead}/{totalAyahInThisJuz} Ayat
+                    </p>
+                    
+                    {/* Render 4 Titik (Quarter) */}
+                    <div className="quarter-dots">
+                      {[0, 1, 2, 3].map((qIdx) => (
+                        <div key={qIdx} className={`dot ${progressData.quarters[qIdx] ? 'filled' : ''}`}></div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Render Burung Mascot jika ini adalah Juz Aktif */}
+                  {activeJuz === juz.juz && !juz.isCompleted && (
+                    <div className="origami-bird" title="Posisi Anda Saat Ini"></div>
+                  )}
+                  {/* Kalau semua sudah khatam, burung hinggap di Juz 30 */}
+                  {juz.juz === 30 && activeJuz === 30 && juz.isCompleted && (
+                     <div className="origami-bird" style={{ filter: 'hue-rotate(90deg)' }} title="Alhamdulillah Khatam!"></div>
+                  )}
+
+                </div>
+              );
+            })}
+          </div>
+          
+          <div style={{ textAlign: 'center', marginTop: '40px', color: '#888', fontSize: '0.8rem', fontStyle: 'italic' }}>
+            ~ Perjalanan 30 Juz ~
+          </div>
+        </div>
+      )}
+
       {activeTab === "log" && (
         <div style={{ padding: '20px' }}>
           <h2 style={{ color: '#2b7a5f', margin: '0 0 15px 0' }}>Riwayat Tilawah</h2>
