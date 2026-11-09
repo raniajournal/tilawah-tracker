@@ -279,8 +279,6 @@ export default function App() {
       juzProgress: updatedJuzProgress
     }, { merge: true });
   };
-    await setDoc(doc(db, "users", user.uid), { progress: updatedProgress }, { merge: true });
-  };
 
   const deleteHistory = async (indexToDelete, surahId) => {
     if (!user) return;
@@ -316,12 +314,22 @@ export default function App() {
         startDate: stats.startDate,
         endDate: todayDate
       };
-      // --- BUAT ARRAY JUZ KOSONG UNTUK RESET ---
+      
+      const existingHistory = stats.khatamHistory || [];
+
+      // Definisi newStats harus dilakukan SEBELUM setDoc dipanggil
+      const newStats = { 
+        khatamCount: stats.khatamCount + 1, 
+        startDate: todayDate, 
+        khatamHistory: [newKhatamRecord, ...existingHistory]
+      };
+
+      // --- BUAT ARRAY JUZ KOSONG UNTUK RESET PETA ---
       const resetJuzMap = Array.from({ length: 30 }, (_, i) => ({
         juz: i + 1, ayatRead: 0, isCompleted: false
       }));
 
-      // UBAH BARIS SETDOC MBUN MENJADI SEPERTI INI:
+      // SIMPAN SEMUANYA KE FIREBASE DALAM SATU PERINTAH
       await setDoc(doc(db, "users", user.uid), { 
         progress: {}, 
         stats: newStats,
