@@ -143,6 +143,14 @@ const getLastNDays = (n) => {
   return dates;
 };
 
+// DATA 4 ZONA TEMA
+const ZONES = [
+  { id: 1, title: "THE DAWN SPRINGS", icon: "🌅", startJuz: 1, endJuz: 5, bgClass: "zone-dawn" },
+  { id: 2, title: "THE PALM VALLEY", icon: "🌴", startJuz: 6, endJuz: 15, bgClass: "zone-palm" },
+  { id: 3, title: "THE LANTERN TRAIL", icon: "🏮", startJuz: 16, endJuz: 25, bgClass: "zone-lantern" },
+  { id: 4, title: "THE STARRY SKY", icon: "✨", startJuz: 26, endJuz: 30, bgClass: "zone-starry" }
+];
+
 export default function App() {
   const [user, setUser] = useState(null);
   const [progress, setProgress] = useState({});
@@ -164,36 +172,29 @@ export default function App() {
   const [journeyMode, setJourneyMode] = useState("FREE"); 
   const [activeJuz, setActiveJuz] = useState(1);
 
-  // --- OTAK BARU: Kalkulasi otomatis 30 Juz dari progres riil ---
+  // OTAK KALKULASI JUZ YANG SUDAH DIPERBAIKI
   const juzProgress = useMemo(() => {
     const newJuzMap = Array.from({ length: 30 }, (_, i) => ({
       juz: i + 1, ayatRead: 0, isCompleted: false
     }));
-
     if (!JUZ_DATA || JUZ_DATA.length === 0) return newJuzMap;
 
     JUZ_DATA.forEach((juz, index) => {
       let ayahsInThisJuzRead = 0;
-      
       for (let s = juz.start.surah; s <= juz.end.surah; s++) {
         const readCount = progress[s]?.read || 0;
         if (readCount === 0) continue;
 
         if (juz.start.surah === juz.end.surah) {
-          if (readCount >= juz.start.ayah) {
-             ayahsInThisJuzRead += Math.min(readCount, juz.end.ayah) - juz.start.ayah + 1;
-          }
+          if (readCount >= juz.start.ayah) ayahsInThisJuzRead += Math.min(readCount, juz.end.ayah) - juz.start.ayah + 1;
         } else if (s === juz.start.surah) {
-          if (readCount >= juz.start.ayah) {
-            ayahsInThisJuzRead += readCount - juz.start.ayah + 1;
-          }
+          if (readCount >= juz.start.ayah) ayahsInThisJuzRead += readCount - juz.start.ayah + 1;
         } else if (s === juz.end.surah) {
           ayahsInThisJuzRead += Math.min(readCount, juz.end.ayah);
         } else {
           ayahsInThisJuzRead += readCount;
         }
       }
-      
       newJuzMap[index].ayatRead = ayahsInThisJuzRead;
       newJuzMap[index].isCompleted = ayahsInThisJuzRead >= juz.totalAyahs;
     });
@@ -234,7 +235,7 @@ export default function App() {
   };
 
   const toggleJourneyMode = async (mode) => {
-    setJourneyMode(mode); // Update state lokal seketika
+    setJourneyMode(mode); 
     if (!user) return;
     await setDoc(doc(db, "users", user.uid), { journeyMode: mode }, { merge: true });
   };
@@ -311,11 +312,7 @@ export default function App() {
       const existingHistory = stats.khatamHistory || [];
       const newStats = { khatamCount: stats.khatamCount + 1, startDate: todayDate, khatamHistory: [newKhatamRecord, ...existingHistory] };
 
-      await setDoc(doc(db, "users", user.uid), { 
-        progress: {}, 
-        stats: newStats,
-        activeJuz: 1 
-      }, { merge: true });
+      await setDoc(doc(db, "users", user.uid), { progress: {}, stats: newStats, activeJuz: 1 }, { merge: true });
     }
   };
 
@@ -373,7 +370,6 @@ export default function App() {
 
   const filteredSurahs = SURAHS.filter(s => s.name.toLowerCase().includes(searchQuery.toLowerCase()) || s.meaning.toLowerCase().includes(searchQuery.toLowerCase()));
 
-  // PENENTUAN POSISI BURUNG
   let displayActiveJuz = activeJuz;
   if (journeyMode === 'LINEAR') {
     const firstUnfinished = juzProgress.find(j => !j.isCompleted);
@@ -394,6 +390,7 @@ export default function App() {
 
   return (
     <div className="app-container">
+      {/* HEADER TETAP SAMA */}
       <div className="curved-header" style={{ position: 'relative' }}>
         <button onClick={() => signOut(auth)} style={{ position: 'absolute', top: '20px', right: '20px', background: 'rgba(255,255,255,0.2)', border: '1px solid rgba(255,255,255,0.4)', color: 'white', padding: '6px 12px', borderRadius: '20px', fontSize: '0.75rem', cursor: 'pointer', backdropFilter: 'blur(5px)' }} title="Keluar">Keluar</button>
         <h1 style={{ margin: '0 0 10px 0', fontSize: '1.8rem' }}>Tilawah Tracker</h1>
@@ -416,6 +413,37 @@ export default function App() {
         </div>
       </div>
 
+      {showTargetModal && (
+         <div className="modal-overlay" onClick={(e) => e.target.className === 'modal-overlay' && setShowTargetModal(false)}>
+           <div className="target-modal">
+             <h3 style={{ marginTop: 0, color: '#2b7a5f' }}>Pilih Mode Target</h3>
+             <label style={{ display: 'block', margin: '15px 0 5px 0' }}>Tipe Target:</label>
+             <select className="input-field" value={tempTargetType} onChange={(e) => setTempTargetType(e.target.value)}>
+               <option value="daily">1. Target Harian (Micro-habit)</option>
+               <option value="date">2. Target Waktu Khatam (Kalkulator)</option>
+             </select>
+             {tempTargetType === "daily" ? (
+               <>
+                 <label style={{ display: 'block', margin: '15px 0 5px 0' }}>Jumlah Ayat per Hari:</label>
+                 <input type="number" className="input-field" value={tempTargetValue} onChange={(e) => setTempTargetValue(e.target.value)} />
+               </>
+             ) : (
+               <>
+                 <label style={{ display: 'block', margin: '15px 0 5px 0' }}>Tanggal Ingin Khatam:</label>
+                 <input type="date" className="input-field" value={tempTargetValue} onChange={(e) => setTempTargetValue(e.target.value)} />
+               </>
+             )}
+             <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
+               <button onClick={() => setShowTargetModal(false)} className="btn-primary" style={{ flex: 1, background: '#ff9ebd', color: 'white' }}>Batal</button>
+               <button onClick={saveTarget} className="btn-primary" style={{ flex: 1 }}>Simpan</button>
+             </div>
+           </div>
+         </div>
+       )}
+
+      {/* ============================================== */}
+      {/* DASHBOARD TAB                                */}
+      {/* ============================================== */}
       {activeTab === "dashboard" && (
         <>
           <div className="floating-bookmark">
@@ -442,79 +470,95 @@ export default function App() {
         </>
       )}
 
-      {/* HALAMAN QURAN JOURNEY (PETA OASIS 30 JUZ) */}
+      {/* ============================================== */}
+      {/* QURAN JOURNEY MAP (DESAIN BARU)                */}
+      {/* ============================================== */}
       {activeTab === "peta" && (
         <div className="map-container">
-          {/* Latar Belakang Bukit Bertumpuk */}
-          <div className="hills-background">
-             <div className="hill hill-1"></div>
-             <div className="hill hill-2"></div>
-             <div className="hill hill-3"></div>
-             <div className="hill hill-4"></div>
-          </div>
-          
           <div className="mode-toggle-box">
-            <h3 style={{ margin: '0 0 5px 0', color: '#1e5441' }}>Pengaturan Peta Oasis</h3>
-            <p style={{ margin: 0, fontSize: '0.8rem', color: '#666' }}>Pilih gaya petualanganmu hari ini</p>
+            <h3 style={{ margin: '0 0 5px 0', color: '#1e5441' }}>Pengaturan Perjalanan</h3>
+            <p style={{ margin: 0, fontSize: '0.8rem', color: '#666' }}>Pilih gayamu menaklukkan 30 Juz</p>
             <div className="mode-buttons">
               <button className={`btn-mode ${journeyMode === 'LINEAR' ? 'active' : ''}`} onClick={() => toggleJourneyMode('LINEAR')}>⛺ Ekspedisi Linear</button>
               <button className={`btn-mode ${journeyMode === 'FREE' ? 'active' : ''}`} onClick={() => toggleJourneyMode('FREE')}>🦅 Jelajah Bebas</button>
             </div>
           </div>
 
-          <div className="journey-path">
-            {juzProgress.map((juz, index) => {
-              const totalAyahInThisJuz = JUZ_DATA[juz.juz - 1].totalAyahs;
-              const progressData = calculateJuzProgress(juz.ayatRead, totalAyahInThisJuz);
-              const isLocked = journeyMode === 'LINEAR' && juz.juz > displayActiveJuz;
+          <div className="journey-zones-wrapper">
+            {ZONES.map((zone, zIndex) => {
+              // Ambil data Juz yang hanya ada di zona ini
+              const zoneJuzData = juzProgress.filter(j => j.juz >= zone.startJuz && j.juz <= zone.endJuz);
               
-              // Menentukan posisi (kiri, kanan, tengah) untuk efek liuk
-              const positions = ['left', 'center', 'right', 'center'];
-              const positionClass = `pos-${positions[index % 4]}`;
-
-              // Menghitung derajat untuk cincin progres (1/4 = 90deg, 2/4 = 180deg, dst)
-              const completedQuarters = progressData.quarters.filter(Boolean).length;
-              const progressDegrees = completedQuarters * 90;
-
               return (
-                <div key={juz.juz} className={`juz-node-wrapper ${positionClass}`}>
-                  <div className={`juz-node-circle ${isLocked ? 'locked' : ''} ${juz.isCompleted ? 'completed' : ''}`}>
-                    {/* Cincin Progres */}
-                    <div 
-                      className="progress-ring" 
-                      style={{ 
-                        background: `conic-gradient(#2b7a5f ${progressDegrees}deg, transparent 0)` 
-                      }}
-                    ></div>
-                    
-                    {/* Konten Dalam Lingkaran */}
-                    <div className="node-content">
-                        {isLocked ? (
-                            <span className="lock-icon">🔒</span>
-                        ) : (
-                            <span className="juz-number">{juz.juz}</span>
-                        )}
-                    </div>
-                    
-                     {/* Mascot Burung */}
-                    {displayActiveJuz === juz.juz && !juz.isCompleted && (
-                      <div className="origami-bird" title="Posisi Anda Saat Ini">
-                        <svg viewBox="0 0 24 24" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
-                          <path d="M22,12 c-2-4.7-5.8-7.6-10-7.6 S4.1,7.3,2.1,12 a1,1,0,0,0,0,.8 c2.1,4.7,5.9,7.6,10,7.6 s7.9-2.9,9.9-7.6 A1,1,0,0,0,22,12 Z M12,18 c-3.2,0-6.2-2.3-7.9-6 C5.8,8.3,8.8,6,12,6 s6.2,2.3,7.9,6 C18.2,15.7,15.2,18,12,18 Z" fill="#2b7a5f"/>
-                          <path d="M12,8 a4,4,0,1,0,4,4 A4,4,0,0,0,12,8 Zm0,6 a2,2,0,1,1,2-2 A2,2,0,0,1,12,14 Z" fill="#fcd34d"/>
-                        </svg>
-                      </div>
-                    )}
+                <div key={zone.id} className={`zone-section ${zone.bgClass}`}>
+                  
+                  {/* TITLE ZONA (Tampil persis seperti mockup) */}
+                  <div className="zone-header">
+                    <div className="zone-icon">{zone.icon}</div>
+                    <h2 className="zone-title">{zone.title}</h2>
+                  </div>
+
+                  <div className="journey-path">
+                    {zoneJuzData.map((juz, index) => {
+                      const totalAyah = JUZ_DATA[juz.juz - 1].totalAyahs;
+                      const progressData = calculateJuzProgress(juz.ayatRead, totalAyah);
+                      const isLocked = journeyMode === 'LINEAR' && juz.juz > displayActiveJuz;
+                      
+                      // Pola Meliuk-liuk: Kiri -> Tengah -> Kanan -> Tengah
+                      const positions = ['pos-left', 'pos-center', 'pos-right', 'pos-center'];
+                      const positionClass = positions[index % 4];
+                      
+                      // Menghitung panjang garis oranye SVG untuk cincin (Maks = 188px)
+                      const completedQuarters = progressData.quarters.filter(Boolean).length;
+                      const dashOffset = 188 - (completedQuarters * 47); 
+
+                      return (
+                        <div key={juz.juz} className={`juz-node-wrapper ${positionClass}`}>
+                          <div className={`juz-node-circle ${isLocked ? 'locked' : ''} ${juz.isCompleted ? 'completed' : ''}`}>
+                            
+                            {/* CINCIN SVG BERSEGMEN */}
+                            {!isLocked && (
+                                <svg width="70" height="70" viewBox="0 0 70 70" className="progress-svg">
+                                  {/* Cincin Putus-putus Dasar (Putih transparan) */}
+                                  <circle cx="35" cy="35" r="30" fill="white" stroke="rgba(255,255,255,0.7)" strokeWidth="4" strokeDasharray="42 5" transform="rotate(-90 35 35)" />
+                                  {/* Cincin Oranye Aktif */}
+                                  <circle cx="35" cy="35" r="30" fill="none" stroke="#f59e0b" strokeWidth="6" strokeDasharray="188" strokeDashoffset={dashOffset} strokeLinecap="round" transform="rotate(-90 35 35)" style={{transition: 'stroke-dashoffset 1s ease'}}/>
+                                </svg>
+                            )}
+
+                            {/* ISI TENGAH LINGKARAN */}
+                            <div className="node-content">
+                                {isLocked ? <span className="lock-icon">🔒</span> : <span className="juz-number">{juz.juz}</span>}
+                            </div>
+                            
+                            {/* BURUNG ORIGAMI 3D */}
+                            {displayActiveJuz === juz.juz && !juz.isCompleted && (
+                              <div className="origami-bird" title="Posisi Anda Saat Ini">
+                                <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                  <path d="M32 20L44 8L38 24L32 20Z" fill="#FEF08A"/>
+                                  <path d="M32 20L20 8L26 24L32 20Z" fill="#FDE047"/>
+                                  <path d="M32 20L26 24L32 40L38 24L32 20Z" fill="#FACC15"/>
+                                  <path d="M32 40L26 24L12 28L32 40Z" fill="#EAB308"/>
+                                  <path d="M32 40L38 24L52 28L32 40Z" fill="#CA8A04"/>
+                                  <path d="M32 40L16 56L24 44L32 40Z" fill="#A16207"/>
+                                </svg>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               );
             })}
           </div>
-          <div style={{ textAlign: 'center', marginTop: '40px', color: '#888', fontSize: '0.8rem', fontStyle: 'italic', position: 'relative', zIndex: 10 }}>~ Perjalanan 30 Juz ~</div>
         </div>
       )}
 
-      {/* HALAMAN STATISTIK DAN LOG DIKEMBALIKAN */}
+      {/* ============================================== */}
+      {/* STATISTIK TAB                                */}
+      {/* ============================================== */}
       {activeTab === "statistik" && (
         <div style={{ padding: '20px' }}>
           <div className="chart-card">
@@ -533,49 +577,32 @@ export default function App() {
               })}
             </div>
           </div>
-
           <div className="chart-card">
             <h4 style={{ margin: '0 0 10px 0', color: '#333' }}>Kalender Konsistensi (28 Hari)</h4>
             <div className="heatmap-grid">
               {last28Days.map((dObj, index) => {
                 const ayahs = dailyStats[dObj.fullDate] || 0;
-                let bgColor = "#ebedf0";
-                let textColor = "#888"; 
-                
+                let bgColor = "#ebedf0"; let textColor = "#888"; 
                 if (ayahs > 0 && ayahs <= 15) { bgColor = "#c2dfd1"; textColor = "#2b7a5f"; }
                 else if (ayahs > 15 && ayahs <= 40) { bgColor = "#7ebc9f"; textColor = "white"; }
                 else if (ayahs > 40 && ayahs <= 80) { bgColor = "#2b7a5f"; textColor = "white"; }
                 else if (ayahs > 80) { bgColor = "#1e5441"; textColor = "white"; }
-                
-                return (
-                  <div key={index} className="heatmap-box" style={{ background: bgColor, color: textColor }} title={`${dObj.fullDate}: ${ayahs} Ayat`}>
-                    {dObj.dateNum}
-                  </div>
-                );
+                return (<div key={index} className="heatmap-box" style={{ background: bgColor, color: textColor }} title={`${dObj.fullDate}: ${ayahs} Ayat`}>{dObj.dateNum}</div>);
               })}
-            </div>
-            <div className="heatmap-legend">
-              <span>Sedikit</span>
-              <div className="legend-box" style={{ background: '#ebedf0' }}></div>
-              <div className="legend-box" style={{ background: '#c2dfd1' }}></div>
-              <div className="legend-box" style={{ background: '#7ebc9f' }}></div>
-              <div className="legend-box" style={{ background: '#2b7a5f' }}></div>
-              <div className="legend-box" style={{ background: '#1e5441' }}></div>
-              <span>Banyak</span>
             </div>
           </div>
         </div>
       )}
 
+      {/* ============================================== */}
+      {/* RIWAYAT (LOG) TAB                                */}
+      {/* ============================================== */}
       {activeTab === "log" && (
         <div style={{ padding: '20px' }}>
           <h2 style={{ color: '#2b7a5f', margin: '0 0 15px 0' }}>Riwayat Tilawah</h2>
-
           {stats.khatamHistory && stats.khatamHistory.length > 0 && (
             <div style={{ marginBottom: '25px' }}>
-              <h4 style={{ color: '#fb923c', margin: '0 0 10px 0', display: 'flex', alignItems: 'center', gap: '5px' }}>
-                ✨ <span>Catatan Khatam</span>
-              </h4>
+              <h4 style={{ color: '#fb923c', margin: '0 0 10px 0', display: 'flex', alignItems: 'center', gap: '5px' }}>✨ <span>Catatan Khatam</span></h4>
               <div className="receipt-container" style={{ padding: '10px 15px' }}>
                 {stats.khatamHistory.map((kh, idx) => (
                   <div key={idx} className="receipt-item" style={{ borderBottom: '1px dashed #d1cbbd', paddingBottom: '8px', marginBottom: '8px' }}>
@@ -586,40 +613,30 @@ export default function App() {
               </div>
             </div>
           )}
-
           <div className="filter-toggle">
             <button className={`filter-btn ${historyFilter === "7" ? "active" : ""}`} onClick={() => setHistoryFilter("7")}>7 Hari Terakhir</button>
             <button className={`filter-btn ${historyFilter === "30" ? "active" : ""}`} onClick={() => setHistoryFilter("30")}>30 Hari Terakhir</button>
           </div>
-          
           <div className="receipt-container" style={{ maxHeight: 'none', paddingBottom: '20px', marginBottom: '80px' }}>
             {filteredGlobalHistory.length > 0 ? (
               filteredGlobalHistory.map((hist, i) => (
                 <div key={i} className="receipt-item" style={{ flexDirection: 'column', alignItems: 'flex-start' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', marginBottom: '5px' }}>
                     <span className="receipt-date">{hist.date}</span>
-                    <span style={{ fontSize: '0.75rem', fontWeight: 'bold', color: '#2b7a5f', background: '#e6f2ed', padding: '2px 8px', borderRadius: '5px' }}>
-                      +{hist.ayahsAdded || 0} Ayat
-                    </span>
+                    <span style={{ fontSize: '0.75rem', fontWeight: 'bold', color: '#2b7a5f', background: '#e6f2ed', padding: '2px 8px', borderRadius: '5px' }}>+{hist.ayahsAdded || 0} Ayat</span>
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', alignItems: 'center' }}>
-                    <span style={{ fontWeight: 'bold', color: '#333' }}>
-                      {hist.surahName} 
-                      <span style={{ color: '#aaa', fontWeight: 'normal', fontSize: '0.8rem', marginLeft: '5px' }}>({hist.totalAyahs} ayat)</span>
-                    </span>
+                    <span style={{ fontWeight: 'bold', color: '#333' }}>{hist.surahName} <span style={{ color: '#aaa', fontWeight: 'normal', fontSize: '0.8rem', marginLeft: '5px' }}>({hist.totalAyahs} ayat)</span></span>
                     <span className="receipt-note">{hist.note}</span>
                   </div>
                 </div>
               ))
-            ) : (
-              <div style={{ textAlign: 'center', color: '#888', marginTop: '10px', padding: '20px' }}>
-                <p>Belum ada riwayat tilawah di periode ini.</p>
-              </div>
-            )}
+            ) : (<div style={{ textAlign: 'center', color: '#888', marginTop: '10px', padding: '20px' }}><p>Belum ada riwayat tilawah di periode ini.</p></div>)}
           </div>
         </div>
       )}
 
+      {/* NAVBAR BAWAH */}
       <div className="bottom-nav">
         <button className={`nav-btn ${activeTab === 'dashboard' ? 'active' : ''}`} onClick={() => setActiveTab('dashboard')}><span style={{ fontSize: '1.4rem' }}>🏠</span> Dashboard</button>
         <button className={`nav-btn ${activeTab === 'statistik' ? 'active' : ''}`} onClick={() => setActiveTab('statistik')}><span style={{ fontSize: '1.4rem' }}>📊</span> Statistik</button>
@@ -627,8 +644,8 @@ export default function App() {
         <button className={`nav-btn ${activeTab === 'log' ? 'active' : ''}`} onClick={() => setActiveTab('log')}><span style={{ fontSize: '1.4rem' }}>📜</span> Riwayat</button>
       </div>
 
-      {/* SISA MODAL SURAH */}
-       {selectedSurah && (
+      {/* MODAL SURAH */}
+      {selectedSurah && (
         <div className="modal-overlay" onClick={(e) => e.target.className === 'modal-overlay' && setSelectedSurah(null)}>
           <div className="modal-content">
             <button className="close-btn" onClick={() => setSelectedSurah(null)}>&times;</button>
@@ -637,37 +654,25 @@ export default function App() {
               <h2 style={{ margin: '0', color: '#2b7a5f' }}>{selectedSurah.name}</h2>
               <p style={{ margin: '5px 0 0 0', color: '#666', fontStyle: 'italic' }}>"{selectedSurah.meaning}"</p>
               <div style={{ display: 'inline-block', background: '#e2e8f0', color: '#555', padding: '3px 10px', borderRadius: '10px', fontSize: '0.8rem', marginTop: '5px', fontWeight: 'bold' }}>{selectedSurah.juz}</div>
-              
               <h3 style={{ margin: '15px 0 5px 0', color: '#2b7a5f', fontSize: '1.5rem' }}>
                 {Math.round(((progress[selectedSurah.id]?.read || 0) / selectedSurah.ayahs) * 100)}% 
-                <span style={{ fontSize: '0.9rem', color: '#888', fontWeight: 'normal', marginLeft: '8px' }}>
-                  ({progress[selectedSurah.id]?.read || 0} / {selectedSurah.ayahs} Ayat)
-                </span>
+                <span style={{ fontSize: '0.9rem', color: '#888', fontWeight: 'normal', marginLeft: '8px' }}>({progress[selectedSurah.id]?.read || 0} / {selectedSurah.ayahs} Ayat)</span>
               </h3>
             </div>
-            
             <div className="progress-bar-bg"><div className="progress-bar-fill" style={{ width: `${(progress[selectedSurah.id]?.read || 0) / selectedSurah.ayahs * 100}%`, background: getProgressBarColor((progress[selectedSurah.id]?.read || 0) / selectedSurah.ayahs * 100) }}></div></div>
-            
             <div style={{ marginTop: '20px' }}>
               <label>Tanggal:</label><input type="date" className="input-field" value={date} onChange={(e) => setDate(e.target.value)} />
               <div style={{ display: 'flex', gap: '10px' }}><div style={{ flex: 1 }}><label>Dari Ayat:</label><input type="number" className="input-field" value={startAyah} onChange={(e) => setStartAyah(e.target.value)} /></div><div style={{ flex: 1 }}><label>Sampai Ayat:</label><input type="number" className="input-field" value={endAyah} onChange={(e) => setEndAyah(e.target.value)} /></div></div>
               <button onClick={() => saveTracking(false)} className="btn-primary">Simpan Progress</button>
               <button onClick={() => saveTracking(true)} className="btn-gold" style={{ background: '#2b7a5f' }}>Tandai Selesai 100%</button>
             </div>
-            
             <div style={{ marginTop: '20px', borderTop: '1px solid #eee', paddingTop: '10px' }}>
               <h4 style={{ marginBottom: '5px' }}>Riwayat Surat Ini</h4>
-              
               <div className="receipt-container">
                 {(progress[selectedSurah.id]?.history || []).map((hist, i) => (
                   <div key={i} className="receipt-item">
-                    <div>
-                      <span className="receipt-date">{hist.date}</span>
-                      <span className="receipt-note">{hist.note}</span>
-                    </div>
-                    <button onClick={() => deleteHistory(i, selectedSurah.id)} style={{ background: 'none', border: 'none', color: '#e53e3e', cursor: 'pointer', fontSize: '1.2rem', padding: '5px' }} title="Hapus">
-                      🗑️
-                    </button>
+                    <div><span className="receipt-date">{hist.date}</span><span className="receipt-note">{hist.note}</span></div>
+                    <button onClick={() => deleteHistory(i, selectedSurah.id)} style={{ background: 'none', border: 'none', color: '#e53e3e', cursor: 'pointer', fontSize: '1.2rem', padding: '5px' }} title="Hapus">🗑️</button>
                   </div>
                 ))}
               </div>
