@@ -206,6 +206,20 @@ export default function App() {
     setDate(new Date().toISOString().split('T')[0]);
   };
 
+  // --- FUNGSI GANTI MODE JOURNEY ---
+  const toggleJourneyMode = async (mode) => {
+    setJourneyMode(mode);
+    if (!user) return;
+
+    let newActiveJuz = activeJuz;
+    if (mode === 'LINEAR') {
+      const firstUnfinished = juzProgress.find(j => !j.isCompleted);
+      newActiveJuz = firstUnfinished ? firstUnfinished.juz : 30;
+    }
+    setActiveJuz(newActiveJuz);
+    await setDoc(doc(db, "users", user.uid), { journeyMode: mode, activeJuz: newActiveJuz }, { merge: true });
+  };
+
   const saveTracking = async (isComplete = false) => {
     if (!user) return;
     let readCount = progress[selectedSurah.id]?.read || 0;
@@ -231,13 +245,12 @@ export default function App() {
     }
 
     const updatedProgress = { ...progress, [selectedSurah.id]: { read: readCount, history: newHistory } };   
+    
     // --- TAMBAHKAN LOGIKA QURAN JOURNEY DI SINI ---
     let updatedJuzProgress = [...juzProgress];
     let newActiveJuz = activeJuz;
 
-    // Hanya proses jika ada ayat yang ditambah
     if (ayahsAdded > 0) {
-      // Cari target ujung ayat yang dibaca
       const targetEnd = isComplete ? selectedSurah.ayahs : parseInt(endAyah);
       const targetJuzData = getJuzFromSurahAndAyah(selectedSurah.id, targetEnd);
       
@@ -245,7 +258,6 @@ export default function App() {
         const targetJuzNumber = targetJuzData.juz;
         const targetIndex = targetJuzNumber - 1;
         
-        // Hitung penambahan ayat ke Juz tersebut
         const currentAyatRead = updatedJuzProgress[targetIndex].ayatRead;
         const maxAyat = JUZ_DATA[targetIndex].totalAyahs;
         const updatedAyatRead = Math.min(currentAyatRead + ayahsAdded, maxAyat);
@@ -256,11 +268,9 @@ export default function App() {
           isCompleted: updatedAyatRead === maxAyat
         };
 
-        // Atur pergerakan burung origami
         if (journeyMode === 'FREE') {
-          newActiveJuz = targetJuzNumber; // Langsung loncat
+          newActiveJuz = targetJuzNumber; 
         } else {
-          // Linear: Cari juz pertama yang belum selesai
           const firstUnfinished = updatedJuzProgress.find(j => !j.isCompleted);
           newActiveJuz = firstUnfinished ? firstUnfinished.juz : 30;
         }
@@ -269,9 +279,7 @@ export default function App() {
         setActiveJuz(newActiveJuz);
       }
     }
-    // --- AKHIR LOGIKA QURAN JOURNEY ---
 
-    // UBAH BARIS SETDOC MBUN MENJADI SEPERTI INI AGAR DATA PETA IKUT TERSIMPAN:
     await setDoc(doc(db, "users", user.uid), { 
       progress: updatedProgress,
       journeyMode: journeyMode,
@@ -316,38 +324,22 @@ export default function App() {
       };
       
       const existingHistory = stats.khatamHistory || [];
-
-      // Definisi newStats harus dilakukan SEBELUM setDoc dipanggil
       const newStats = { 
         khatamCount: stats.khatamCount + 1, 
         startDate: todayDate, 
         khatamHistory: [newKhatamRecord, ...existingHistory]
       };
 
-      // --- BUAT ARRAY JUZ KOSONG UNTUK RESET PETA ---
       const resetJuzMap = Array.from({ length: 30 }, (_, i) => ({
         juz: i + 1, ayatRead: 0, isCompleted: false
       }));
 
-      // SIMPAN SEMUANYA KE FIREBASE DALAM SATU PERINTAH
       await setDoc(doc(db, "users", user.uid), { 
         progress: {}, 
         stats: newStats,
-        activeJuz: 1, // Burung kembali ke Juz 1
-        juzProgress: resetJuzMap // Peta di-reset jadi abu-abu
+        activeJuz: 1, 
+        juzProgress: resetJuzMap 
       }, { merge: true });
-    }
-  };
-      
-      const existingHistory = stats.khatamHistory || [];
-
-      const newStats = { 
-        khatamCount: stats.khatamCount + 1, 
-        startDate: todayDate, 
-        khatamHistory: [newKhatamRecord, ...existingHistory]
-      };
-      
-      await setDoc(doc(db, "users", user.uid), { progress: {}, stats: newStats }, { merge: true });
     }
   };
 
@@ -592,8 +584,7 @@ export default function App() {
         </div>
       )}
 
-      {/* HALAMAN QURAN JOURNEY (PETA OASIS 30 JUZ)           */}
-      {/* ==================================================== */}
+      {/* HALAMAN QURAN JOURNEY (PETA OASIS 30 JUZ) */}
       {activeTab === "peta" && (
         <div className="map-container">
           
@@ -618,19 +609,15 @@ export default function App() {
 
           <div className="paper-cut-stack">
             {juzProgress.map((juz) => {
-              // 1. Tentukan Tema Berdasarkan Nomor Juz
               let themeClass = "theme-dawn";
               let themeName = "The Dawn Springs 🌅";
               if (juz.juz >= 6 && juz.juz <= 15) { themeClass = "theme-palm"; themeName = "The Palm Valley 🌴"; }
               else if (juz.juz >= 16 && juz.juz <= 25) { themeClass = "theme-lantern"; themeName = "The Lantern Trail 🏮"; }
               else if (juz.juz >= 26) { themeClass = "theme-starry"; themeName = "The Starry Sky ✨"; }
 
-              // 2. Hitung Progress 1/4 menggunakan Utils
               const totalAyahInThisJuz = JUZ_DATA[juz.juz - 1].totalAyahs;
               const progressData = calculateJuzProgress(juz.ayatRead, totalAyahInThisJuz);
               
-              // 3. Cek Status Kunci (Linear Mode)
-              // Kalau Linear, dan ada Juz SEBELUMNYA yang belum selesai, maka Juz ini kekunci
               const isLocked = journeyMode === 'LINEAR' && juz.juz > activeJuz;
 
               return (
@@ -638,9 +625,7 @@ export default function App() {
                   key={juz.juz} 
                   className={`juz-node ${themeClass} ${isLocked ? 'locked' : ''} ${juz.isCompleted ? 'completed' : ''}`}
                 >
-                  <div className="node-number-circle">
-                    {juz.juz}
-                  </div>
+                  <div className="node-number-circle">{juz.juz}</div>
                   
                   <div style={{ flex: 1 }}>
                     <h4 style={{ margin: '0 0 2px 0' }}>Oasis {juz.juz}</h4>
@@ -648,7 +633,6 @@ export default function App() {
                       {themeName} • {juz.ayatRead}/{totalAyahInThisJuz} Ayat
                     </p>
                     
-                    {/* Render 4 Titik (Quarter) */}
                     <div className="quarter-dots">
                       {[0, 1, 2, 3].map((qIdx) => (
                         <div key={qIdx} className={`dot ${progressData.quarters[qIdx] ? 'filled' : ''}`}></div>
@@ -656,11 +640,9 @@ export default function App() {
                     </div>
                   </div>
 
-                  {/* Render Burung Mascot jika ini adalah Juz Aktif */}
                   {activeJuz === juz.juz && !juz.isCompleted && (
                     <div className="origami-bird" title="Posisi Anda Saat Ini"></div>
                   )}
-                  {/* Kalau semua sudah khatam, burung hinggap di Juz 30 */}
                   {juz.juz === 30 && activeJuz === 30 && juz.isCompleted && (
                      <div className="origami-bird" style={{ filter: 'hue-rotate(90deg)' }} title="Alhamdulillah Khatam!"></div>
                   )}
@@ -680,7 +662,6 @@ export default function App() {
         <div style={{ padding: '20px' }}>
           <h2 style={{ color: '#2b7a5f', margin: '0 0 15px 0' }}>Riwayat Tilawah</h2>
 
-          {/* --- TAMPILAN RIWAYAT KHATAM --- */}
           {stats.khatamHistory && stats.khatamHistory.length > 0 && (
             <div style={{ marginBottom: '25px' }}>
               <h4 style={{ color: '#fb923c', margin: '0 0 10px 0', display: 'flex', alignItems: 'center', gap: '5px' }}>
