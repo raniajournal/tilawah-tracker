@@ -1,45 +1,547 @@
-@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap');
 
 body {
   margin: 0;
+  padding: 0;
   font-family: 'Nunito', sans-serif;
   background-color: #f7f3ec;
   color: #333;
 }
 
-.app-container { padding-bottom: 80px; }
-
-/* Sisa CSS global kamu bisa ditempelkan di bawah sini... (seperti header, card, dashboard, dll) */
-/* HEADER & NAVBAR BAWAH (FONDASI) */
-.curved-header { background: #2b7a5f; color: white; padding: 2rem 1.5rem 4rem 1.5rem; border-bottom-left-radius: 40px; border-bottom-right-radius: 40px; text-align: center; box-shadow: 0 10px 20px rgba(43, 122, 95, 0.2); position: relative; z-index: 10; }
-.bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: white; display: flex; justify-content: space-around; padding: 15px 0; box-shadow: 0 -5px 20px rgba(0,0,0,0.05); border-top-left-radius: 25px; border-top-right-radius: 25px; z-index: 100; max-width: 450px; margin: 0 auto; }
-.nav-btn { background: none; border: none; font-size: 1rem; font-family: inherit; color: #aaa; font-weight: bold; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 5px; }
-.nav-btn.active { color: #2b7a5f; }
-
-/* ... (Tempelkan seluruh CSS Dashboard, Statistik, dan Riwayat yang sudah stabil sebelumnya di sini) ... */
+.app-container {
+  padding-bottom: 90px;
+  min-height: 100vh;
+}
 
 /* =========================================
-   MILESTONE POP-UP (EFEK BUKU)
+   HEADER & STATISTIK UTAMA
 ========================================= */
-.milestone-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center; z-index: 1100; }
-.milestone-popup { perspective: 1000px; }
+.curved-header {
+  background: #2b7a5f;
+  color: white;
+  padding: 2rem 1.5rem 4rem 1.5rem;
+  border-bottom-left-radius: 40px;
+  border-bottom-right-radius: 40px;
+  text-align: center;
+  box-shadow: 0 10px 20px rgba(43, 122, 95, 0.2);
+  position: relative;
+  z-index: 10;
+}
+
+.glass-stat-card {
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 20px;
+  padding: 20px;
+  margin: 15px auto;
+  width: 90%;
+  max-width: 450px;
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.05);
+  text-align: left;
+  box-sizing: border-box;
+}
+
+.stat-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+  font-size: 0.85rem;
+  color: #fff;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  padding-bottom: 5px;
+}
+
+.stat-row:last-child {
+  border-bottom: none;
+}
+
+.header-progress-bg {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 10px;
+  height: 12px;
+  width: 100%;
+  margin: 15px auto 5px auto;
+  overflow: hidden;
+}
+
+.header-progress-fill {
+  background: #e5b05c;
+  height: 100%;
+  transition: width 0.5s ease;
+}
+
+/* =========================================
+   DASHBOARD, BOOKMARK & KARTU SURAT
+========================================= */
+.floating-bookmark {
+  background: white;
+  margin: -20px 1.5rem 2rem 1.5rem;
+  padding: 1rem;
+  border-radius: 15px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-left: 5px solid #e5b05c;
+  position: relative;
+  z-index: 20;
+}
+
+.search-container {
+  padding: 0 1.5rem;
+  margin-bottom: 20px;
+}
+
+.search-input {
+  width: 100%;
+  padding: 12px 20px;
+  border-radius: 15px;
+  border: 1px solid #ddd;
+  background: white;
+  font-size: 0.95rem;
+  font-family: inherit;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.02);
+  outline: none;
+  box-sizing: border-box;
+}
+
+.search-input:focus {
+  border-color: #2b7a5f;
+}
+
+.paper-cut-card {
+  background: #fff;
+  border-radius: 20px;
+  padding: 1rem;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 
+    4px 4px 0px #e0d8c8, 
+    8px 8px 0px #c2dfd1, 
+    12px 12px 0px #2b7a5f;
+  border: 2px solid #e0d8c8;
+}
+
+.paper-cut-card:hover {
+  transform: translateY(-5px) translateX(-5px);
+  box-shadow: 
+    6px 6px 0px #e0d8c8, 
+    12px 12px 0px #c2dfd1, 
+    18px 18px 0px #2b7a5f;
+}
+
+.surah-image {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  border-radius: 12px;
+  object-fit: contain;
+  margin-bottom: 10px;
+}
+
+.progress-bar-bg {
+  background: #e2e8f0;
+  border-radius: 10px;
+  height: 12px;
+  width: 100%;
+  overflow: hidden;
+  margin-top: 10px;
+}
+
+.progress-bar-fill {
+  background: #e5b05c;
+  height: 100%;
+  transition: width 0.5s ease;
+}
+
+/* =========================================
+   TOMBOL, INPUT & MODAL POP-UP
+========================================= */
+.input-field {
+  width: 100%;
+  padding: 10px;
+  margin: 5px 0 15px 0;
+  border: 2px solid #e0d8c8;
+  border-radius: 10px;
+  font-family: inherit;
+  box-sizing: border-box;
+}
+
+.btn-primary {
+  background: #2b7a5f;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 10px;
+  font-weight: bold;
+  cursor: pointer;
+  width: 100%;
+}
+
+.btn-gold {
+  background: #e5b05c;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 10px;
+  font-weight: bold;
+  cursor: pointer;
+  width: 100%;
+  margin-top: 10px;
+}
+
+.modal-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal-content, .target-modal {
+  background: white;
+  padding: 2rem;
+  border-radius: 25px;
+  width: 90%;
+  max-width: 400px;
+  max-height: 80vh;
+  overflow-y: auto;
+  position: relative;
+  color: #333;
+  box-sizing: border-box;
+}
+
+.close-btn {
+  position: absolute;
+  top: 10px;
+  right: 15px;
+  font-size: 2.5rem;
+  font-weight: bold;
+  color: #aaa;
+  cursor: pointer;
+  background: none;
+  border: none;
+  line-height: 1;
+}
+
+.close-btn:hover {
+  color: #e53e3e;
+}
+
+/* =========================================
+   NAVIGASI BAWAH (NORMAL DI PC & MOBILE)
+========================================= */
+.bottom-nav {
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  background: white;
+  display: flex;
+  justify-content: space-around;
+  padding: 15px 0;
+  box-shadow: 0 -5px 20px rgba(0, 0, 0, 0.05);
+  border-top-left-radius: 25px;
+  border-top-right-radius: 25px;
+  z-index: 100;
+}
+
+.nav-btn {
+  background: none;
+  border: none;
+  font-size: 1rem;
+  font-family: inherit;
+  color: #aaa;
+  font-weight: bold;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+}
+
+.nav-btn.active {
+  color: #2b7a5f;
+}
+
+/* =========================================
+   STATISTIK & RIWAYAT
+========================================= */
+.chart-card {
+  background: white;
+  border-radius: 20px;
+  padding: 20px;
+  margin: 15px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
+}
+
+.chart-container {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  height: 120px;
+  margin-top: 20px;
+}
+
+.bar-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 12%;
+  gap: 5px;
+}
+
+.bar-bg {
+  height: 90px;
+  width: 15px;
+  background: #f7f3ec;
+  border-radius: 10px;
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+}
+
+.bar-fill {
+  width: 100%;
+  background: #e5b05c;
+  border-radius: 10px;
+  transition: height 0.5s ease;
+}
+
+.date-label {
+  font-size: 0.6rem;
+  color: #888;
+  margin-top: 5px;
+  text-align: center;
+  line-height: 1.2;
+}
+
+.heatmap-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 8px;
+  margin-top: 15px;
+}
+
+.heatmap-box {
+  aspect-ratio: 1;
+  border-radius: 4px;
+  background: #f7f3ec;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.65rem;
+  color: #fff;
+  font-weight: bold;
+  transition: transform 0.2s;
+}
+
+.heatmap-box:hover {
+  transform: scale(1.1);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+.heatmap-legend {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 5px;
+  font-size: 0.7rem;
+  color: #888;
+  margin-top: 15px;
+}
+
+.legend-box {
+  width: 12px;
+  height: 12px;
+  border-radius: 2px;
+}
+
+.filter-toggle {
+  display: flex;
+  background: #f7f3ec;
+  border-radius: 10px;
+  margin-bottom: 15px;
+  overflow: hidden;
+}
+
+.filter-btn {
+  flex: 1;
+  padding: 8px;
+  border: none;
+  background: transparent;
+  color: #888;
+  font-size: 0.8rem;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.filter-btn.active {
+  background: #2b7a5f;
+  color: white;
+}
+
+.receipt-container {
+  background: #faf9f5;
+  border: 2px dashed #d1cbbd;
+  border-radius: 8px;
+  padding: 10px 15px;
+  margin-top: 10px;
+  max-height: 250px;
+  overflow-y: auto;
+  box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.02);
+}
+
+.receipt-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 0;
+  border-bottom: 1px dashed #d1cbbd;
+  font-family: 'Courier New', Courier, monospace;
+}
+
+.receipt-item:last-child {
+  border-bottom: none;
+}
+
+.receipt-date {
+  color: #888;
+  display: block;
+  font-size: 0.75rem;
+  margin-bottom: 3px;
+  font-family: sans-serif;
+}
+
+.receipt-note {
+  color: #2b7a5f;
+  font-weight: bold;
+  font-size: 0.95rem;
+}
+
+/* =========================================
+   HALAMAN LOGIN GLASSMORPHISM
+========================================= */
+.login-page {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  background-image: url('/images/pc-bg2.webp');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  padding: 20px;
+}
+
+@media (max-width: 768px) {
+  .login-page {
+    background-image: url('/images/hp-bg2.webp');
+  }
+}
+
+.login-glass-box {
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  border-radius: 20px;
+  padding: 40px 30px;
+  width: 90%;
+  max-width: 450px;
+  text-align: center;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+}
+
+.login-hadith {
+  font-size: 0.95rem;
+  font-style: italic;
+  color: #333;
+  line-height: 1.6;
+  margin-bottom: 20px;
+  text-shadow: 0 1px 2px rgba(255, 255, 255, 0.5);
+}
+
+.login-motivation {
+  font-size: 0.9rem;
+  color: #1e5441;
+  font-weight: bold;
+  margin-bottom: 30px;
+}
+
+.btn-google {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  background: white;
+  color: #555;
+  border: none;
+  padding: 12px 25px;
+  border-radius: 25px;
+  font-size: 1rem;
+  font-weight: bold;
+  cursor: pointer;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.btn-google:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+}
+
+.btn-google img {
+  width: 20px;
+  height: 20px;
+}
+
+/* =========================================
+   MILESTONE POP-UP (EFEK BUKU 3D)
+========================================= */
+.milestone-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1100;
+}
+
+.milestone-popup {
+  perspective: 1000px;
+}
+
 .popup-book-effect {
   background: white;
   padding: 40px 30px;
   border-radius: 20px;
   text-align: center;
   width: 300px;
-  box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
   transform: rotateX(20deg) scale(0.8);
   animation: popBookOpen 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
 }
-@keyframes popBookOpen { to { transform: rotateX(0deg) scale(1); } }
+
+@keyframes popBookOpen {
+  to { transform: rotateX(0deg) scale(1); }
+}
+
 .sticker-badge {
   display: inline-block;
   background: #fcd34d;
   padding: 20px;
   border-radius: 50%;
   border: 4px dashed #fff;
-  box-shadow: 0 8px 15px rgba(0,0,0,0.2), inset 0 4px 6px rgba(255,255,255,0.5);
+  box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2), inset 0 4px 6px rgba(255, 255, 255, 0.5);
 }
-.badge-icon { font-size: 3rem; filter: drop-shadow(0 4px 4px rgba(0,0,0,0.1)); }
+
+.badge-icon {
+  font-size: 3rem;
+  filter: drop-shadow(0 4px 4px rgba(0, 0, 0, 0.1));
+}
