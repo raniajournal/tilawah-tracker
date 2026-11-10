@@ -1,150 +1,280 @@
 /* =========================================
-   QURAN JOURNEY MAP (BACKGROUND IMAGES)
+   PEMBUNGKUS LUAR (UNTUK MARGIN KIRI-KANAN PC)
 ========================================= */
+.map-outer-wrapper {
+  width: 100%;
+  background-color: #f7f3ec;
+  display: flex;
+  justify-content: center;
+}
+
 .map-paper-box {
   padding: 0;
   width: 100%;
-  /* Batasi lebar maksimal hanya untuk peta, tengahkan posisinya */
-  max-width: 450px; 
-  margin: 0 auto; 
+  max-width: 450px;
+  margin: 0 auto;
   min-height: 100vh;
-  /* Agar bayangan/elemen yang keluar tidak membuat scroll ngang (horizontal) */
-  overflow-x: hidden; 
+  overflow-x: hidden;
+  /* Warna dasar gelap di bagian paling bawah agar menyatu dengan Starry Sky */
+  background-color: #091235;
+  box-shadow: 0 0 35px rgba(0, 0, 0, 0.12);
 }
 
+/* =========================================
+   KOTAK PENGATURAN MODE
+========================================= */
 .mode-toggle-box {
-  background: rgba(255, 255, 255, 0.95);
+  background: rgba(255, 255, 255, 0.92);
   backdrop-filter: blur(10px);
   padding: 15px;
   border-radius: 20px;
-  box-shadow: 0 10px 20px rgba(0,0,0,0.05);
-  margin: 20px 20px 40px 20px;
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.08);
+  margin: 0 20px 35px 20px;
   text-align: center;
   position: relative;
   z-index: 100;
 }
-.mode-buttons { display: flex; gap: 10px; margin-top: 10px; background: #f1f0ea; padding: 5px; border-radius: 15px; }
-.btn-mode { flex: 1; padding: 10px; border: none; border-radius: 12px; font-weight: bold; font-size: 0.85rem; color: #888; background: transparent; cursor: pointer; transition: all 0.3s; }
-.btn-mode.active { background: #2b7a5f; color: white; box-shadow: 0 4px 10px rgba(43, 122, 95, 0.3); }
 
-.journey-zones-wrapper { 
-  display: flex; 
-  flex-direction: column; 
-}
-/* --- TUMPANG TINDIH BACKGROUND GAMBAR --- */
-.zone-section { 
-  position: relative; 
-  background-size: cover;
-  background-position: center;
-  /* Tambahkan filter drop-shadow di SINI, bukan di elemen terpisah */
-  filter: drop-shadow(0px 10px 15px rgba(0,0,0,0.4)); 
+.mode-buttons {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+  background: #f1f0ea;
+  padding: 5px;
+  border-radius: 15px;
 }
 
-/* 
-  KUNCI TUMPUKAN: 
-  Z-index mengecil ke bawah (4 -> 3 -> 2 -> 1).
-  Gunakan margin-top negatif untuk menarik zona bawah agar tertindih zona atas.
-*/
-.zone-dawn { 
-  background-image: url('/images/journey-curve-1.jpg'); 
-  z-index: 4; 
-  padding: 40px 0 60px 0; /* Padding normal untuk zona pertama */
+.btn-mode {
+  flex: 1;
+  padding: 10px;
+  border: none;
+  border-radius: 12px;
+  font-weight: bold;
+  font-size: 0.85rem;
+  color: #888;
+  background: transparent;
+  cursor: pointer;
+  transition: all 0.3s;
 }
 
-.zone-palm { 
-  background-image: url('/images/journey-curve-2.webp'); 
-  z-index: 3; 
-  margin-top: -60px; /* Ditarik ke atas agar tertindih zona-dawn */
-  padding: 100px 0 60px 0; /* Padding atas diperbesar agar konten tidak tertutup */
+.btn-mode.active {
+  background: #2b7a5f;
+  color: white;
+  box-shadow: 0 4px 10px rgba(43, 122, 95, 0.3);
 }
 
-.zone-lantern { 
-  background-image: url('/images/journey-curve-3.webp'); 
-  z-index: 2; 
-  margin-top: -60px; /* Ditarik ke atas agar tertindih zone-palm */
-  padding: 100px 0 60px 0; 
+/* =========================================
+   TUMPANG TINDIH 4 ZONA GAMBAR CURVE (TANPA GAP!)
+========================================= */
+.journey-zones-wrapper {
+  display: flex;
+  flex-direction: column;
 }
 
-.zone-starry { 
-  background-image: url('/images/journey-curve-4.webp'); 
-  z-index: 1; 
-  margin-top: -60px; /* Ditarik ke atas agar tertindih zone-lantern */
-  padding: 100px 0 120px 0; 
+.zone-section {
+  position: relative;
+  width: 100%;
+  /* 100% 100% menjaga agar lekukan curve di bagian bawah gambar utuh dari ujung kiri ke kanan */
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
+  background-position: bottom center;
+  /* Bayangan tegas mengikuti potongan transparan gambar curve */
+  filter: drop-shadow(0px 14px 10px rgba(0, 0, 0, 0.35));
 }
 
+/* ZONA 1: DAWN SPRINGS (Paling Atas: z-index 4) */
+.zone-dawn {
+  background-image: url('/images/journey-curve-1.webp'), url('/images/journey-curve-1.jpg');
+  z-index: 4;
+  padding: 25px 0 210px 0; /* Padding bawah besar agar Juz 5 tidak terkena area transparan */
+}
+
+/* ZONA 2: PALM VALLEY (Di bawah Dawn: z-index 3) */
+.zone-palm {
+  background-image: url('/images/journey-curve-2.webp');
+  z-index: 3;
+  margin-top: -240px; /* Ditarik jauh ke atas masuk ke balik lekukan transparan Zona 1 */
+  padding: 230px 0 310px 0; /* Padding bawah ekstra karena zona ini tinggi (10 Juz) */
+}
+
+/* ZONA 3: LANTERN TRAIL (Di bawah Palm: z-index 2) */
+.zone-lantern {
+  background-image: url('/images/journey-curve-3.webp');
+  z-index: 2;
+  margin-top: -340px; /* Ditarik jauh ke atas menutup seluruh area transparan Zona 2 */
+  padding: 320px 0 310px 0;
+}
+
+/* ZONA 4: STARRY SKY (Paling Bawah: z-index 1) */
+.zone-starry {
+  background-image: url('/images/journey-curve-4.webp');
+  z-index: 1;
+  margin-top: -340px; /* Ditarik jauh ke atas menutup seluruh area transparan Zona 3 */
+  padding: 320px 0 180px 0;
+  filter: none;
+}
+
+/* =========================================
+   HEADER TIAP ZONA
+========================================= */
 .zone-header {
   display: flex;
   align-items: center;
   justify-content: flex-start;
   padding-left: 25px;
   gap: 15px;
-  margin: 10px 0 30px 0;
+  margin: 0 0 25px 0;
   position: relative;
   z-index: 20;
 }
-.zone-icon { background: rgba(255,255,255,0.7); padding: 10px; border-radius: 12px; font-size: 1.5rem; box-shadow: 2px 4px 10px rgba(0,0,0,0.1); }
-.zone-title { font-size: 1.2rem; font-weight: 900; letter-spacing: 2px; color: #78350f; margin: 0; text-shadow: 0px 0px 5px rgba(255,255,255,0.8); }
-.zone-starry .zone-title { color: #fef08a; text-shadow: 0px 0px 5px rgba(0,0,0,0.8);} 
 
-.juz-node-wrapper {
+.zone-icon {
+  background: rgba(255, 255, 255, 0.75);
+  padding: 10px;
+  border-radius: 14px;
+  font-size: 1.5rem;
+  box-shadow: 3px 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.zone-title {
+  font-size: 1.15rem;
+  font-weight: 900;
+  letter-spacing: 2px;
+  color: #652b0d;
+  margin: 0;
+  text-shadow: 0px 1px 6px rgba(255, 255, 255, 0.85);
+}
+
+.zone-palm .zone-title {
+  color: #143d29;
+}
+
+.zone-starry .zone-title {
+  color: #fef08a;
+  text-shadow: 0px 2px 6px rgba(0, 0, 0, 0.8);
+}
+
+/* =========================================
+   JALUR STITCHED THREAD & TITIK JUZ PRESISI
+========================================= */
+.journey-path-container {
   position: relative;
   width: 100%;
-  height: 100px; 
-  z-index: 2;
-  display: flex;
-  align-items: center;
 }
 
 .dashed-path-svg {
   position: absolute;
-  top: 0; left: 0; width: 100%; height: 100%; 
-  z-index: 1; pointer-events: none;
-  filter: drop-shadow(2px 2px 2px rgba(0,0,0,0.3));
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+  pointer-events: none;
+  filter: drop-shadow(2px 2px 3px rgba(0, 0, 0, 0.25));
 }
 
-.pos-left { justify-content: flex-start; padding-left: 25%; }
-.pos-right { justify-content: flex-end; padding-right: 25%; }
-
-/* LINGKARAN OASIS PAPER-CUT[cite: 21] */
-.organic-ring {
+.juz-node-wrapper {
   position: relative;
-  width: 76px; height: 76px;
+  width: 100%;
+  height: 100px;
+  z-index: 2;
+}
+
+/* LINGKARAN OASIS PAPER-CUT */
+.organic-ring {
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%); /* Mengunci titik tengah lingkaran tepat di koordinat left */
+  width: 76px;
+  height: 76px;
   border-radius: 45% 55% 42% 58% / 53% 45% 58% 42%;
-  display: flex; align-items: center; justify-content: center;
-  box-shadow: 4px 5px 8px rgba(0,0,0,0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 4px 5px 8px rgba(0, 0, 0, 0.35);
   transition: all 0.3s;
   z-index: 3;
 }
 
+/* Mengunci posisi X persis di 25% dan 75% sesuai rumus garis SVG */
+.pos-left .organic-ring {
+  left: 25%;
+}
+
+.pos-right .organic-ring {
+  left: 75%;
+}
+
 .organic-inner {
-  width: 60px; height: 60px;
+  width: 60px;
+  height: 60px;
   border-radius: 45% 55% 42% 58% / 53% 45% 58% 42%;
   background: #fdfcf8;
-  display: flex; justify-content: center; align-items: center;
+  display: flex;
+  justify-content: center;
+  align-items: center;
   position: relative;
-  box-shadow: inset 3px 3px 5px rgba(0,0,0,0.15);
+  box-shadow: inset 3px 3px 5px rgba(0, 0, 0, 0.15);
 }
 
-.juz-number { font-size: 1.4rem; font-weight: 900; color: #2b7a5f; }
+.juz-number {
+  font-size: 1.4rem;
+  font-weight: 900;
+  color: #2b7a5f;
+}
 
-.locked-text { color: #9ca3af; }
-.organic-ring.locked { background: #cbd5e1 !important; }
-.organic-ring.locked .organic-inner { background: #f1f5f9; }
+.locked-text {
+  color: #9ca3af;
+}
+
+.organic-ring.locked {
+  background: #cbd5e1 !important;
+}
+
+.organic-ring.locked .organic-inner {
+  background: #f1f5f9;
+}
+
 .lock-overlay {
-  position: absolute; bottom: -2px; right: -2px;
-  background: white; border-radius: 50%; width: 22px; height: 22px;
-  display: flex; justify-content: center; align-items: center;
-  font-size: 0.8rem; box-shadow: 0 2px 4px rgba(0,0,0,0.2); z-index: 5;
+  position: absolute;
+  bottom: -2px;
+  right: -2px;
+  background: white;
+  border-radius: 50%;
+  width: 22px;
+  height: 22px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 0.8rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  z-index: 5;
 }
 
-.organic-ring.completed .organic-inner { background: #fef08a; }
-.organic-ring.completed .juz-number { color: #b45309; }
+.organic-ring.completed .organic-inner {
+  background: #fef08a;
+}
 
-/* BURUNG ORIGAMI[cite: 21] */
+.organic-ring.completed .juz-number {
+  color: #b45309;
+}
+
+/* =========================================
+   BURUNG BANGAU ORIGAMI 3D
+========================================= */
 .origami-bird {
-  position: absolute; right: -15px; top: -30px; width: 50px; height: 50px;
-  filter: drop-shadow(4px 8px 6px rgba(0,0,0,0.4));
+  position: absolute;
+  right: -15px;
+  top: -30px;
+  width: 50px;
+  height: 50px;
+  filter: drop-shadow(4px 8px 6px rgba(0, 0, 0, 0.4));
   animation: floatingOrigami 2.5s ease-in-out infinite;
   z-index: 100;
 }
-@keyframes floatingOrigami { 0% { transform: translateY(0) rotate(0deg); } 50% { transform: translateY(-10px) rotate(-8deg); } 100% { transform: translateY(0) rotate(0deg); } }
+
+@keyframes floatingOrigami {
+  0% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-10px) rotate(-8deg); }
+  100% { transform: translateY(0) rotate(0deg); }
+}
