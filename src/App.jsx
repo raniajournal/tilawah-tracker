@@ -144,6 +144,35 @@ const getLastNDays = (n) => {
   return dates;
 };
 
+// FUNGSI HELPER UNTUK MENGHITUNG STATUS 30 JUZ DARI OBJEK PROGRESS
+const computeJuzMapFromProgress = (progressObj) => {
+  const newJuzMap = Array.from({ length: 30 }, (_, i) => ({
+    juz: i + 1, ayatRead: 0, isCompleted: false
+  }));
+  if (!JUZ_DATA || JUZ_DATA.length === 0) return newJuzMap;
+
+  JUZ_DATA.forEach((juz, index) => {
+    let ayahsInThisJuzRead = 0;
+    for (let s = juz.start.surah; s <= juz.end.surah; s++) {
+      const readCount = progressObj[s]?.read || 0;
+      if (readCount === 0) continue;
+
+      if (juz.start.surah === juz.end.surah) {
+        if (readCount >= juz.start.ayah) ayahsInThisJuzRead += Math.min(readCount, juz.end.ayah) - juz.start.ayah + 1;
+      } else if (s === juz.start.surah) {
+        if (readCount >= juz.start.ayah) ayahsInThisJuzRead += readCount - juz.start.ayah + 1;
+      } else if (s === juz.end.surah) {
+        ayahsInThisJuzRead += Math.min(readCount, juz.end.ayah);
+      } else {
+        ayahsInThisJuzRead += readCount;
+      }
+    }
+    newJuzMap[index].ayatRead = ayahsInThisJuzRead;
+    newJuzMap[index].isCompleted = ayahsInThisJuzRead >= juz.totalAyahs;
+  });
+  return newJuzMap;
+};
+
 export default function App() {
   const [user, setUser] = useState(null);
   const [progress, setProgress] = useState({});
@@ -168,33 +197,7 @@ export default function App() {
   const [showMilestone, setShowMilestone] = useState(false);
   const [milestoneZone, setMilestoneZone] = useState(null);
 
-  const juzProgress = useMemo(() => {
-    const newJuzMap = Array.from({ length: 30 }, (_, i) => ({
-      juz: i + 1, ayatRead: 0, isCompleted: false
-    }));
-    if (!JUZ_DATA || JUZ_DATA.length === 0) return newJuzMap;
-
-    JUZ_DATA.forEach((juz, index) => {
-      let ayahsInThisJuzRead = 0;
-      for (let s = juz.start.surah; s <= juz.end.surah; s++) {
-        const readCount = progress[s]?.read || 0;
-        if (readCount === 0) continue;
-
-        if (juz.start.surah === juz.end.surah) {
-          if (readCount >= juz.start.ayah) ayahsInThisJuzRead += Math.min(readCount, juz.end.ayah) - juz.start.ayah + 1;
-        } else if (s === juz.start.surah) {
-          if (readCount >= juz.start.ayah) ayahsInThisJuzRead += readCount - juz.start.ayah + 1;
-        } else if (s === juz.end.surah) {
-          ayahsInThisJuzRead += Math.min(readCount, juz.end.ayah);
-        } else {
-          ayahsInThisJuzRead += readCount;
-        }
-      }
-      newJuzMap[index].ayatRead = ayahsInThisJuzRead;
-      newJuzMap[index].isCompleted = ayahsInThisJuzRead >= juz.totalAyahs;
-    });
-    return newJuzMap;
-  }, [progress]);
+  const juzProgress = useMemo(() => computeJuzMapFromProgress(progress), [progress]);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
@@ -238,7 +241,7 @@ export default function App() {
   const saveTracking = async (isComplete = false) => {
     if (!user) return;
     let readCount = progress[selectedSurah.id]?.read || 0;
-    let newHistory = progress[selectedSurah.id]?.history || [];
+    let newHistory = [...(progress[selectedSurah.id]?.history || [])];
     const currentTime = Date.now();
     let ayahsAdded = 0;
     const historyId = currentTime.toString();
@@ -260,38 +263,56 @@ export default function App() {
 
     const updatedProgress = { ...progress, [selectedSurah.id]: { read: readCount, history: newHistory } };
 
+    // Hitung status Juz terbaru setelah penambahan ayat ini
+    const updatedJuzMap = computeJuzMapFromProgress(updatedProgress);
+
     let newActiveJuz = activeJuz;
     const targetEnd = isComplete ? selectedSurah.ayahs : parseInt(endAyah);
     const targetJuzData = getJuzFromSurahAndAyah(selectedSurah.id, targetEnd);
 
-    if (targetJuzData) {
-      const targetJuzNumber = targetJuzData.juz;
-      if (ayahsAdded > 0 && journeyMode === 'FREE') {
-        newActiveJuz = targetJuzNumber;
-      }
+    if (targetJuzData && ayahsAdded > 0 && journeyMode === 'FREE') {
+      newActiveJuz = targetJuzData.juz;
+    }
 
-      if ([6, 12, 18, 24, 30].includes(targetJuzNumber) && isComplete) {
-        const zones = [
-          { id: 1, title: "GOLDEN SUNRISE", icon: "🌅", startJuz: 1, endJuz: 6 },
-          { id: 2, title: "DAWN SPRINGS", icon: "🏜️", startJuz: 7, endJuz: 12 },
-          { id: 3, title: "PALM VALLEY", icon: "🌴", startJuz: 13, endJuz: 18 },
-          { id: 4, title: "LANTERN TRAIL", icon: "🏮", startJuz: 19, endJuz: 24 },
-          { id: 5, title: "STARRY NIGHT", icon: "✨", startJuz: 25, endJuz: 30 }
-        ];
-        setMilestoneZone(zones.find(z => z.endJuz === targetJuzNumber));
+    // CEK MILESTONE 5 SEKSI (Juz 6, 12, 18, 24, 30)
+    // Memicu Pop-up Book jika Juz akhir seksi baru saja mencapai 100% ATAU batas ayat akhir Juz tersebut baru saja dilewati
+    const milestoneZones = [
+      { id: 1, title: "GOLDEN SUNRISE", icon: "🌅", startJuz: 1, endJuz: 6, boundarySurah: 5, boundaryAyah: 81 },
+      { id: 2, title: "DAWN SPRINGS", icon: "🏜️", startJuz: 7, endJuz: 12, boundarySurah: 12, boundaryAyah: 52 },
+      { id: 3, title: "PALM VALLEY", icon: "🌴", startJuz: 13, endJuz: 18, boundarySurah: 25, boundaryAyah: 20 },
+      { id: 4, title: "LANTERN TRAIL", icon: "🏮", startJuz: 19, endJuz: 24, boundarySurah: 41, boundaryAyah: 46 },
+      { id: 5, title: "STARRY NIGHT", icon: "✨", startJuz: 25, endJuz: 30, boundarySurah: 114, boundaryAyah: 6 }
+    ];
+
+    const oldSurahRead = progress[selectedSurah.id]?.read || 0;
+
+    for (const z of milestoneZones) {
+      const wasJuzCompleted = juzProgress[z.endJuz - 1]?.isCompleted;
+      const isNowJuzCompleted = updatedJuzMap[z.endJuz - 1]?.isCompleted;
+
+      const crossedBoundaryInThisSurah =
+        selectedSurah.id === z.boundarySurah &&
+        oldSurahRead < z.boundaryAyah &&
+        readCount >= z.boundaryAyah;
+
+      if ((!wasJuzCompleted && isNowJuzCompleted) || crossedBoundaryInThisSurah) {
+        setMilestoneZone(z);
         setShowMilestone(true);
+        break;
       }
     }
 
     setActiveJuz(newActiveJuz);
+
+    // Update input ayat berikutnya tapi JANGAN tutup modal (biarkan user klik X)
+    setStartAyah(readCount >= selectedSurah.ayahs ? selectedSurah.ayahs : readCount + 1);
+    setEndAyah("");
 
     await setDoc(doc(db, "users", user.uid), {
       progress: updatedProgress,
       journeyMode: journeyMode,
       activeJuz: newActiveJuz
     }, { merge: true });
-
-    setSelectedSurah(null);
   };
 
   const deleteHistory = async (indexToDelete, surahId) => {
@@ -442,6 +463,23 @@ export default function App() {
         </div>
       </div>
 
+      {/* MODAL POP-UP BOOK MILESTONE (GLOBAL AGAR MUNCUL DI SEMUA TAB) */}
+      {showMilestone && milestoneZone && (
+        <div className="milestone-overlay" onClick={() => setShowMilestone(false)}>
+          <div className="milestone-popup" onClick={(e) => e.stopPropagation()}>
+            <div className="popup-book-effect">
+              <div className="sticker-badge">
+                <span className="badge-icon">{milestoneZone.icon}</span>
+              </div>
+              <h2 style={{ color: '#2b7a5f', marginTop: '20px' }}>Alhamdulillah!</h2>
+              <p>Kamu berhasil menamatkan wilayah<br /><b>{milestoneZone.title}</b></p>
+              <p style={{ fontSize: '0.85rem', color: '#888' }}>(Juz {milestoneZone.startJuz} s/d {milestoneZone.endJuz})</p>
+              <button className="btn-primary" onClick={() => setShowMilestone(false)}>Lanjutkan Perjalanan</button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {showTargetModal && (
         <div className="modal-overlay" onClick={(e) => e.target.className === 'modal-overlay' && setShowTargetModal(false)}>
           <div className="target-modal">
@@ -510,35 +548,17 @@ export default function App() {
 
       {/* JOURNEY MAP TAB */}
       {activeTab === "peta" && (
-        <>
-          {showMilestone && milestoneZone && (
-            <div className="milestone-overlay" onClick={() => setShowMilestone(false)}>
-              <div className="milestone-popup">
-                <div className="popup-book-effect">
-                  <div className="sticker-badge">
-                    <span className="badge-icon">{milestoneZone.icon}</span>
-                  </div>
-                  <h2 style={{ color: '#2b7a5f', marginTop: '20px' }}>Alhamdulillah!</h2>
-                  <p>Kamu berhasil menamatkan zona<br /><b>{milestoneZone.title}</b></p>
-                  <p style={{ fontSize: '0.85rem', color: '#888' }}>(Juz {milestoneZone.startJuz} s/d {milestoneZone.endJuz})</p>
-                  <button className="btn-primary" onClick={() => setShowMilestone(false)}>Lanjutkan Perjalanan</button>
-                </div>
-              </div>
-            </div>
-          )}
-
-          <JourneyMap
-            juzProgress={juzProgress}
-            journeyMode={journeyMode}
-            displayActiveJuz={displayActiveJuz}
-            toggleJourneyMode={toggleJourneyMode}
-          />
-        </>
+        <JourneyMap
+          juzProgress={juzProgress}
+          journeyMode={journeyMode}
+          displayActiveJuz={displayActiveJuz}
+          toggleJourneyMode={toggleJourneyMode}
+        />
       )}
 
-      {/* STATISTIK TAB */}
+      {/* STATISTIK TAB (50% CENTERED DI PC) */}
       {activeTab === "statistik" && (
-        <div style={{ padding: '20px' }}>
+        <div className="stats-container">
           <div className="chart-card">
             <h4 style={{ margin: '0 0 15px 0', color: '#333' }}>Pencapaian 7 Hari Terakhir</h4>
             <div className="chart-container" style={{ height: '140px' }}>
@@ -629,7 +649,7 @@ export default function App() {
         <button className={`nav-btn ${activeTab === 'log' ? 'active' : ''}`} onClick={() => setActiveTab('log')}><span style={{ fontSize: '1.4rem' }}>📜</span> Riwayat</button>
       </div>
 
-      {/* MODAL SURAH */}
+      {/* MODAL SURAH (TETAP TERBUKA SAMPAI KLIK X) */}
       {selectedSurah && (
         <div className="modal-overlay" onClick={(e) => e.target.className === 'modal-overlay' && setSelectedSurah(null)}>
           <div className="modal-content">
