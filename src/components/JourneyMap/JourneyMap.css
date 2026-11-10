@@ -84,7 +84,6 @@
   z-index: 1;
 }
 
-/* Setiap seksi menyumbang tinggi bersih 600px + 140px overlap bawah agar lekukan curve menumpuk tanpa celah */
 .oasis-segment {
   position: relative;
   width: 100%;
@@ -130,54 +129,85 @@
 }
 
 /* =========================================
-   RIBBON TAG (PITA KERTAS PENANDA SEKSI)
+   RIBBON TAG (PITA KERTAS + DROP SHADOW TEGAS)
 ========================================= */
-.ribbon-tag {
+/* Wrapper bertugas memberikan bayangan paper-cut agar tidak terpotong oleh clip-path */
+.ribbon-wrapper {
   position: absolute;
   top: 22px;
+  z-index: 15;
+  filter: 
+    drop-shadow(3px 4px 0px rgba(0, 0, 0, 0.28)) 
+    drop-shadow(0px 6px 8px rgba(0, 0, 0, 0.22));
+}
+
+.ribbon-wrapper.ribbon-left {
   left: -4px;
-  padding: 8px 22px 8px 18px;
+}
+
+.ribbon-wrapper.ribbon-right {
+  right: -4px;
+  filter: 
+    drop-shadow(-3px 4px 0px rgba(0, 0, 0, 0.28)) 
+    drop-shadow(0px 6px 8px rgba(0, 0, 0, 0.22));
+}
+
+/* Untuk Seksi 2-5, turunkan posisi ribbon melewati area overlap seksi atasnya */
+.bg-desert .ribbon-wrapper,
+.bg-valley .ribbon-wrapper,
+.bg-lantern .ribbon-wrapper,
+.bg-stars .ribbon-wrapper {
+  top: 155px;
+}
+
+.ribbon-tag {
+  padding: 9px 24px 9px 18px;
   font-size: 13px;
   font-weight: 800;
   letter-spacing: 0.6px;
   text-transform: uppercase;
   color: #FFFDF9;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.25);
+}
+
+/* Potongan lancip di ujung kanan untuk pita kiri */
+.ribbon-left .ribbon-tag {
   clip-path: polygon(0% 0%, 90% 0%, 100% 50%, 90% 100%, 0% 100%);
-  box-shadow: 2px 3px 0px rgba(0, 0, 0, 0.15);
-  z-index: 15;
 }
 
-/* Untuk Seksi 2-5, turunkan posisi ribbon melewati area 140px yang ditindih seksi atasnya */
-.bg-desert .ribbon-tag,
-.bg-valley .ribbon-tag,
-.bg-lantern .ribbon-tag,
-.bg-stars .ribbon-tag {
-  top: 155px;
+/* Potongan lancip di ujung kiri untuk pita kanan (Seksi 3 & 4) */
+.ribbon-right .ribbon-tag {
+  padding: 9px 18px 9px 26px;
+  clip-path: polygon(10% 0%, 100% 0%, 100% 100%, 10% 100%, 0% 50%);
 }
 
+/* WARNA PITA TIAP SEKSI */
 .ribbon-sunrise {
   background-color: #DDA15E;
-  border-left: 5px solid #BC6C25;
+  border-left: 6px solid #BC6C25;
 }
 
 .ribbon-desert {
   background-color: #E29578;
-  border-left: 5px solid #B56576;
+  border-left: 6px solid #B56576;
 }
 
+/* Seksi 3 (Kanan - Hijau Sage) */
 .ribbon-valley {
   background-color: #606C38;
-  border-left: 5px solid #283618;
+  border-right: 6px solid #283618;
 }
 
+/* Seksi 4 (Kanan - Ungu) */
 .ribbon-lantern {
-  background-color: #457B9D;
-  border-left: 5px solid #1D3557;
+  background-color: #7E22CE;
+  border-right: 6px solid #4C1D95;
 }
 
+/* Seksi 5 (Kiri - Biru Navy) */
 .ribbon-stars {
-  background-color: #2A9D8F;
-  border-left: 5px solid #264653;
+  background-color: #1E3A8A;
+  border-left: 6px solid #0F172A;
 }
 
 /* =========================================
@@ -210,7 +240,6 @@
   transition: transform 0.3s ease;
 }
 
-/* Efek membesar & berbinar pada titik Juz yang sedang aktif */
 .juz-node-point.active-node {
   transform: translate(-50%, -50%) scale(1.1);
   z-index: 12;
@@ -220,7 +249,6 @@
   box-shadow: 0px 0px 0px 4px rgba(231, 111, 81, 0.85), 4px 6px 14px rgba(0, 0, 0, 0.35);
 }
 
-/* LINGKARAN OASIS PAPER-CUT */
 .organic-ring {
   width: 66px;
   height: 66px;
