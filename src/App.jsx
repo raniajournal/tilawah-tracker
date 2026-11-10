@@ -71,7 +71,7 @@ const SURAHS = [
   { id: 64, name: "At-Tagabun", meaning: "Hari Penampakan", ayahs: 18, juz: "Juz 28" },
   { id: 65, name: "At-Talaq", meaning: "Talak", ayahs: 12, juz: "Juz 28" },
   { id: 66, name: "At-Tahrim", meaning: "Pengharaman", ayahs: 12, juz: "Juz 28" },
-  { id: 67, name: "Al-Mulk", Kerajaan: "Kerajaan", ayahs: 30, juz: "Juz 29" },
+  { id: 67, name: "Al-Mulk", meaning: "Kerajaan", ayahs: 30, juz: "Juz 29" },
   { id: 68, name: "Al-Qalam", meaning: "Pena", ayahs: 52, juz: "Juz 29" },
   { id: 69, name: "Al-Haqqah", meaning: "Hari Kiamat", ayahs: 52, juz: "Juz 29" },
   { id: 70, name: "Al-Ma'arij", meaning: "Tempat Naik", ayahs: 44, juz: "Juz 29" },
@@ -143,28 +143,16 @@ const getLastNDays = (n) => {
   return dates;
 };
 
-// DATA 4 ZONA TEMA (Update Kode Warna Bukit)
+// =====================================
+// DATA 4 ZONA TEMA PAPER-CUT Z-INDEX
+// Diurutkan: Sand Dunes -> Midnight Blue
+// =====================================
 const ZONES = [
-  { id: 1, title: "THE DAWN SPRINGS", icon: "🌅", startJuz: 1, endJuz: 5, bgClass: "zone-dawn", waveColor: "#fcd34d" },
-  { id: 2, title: "THE PALM VALLEY", icon: "🌴", startJuz: 6, endJuz: 15, bgClass: "zone-palm", waveColor: "#4ade80" },
-  { id: 3, title: "THE LANTERN TRAIL", icon: "🏮", startJuz: 16, endJuz: 25, bgClass: "zone-lantern", waveColor: "#f43f5e" },
-  { id: 4, title: "THE STARRY SKY", icon: "✨", startJuz: 26, endJuz: 30, bgClass: "zone-starry", waveColor: "#1e3a8a" }
+  { id: 1, title: "THE DAWN SPRINGS", icon: "🌅", startJuz: 1, endJuz: 5, bgClass: "zone-dawn", waveFill: "#fde047" },
+  { id: 2, title: "THE PALM VALLEY", icon: "🌴", startJuz: 6, endJuz: 15, bgClass: "zone-palm", waveFill: "#86efac" },
+  { id: 3, title: "THE LANTERN TRAIL", icon: "🏮", startJuz: 16, endJuz: 25, bgClass: "zone-lantern", waveFill: "#fca5a5" },
+  { id: 4, title: "THE STARRY SKY FINALE", icon: "✨", startJuz: 26, endJuz: 30, bgClass: "zone-starry", waveFill: "#1e3a8a" } // Zona terakhir tidak butuh wave ke bawah
 ];
-
-// FUNGSI MEMBUAT JALUR MELIUK (BEZIER CURVE SVG) OTOMATIS
-const generateDashedPath = (count) => {
-  if (count <= 1) return "";
-  let d = `M 25 40 `; // Mulai dari titik kiri atas
-  for(let i=1; i<count; i++) {
-    const prevX = (i-1) % 2 === 0 ? 25 : 75;
-    const x = i % 2 === 0 ? 25 : 75;
-    const prevY = (i-1) * 80 + 40;
-    const y = i * 80 + 40;
-    // Menggunakan kurva kubik untuk membentuk garis melengkung "S" yang estetik
-    d += `C ${prevX} ${prevY + 30}, ${x} ${y - 30}, ${x} ${y} `;
-  }
-  return d;
-};
 
 export default function App() {
   const [user, setUser] = useState(null);
@@ -299,7 +287,6 @@ export default function App() {
     if (!user) return;
     const currentHistory = progress[surahId]?.history || [];
     const updatedHistory = currentHistory.filter((_, idx) => idx !== indexToDelete);
-    
     let recalculatedReadCount = 0;
     updatedHistory.forEach(hist => {
         if (hist.note === "Selesai 100%") recalculatedReadCount = SURAHS.find(s => s.id === surahId).ayahs;
@@ -381,9 +368,9 @@ export default function App() {
   const last7Days = getLastNDays(7);
   const last28Days = getLastNDays(28);
   const maxAyahs7D = Math.max(...last7Days.map(d => dailyStats[d.fullDate] || 0), 10);
-
   const filteredSurahs = SURAHS.filter(s => s.name.toLowerCase().includes(searchQuery.toLowerCase()) || s.meaning.toLowerCase().includes(searchQuery.toLowerCase()));
 
+  // PENENTUAN POSISI BURUNG
   let displayActiveJuz = activeJuz;
   if (journeyMode === 'LINEAR') {
     const firstUnfinished = juzProgress.find(j => !j.isCompleted);
@@ -455,9 +442,7 @@ export default function App() {
          </div>
        )}
 
-      {/* ============================================== */}
-      {/* DASHBOARD TAB                                */}
-      {/* ============================================== */}
+      {/* DASHBOARD TAB */}
       {activeTab === "dashboard" && (
         <>
           <div className="floating-bookmark">
@@ -485,10 +470,10 @@ export default function App() {
       )}
 
       {/* ============================================== */}
-      {/* QURAN JOURNEY MAP (DUOLINGO STYLE)           */}
+      {/* QURAN JOURNEY MAP (SHADOW BOX STYLE)           */}
       {/* ============================================== */}
       {activeTab === "peta" && (
-        <div className="map-container">
+        <div className="map-paper-box">
           <div className="mode-toggle-box">
             <h3 style={{ margin: '0 0 5px 0', color: '#1e5441' }}>Pengaturan Perjalanan</h3>
             <p style={{ margin: 0, fontSize: '0.8rem', color: '#666' }}>Pilih gayamu menaklukkan 30 Juz</p>
@@ -501,85 +486,93 @@ export default function App() {
           <div className="journey-zones-wrapper">
             {ZONES.map((zone, zIndex) => {
               const zoneJuzData = juzProgress.filter(j => j.juz >= zone.startJuz && j.juz <= zone.endJuz);
-              const nodeCount = zoneJuzData.length;
               
-              // Total tinggi area garis penghubung berdasarkan jumlah titik (jarak diperkecil jadi 80px per titik)
-              const svgHeight = nodeCount * 80;
+              // Tentukan gaya Stitched Thread (Lebih terang di Starry Sky)
+              const threadColor = zone.id === 4 ? "rgba(255,255,255,0.4)" : "rgba(120,60,0,0.25)";
 
               return (
                 <div key={zone.id} className={`zone-section ${zone.bgClass}`}>
                   
-                  {/* BUKIT ORGANIK PAPER-CUT (GELOMBANG SVG) */}
-                  {zIndex > 0 && (
-                    <div className="wave-divider">
-                      <svg viewBox="0 0 1440 120" preserveAspectRatio="none" className="wave-svg">
-                        <path fill={zone.waveColor} d="M0,32L80,48C160,64,320,96,480,90.7C640,85,800,43,960,37.3C1120,32,1280,64,1360,80L1440,96L1440,120L0,120Z" />
-                      </svg>
-                    </div>
-                  )}
-
+                  {/* ZONE HEADER */}
                   <div className="zone-header">
                     <div className="zone-icon">{zone.icon}</div>
                     <h2 className="zone-title">{zone.title}</h2>
                   </div>
 
-                  <div className="journey-path-container" style={{ position: 'relative', width: '100%', paddingBottom: '30px' }}>
+                  {zoneJuzData.map((juz, idx) => {
+                    const totalAyah = JUZ_DATA[juz.juz - 1].totalAyahs;
+                    const progressData = calculateJuzProgress(juz.ayatRead, totalAyah);
+                    const isLocked = journeyMode === 'LINEAR' && juz.juz > displayActiveJuz;
                     
-                    {/* GARIS PUTUS-PUTUS MELIUK (BEZIER CURVE OTOMATIS) */}
-                    <svg className="dashed-path-svg" viewBox={`0 0 100 ${svgHeight}`} preserveAspectRatio="none">
-                       <path d={generateDashedPath(nodeCount)} fill="none" stroke="rgba(255,255,255,0.7)" strokeWidth="1.5" strokeDasharray="3 3" vectorEffect="non-scaling-stroke" />
-                    </svg>
+                    // Menghitung Posisi ZigZag (Pola Kiri, Tengah, Kanan, Tengah)
+                    const xPositions = [25, 50, 75, 50]; 
+                    const currentX = xPositions[(juz.juz - 1) % 4];
+                    const nextX = xPositions[juz.juz % 4];
+                    
+                    // Derajat Cincin Organik (1/4 = 90deg, 2/4 = 180deg)
+                    const completedQuarters = progressData.quarters.filter(Boolean).length;
+                    const progressDegrees = completedQuarters * 90;
 
-                    {zoneJuzData.map((juz, index) => {
-                      const totalAyah = JUZ_DATA[juz.juz - 1].totalAyahs;
-                      const progressData = calculateJuzProgress(juz.ayatRead, totalAyah);
-                      const isLocked = journeyMode === 'LINEAR' && juz.juz > displayActiveJuz;
-                      
-                      // Pola Meliuk: Kiri - Kanan
-                      const positionClass = index % 2 === 0 ? 'pos-left' : 'pos-right';
-                      
-                      // Menghitung panjang garis cincin oranye (Maks = 176px)
-                      const completedQuarters = progressData.quarters.filter(Boolean).length;
-                      const dashOffset = 176 - (completedQuarters * 44); 
+                    return (
+                      <div key={juz.juz} className="juz-node-wrapper">
+                        
+                        {/* GARIS PUTUS-PUTUS SVG YANG 100% RESPONSIVE MENGHUBUNGKAN TITIK */}
+                        {juz.juz < 30 && (
+                          <svg className="stitched-line" viewBox="0 0 100 100" preserveAspectRatio="none">
+                            <path 
+                              d={`M ${currentX} 0 C ${currentX} 50, ${nextX} 50, ${nextX} 100`} 
+                              fill="none" 
+                              stroke={threadColor} 
+                              strokeWidth="3" 
+                              strokeDasharray="6 6" 
+                              strokeLinecap="round" 
+                              vectorEffect="non-scaling-stroke"
+                            />
+                          </svg>
+                        )}
 
-                      return (
-                        <div key={juz.juz} className={`juz-node-wrapper ${positionClass}`}>
-                          <div className={`juz-node-circle ${isLocked ? 'locked' : ''} ${juz.isCompleted ? 'completed' : ''}`}>
-                            
-                            {/* CINCIN SVG PROGRES */}
-                            {!isLocked && (
-                                <svg width="60" height="60" viewBox="0 0 60 60" className="progress-svg">
-                                  <circle cx="30" cy="30" r="28" fill="white" stroke="rgba(255,255,255,0.6)" strokeWidth="4" strokeDasharray="39 5" transform="rotate(-90 30 30)" />
-                                  <circle cx="30" cy="30" r="28" fill="none" stroke="#f59e0b" strokeWidth="4" strokeDasharray="176" strokeDashoffset={dashOffset} strokeLinecap="round" transform="rotate(-90 30 30)" style={{transition: 'stroke-dashoffset 1s ease'}}/>
-                                </svg>
-                            )}
-
-                            {/* ANGKA TENGAH + IKON GEMBOK (JIKA DIKUNCI) */}
-                            <div className="node-content">
+                        {/* TITIK OASIS ORGANIK (MENGUNCI DI POSISI X %) */}
+                        <div className={`organic-ring ${isLocked ? 'locked' : ''} ${juz.isCompleted ? 'completed' : ''}`}
+                             style={{ 
+                               left: `${currentX}%`, 
+                               background: isLocked ? '#e5e7eb' : `conic-gradient(#f59e0b ${progressDegrees}deg, #e5e7eb 0deg)`
+                             }}>
+                          
+                          <div className="organic-inner">
+                            {isLocked ? (
+                                <span className="lock-icon">🔒</span>
+                            ) : (
                                 <span className="juz-number">{juz.juz}</span>
-                                {isLocked && (
-                                  <div className="lock-overlay">🔒</div>
-                                )}
-                            </div>
-                            
-                            {/* BURUNG ORIGAMI 3D (ASLI) */}
-                            {displayActiveJuz === juz.juz && !juz.isCompleted && (
-                              <div className="origami-bird" title="Posisi Anda Saat Ini">
-                                <svg viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
-                                  <polygon fill="#fde047" points="394.6,183.3 226,306.9 285.4,117.7"/>
-                                  <polygon fill="#facc15" points="394.6,183.3 496.1,232.7 226,306.9"/>
-                                  <polygon fill="#eab308" points="226,306.9 148.9,252.3 35.5,233.1"/>
-                                  <polygon fill="#ca8a04" points="226,306.9 313.2,465 313.2,351"/>
-                                  <polygon fill="#a16207" points="226,306.9 176.6,393 216.5,335.7"/>
-                                  <polygon fill="#fef08a" points="226,306.9 285.4,117.7 148.9,252.3"/>
-                                </svg>
-                              </div>
                             )}
                           </div>
+
+                          {/* BURUNG BANGAU ORIGAMI 3D (Tampil di Juz Aktif) */}
+                          {displayActiveJuz === juz.juz && !juz.isCompleted && (
+                            <div className="origami-bird" title="Posisi Anda Saat Ini">
+                              <svg viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+                                <polygon fill="#fde047" points="394.6,183.3 226,306.9 285.4,117.7"/>
+                                <polygon fill="#facc15" points="394.6,183.3 496.1,232.7 226,306.9"/>
+                                <polygon fill="#eab308" points="226,306.9 148.9,252.3 35.5,233.1"/>
+                                <polygon fill="#ca8a04" points="226,306.9 313.2,465 313.2,351"/>
+                                <polygon fill="#a16207" points="226,306.9 176.6,393 216.5,335.7"/>
+                                <polygon fill="#fef08a" points="226,306.9 285.4,117.7 148.9,252.3"/>
+                              </svg>
+                            </div>
+                          )}
                         </div>
-                      );
-                    })}
-                  </div>
+                      </div>
+                    );
+                  })}
+                  
+                  {/* GELOMBANG SVG PAPER-CUT DI BAGIAN BAWAH ZONA (KECUALI ZONA TERAKHIR) */}
+                  {zone.id < 4 && (
+                    <div className="wave-divider">
+                      <svg viewBox="0 0 1440 120" preserveAspectRatio="none" className="wave-svg">
+                        <path fill={zone.waveFill} d="M0,64L80,74.7C160,85,320,107,480,101.3C640,96,800,64,960,53.3C1120,43,1280,53,1360,58.7L1440,64L1440,0L1360,0C1280,0,1120,0,960,0C800,0,640,0,480,0C320,0,160,0,80,0L0,0Z" />
+                      </svg>
+                    </div>
+                  )}
+
                 </div>
               );
             })}
@@ -587,9 +580,7 @@ export default function App() {
         </div>
       )}
 
-      {/* ============================================== */}
-      {/* STATISTIK TAB                                */}
-      {/* ============================================== */}
+      {/* STATISTIK TAB */}
       {activeTab === "statistik" && (
         <div style={{ padding: '20px' }}>
           <div className="chart-card">
@@ -625,9 +616,7 @@ export default function App() {
         </div>
       )}
 
-      {/* ============================================== */}
-      {/* RIWAYAT (LOG) TAB                                */}
-      {/* ============================================== */}
+      {/* RIWAYAT (LOG) TAB */}
       {activeTab === "log" && (
         <div style={{ padding: '20px' }}>
           <h2 style={{ color: '#2b7a5f', margin: '0 0 15px 0' }}>Riwayat Tilawah</h2>
