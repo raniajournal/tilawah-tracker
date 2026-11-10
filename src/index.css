@@ -1,28 +1,13 @@
 @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap');
 
-/* PENGATURAN GLOBAL: MENGUNCI UKURAN HP DI TENGAH LAYAR PC */
 body {
   margin: 0;
-  padding: 0;
   font-family: 'Nunito', sans-serif;
-  background-color: #E6DFD3; /* Warna bingkai PC (Earthy Tone) */
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  min-height: 100vh;
+  background-color: #f7f3ec;
   color: #333;
 }
 
-.app-container {
-  width: 100%;
-  max-width: 450px; /* Lebar maksimal layaknya smartphone */
-  height: 100vh;
-  position: relative;
-  overflow-y: auto;
-  overflow-x: hidden;
-  background-color: #f7f3ec; /* Background dalam aplikasi */
-  box-shadow: 0px 0px 30px rgba(0, 0, 0, 0.1); 
-}
+.app-container { padding-bottom: 80px; }
 
 /* Sisa CSS global kamu bisa ditempelkan di bawah sini... (seperti header, card, dashboard, dll) */
 /* HEADER & NAVBAR BAWAH (FONDASI) */
