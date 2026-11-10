@@ -270,12 +270,13 @@ export default function App() {
         newActiveJuz = targetJuzNumber;
       }
 
-      if ([5, 15, 25, 30].includes(targetJuzNumber) && isComplete) {
+      if ([6, 12, 18, 24, 30].includes(targetJuzNumber) && isComplete) {
         const zones = [
-          { id: 1, title: "THE DAWN SPRINGS", icon: "🌅", startJuz: 1, endJuz: 5 },
-          { id: 2, title: "THE PALM VALLEY", icon: "🌴", startJuz: 6, endJuz: 15 },
-          { id: 3, title: "THE LANTERN TRAIL", icon: "🏮", startJuz: 16, endJuz: 25 },
-          { id: 4, title: "THE STARRY SKY FINALE", icon: "✨", startJuz: 26, endJuz: 30 }
+          { id: 1, title: "GOLDEN SUNRISE", icon: "🌅", startJuz: 1, endJuz: 6 },
+          { id: 2, title: "DAWN SPRINGS", icon: "🏜️", startJuz: 7, endJuz: 12 },
+          { id: 3, title: "PALM VALLEY", icon: "🌴", startJuz: 13, endJuz: 18 },
+          { id: 4, title: "LANTERN TRAIL", icon: "🏮", startJuz: 19, endJuz: 24 },
+          { id: 5, title: "STARRY NIGHT", icon: "✨", startJuz: 25, endJuz: 30 }
         ];
         setMilestoneZone(zones.find(z => z.endJuz === targetJuzNumber));
         setShowMilestone(true);
