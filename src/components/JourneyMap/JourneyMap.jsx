@@ -2,34 +2,29 @@ import React, { useEffect, useRef } from 'react';
 import './JourneyMap.css';
 import { JUZ_DATA, calculateJuzProgress } from '../../juzUtils';
 
-// METADATA 5 SEKSI WILAYAH (Masing-masing 6 Juz)
+// METADATA 5 SEKSI WILAYAH (Seksi 3 & 4 di Kanan, sisanya di Kiri)
 const SEGMENTS = [
-  { id: 1, title: '🌅 1. Golden Sunrise', startJuz: 1, endJuz: 6, className: 'bg-sunrise', ribbonClass: 'ribbon-sunrise' },
-  { id: 2, title: '🏜️ 2. Dawn Springs', startJuz: 7, endJuz: 12, className: 'bg-desert', ribbonClass: 'ribbon-desert' },
-  { id: 3, title: '🌴 3. Palm Valley', startJuz: 13, endJuz: 18, className: 'bg-valley', ribbonClass: 'ribbon-valley' },
-  { id: 4, title: '🏮 4. Lantern Trail', startJuz: 19, endJuz: 24, className: 'bg-lantern', ribbonClass: 'ribbon-lantern' },
-  { id: 5, title: '✨ 5. Starry Night', startJuz: 25, endJuz: 30, className: 'bg-stars', ribbonClass: 'ribbon-stars' },
+  { id: 1, title: '🌅 1. Golden Sunrise', startJuz: 1, endJuz: 6, className: 'bg-sunrise', ribbonClass: 'ribbon-sunrise', ribbonSide: 'left' },
+  { id: 2, title: '🏜️ 2. Dawn Springs', startJuz: 7, endJuz: 12, className: 'bg-desert', ribbonClass: 'ribbon-desert', ribbonSide: 'left' },
+  { id: 3, title: '🌴 3. Palm Valley', startJuz: 13, endJuz: 18, className: 'bg-valley', ribbonClass: 'ribbon-valley', ribbonSide: 'right' },
+  { id: 4, title: '🏮 4. Lantern Trail', startJuz: 19, endJuz: 24, className: 'bg-lantern', ribbonClass: 'ribbon-lantern', ribbonSide: 'right' },
+  { id: 5, title: '✨ 5. Starry Night', startJuz: 25, endJuz: 30, className: 'bg-stars', ribbonClass: 'ribbon-stars', ribbonSide: 'left' },
 ];
 
-// TINGGI BERSIH TIAP SEKSI (600px per 6 Juz = 3000px total)
 const SEGMENT_NET_HEIGHT = 600;
 const TOTAL_MAP_HEIGHT = SEGMENTS.length * SEGMENT_NET_HEIGHT + 80;
 
-// RUMUS GELOMBANG SINUS (Koordinat X dalam %)
 const getWaveX = (juzNumber) => {
   return 50 + Math.sin(juzNumber * 0.8) * 26;
 };
 
-// RUMUS KOORDINAT Y AGAR PRESISI DI DALAM TIAP SEKSI (Dalam px)
 const getNodeY = (juzNumber) => {
   const idx = juzNumber - 1;
-  const segIndex = Math.floor(idx / 6); // Seksi 0..4
-  const posInSeg = idx % 6;             // Urutan 0..5 di dalam seksi
-  // Sisakan 95px di atas tiap seksi untuk ruang Ribbon Tag, lalu jarak antar-node 86px
+  const segIndex = Math.floor(idx / 6);
+  const posInSeg = idx % 6;
   return segIndex * SEGMENT_NET_HEIGHT + 95 + posInSeg * 86;
 };
 
-// MEMBUAT 1 JALUR PUTUS-PUTUS UTUH DARI JUZ 1 S/D 30 TANPA PUTUS ANTAR-SEKSI
 const generateContinuousPath = () => {
   const startX = getWaveX(1);
   const startY = getNodeY(1);
@@ -50,7 +45,6 @@ const generateContinuousPath = () => {
 const JourneyMap = ({ juzProgress, journeyMode, displayActiveJuz, toggleJourneyMode }) => {
   const activeNodeRef = useRef(null);
 
-  // AUTO SMOOTH SCROLL KE JUZ AKTIF SAAT PETA DIBUKA / BERUBAH
   useEffect(() => {
     if (activeNodeRef.current) {
       const timer = setTimeout(() => {
@@ -89,15 +83,17 @@ const JourneyMap = ({ juzProgress, journeyMode, displayActiveJuz, toggleJourneyM
           </div>
         </div>
 
-        {/* KANVAS UTAMA PETA (MENGGABUNGKAN LAYER BACKGROUND & LAYER JALUR) */}
+        {/* KANVAS UTAMA PETA */}
         <div className="map-viewport" style={{ height: `${TOTAL_MAP_HEIGHT}px` }}>
           
           {/* LAYER 1: 5 SEKSI GAMBAR LATAR BELAKANG & RIBBON TAG */}
           <div className="backgrounds-stack">
             {SEGMENTS.map((seg) => (
               <div key={seg.id} className={`oasis-segment ${seg.className}`}>
-                <div className={`ribbon-tag ${seg.ribbonClass}`}>
-                  {seg.title}
+                <div className={`ribbon-wrapper ${seg.ribbonSide === 'right' ? 'ribbon-right' : 'ribbon-left'}`}>
+                  <div className={`ribbon-tag ${seg.ribbonClass}`}>
+                    {seg.title}
+                  </div>
                 </div>
               </div>
             ))}
@@ -106,7 +102,6 @@ const JourneyMap = ({ juzProgress, journeyMode, displayActiveJuz, toggleJourneyM
           {/* LAYER 2: JALUR GARIS MENYAMBUNG & 30 TITIK JUZ */}
           <div className="nodes-scroller">
             
-            {/* 1 GARIS SVG UTUH MENEMBUS SEMUA SEKSI */}
             <svg
               className="continuous-path-svg"
               viewBox={`0 0 100 ${TOTAL_MAP_HEIGHT}`}
@@ -123,7 +118,6 @@ const JourneyMap = ({ juzProgress, journeyMode, displayActiveJuz, toggleJourneyM
               />
             </svg>
 
-            {/* 30 TITIK JUZ */}
             {juzProgress.map((juz) => {
               const totalAyah = JUZ_DATA[juz.juz - 1].totalAyahs;
               const progressData = calculateJuzProgress(juz.ayatRead, totalAyah);
@@ -146,7 +140,6 @@ const JourneyMap = ({ juzProgress, journeyMode, displayActiveJuz, toggleJourneyM
                     top: `${yPos}px`,
                   }}
                 >
-                  {/* CINCIN PROGRES 1/4 JUZ BERGAYA PAPER-CUT */}
                   <div
                     className={`organic-ring ${isLocked ? 'locked' : ''} ${juz.isCompleted ? 'completed' : ''}`}
                     style={{
@@ -167,7 +160,6 @@ const JourneyMap = ({ juzProgress, journeyMode, displayActiveJuz, toggleJourneyM
                     </div>
                   </div>
 
-                  {/* MASKOT BURUNG ORIGAMI + BAYANGAN MENGECIL DI ATAS NODE AKTIF */}
                   {isActive && (
                     <div className="origami-bird-marker" title="Posisi Tilawahmu Saat Ini">
                       <div className="bird-svg-wrapper">
