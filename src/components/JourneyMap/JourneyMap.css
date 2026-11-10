@@ -1,5 +1,5 @@
 /* =========================================
-   PEMBUNGKUS LUAR (UNTUK MARGIN KIRI-KANAN PC)
+   PEMBUNGKUS UTAMA (TENGAH DI PC & MOBILE)
 ========================================= */
 .map-outer-wrapper {
   width: 100%;
@@ -9,30 +9,32 @@
 }
 
 .map-paper-box {
-  padding: 0;
   width: 100%;
   max-width: 450px;
   margin: 0 auto;
   min-height: 100vh;
   overflow-x: hidden;
-  /* Warna dasar gelap di bagian paling bawah agar menyatu dengan Starry Sky */
-  background-color: #091235;
+  background-color: #0B192C;
   box-shadow: 0 0 35px rgba(0, 0, 0, 0.12);
 }
 
 /* =========================================
-   KOTAK PENGATURAN MODE
+   KOTAK PENGATURAN MODE PERJALANAN
 ========================================= */
+.mode-toggle-header {
+  background-color: #f7e6c4;
+  padding: 20px 20px 15px 20px;
+  position: relative;
+  z-index: 30;
+}
+
 .mode-toggle-box {
-  background: rgba(255, 255, 255, 0.92);
+  background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(10px);
   padding: 15px;
   border-radius: 20px;
-  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.08);
-  margin: 0 20px 35px 20px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
   text-align: center;
-  position: relative;
-  z-index: 100;
 }
 
 .mode-buttons {
@@ -64,105 +66,133 @@
 }
 
 /* =========================================
-   TUMPANG TINDIH 4 ZONA GAMBAR CURVE (TANPA GAP!)
+   KANVAS PETA & TUMPUKAN 5 SEKSI GAMBAR
 ========================================= */
-.journey-zones-wrapper {
-  display: flex;
-  flex-direction: column;
-}
-
-.zone-section {
+.map-viewport {
   position: relative;
   width: 100%;
-  /* 100% 100% menjaga agar lekukan curve di bagian bawah gambar utuh dari ujung kiri ke kanan */
+  background-color: #0B192C;
+  overflow: hidden;
+}
+
+.backgrounds-stack {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+}
+
+/* Setiap seksi menyumbang tinggi bersih 600px + 140px overlap bawah agar lekukan curve menumpuk tanpa celah */
+.oasis-segment {
+  position: relative;
+  width: 100%;
+  height: 740px;
   background-size: 100% 100%;
   background-repeat: no-repeat;
   background-position: bottom center;
-  /* Bayangan tegas mengikuti potongan transparan gambar curve */
-  filter: drop-shadow(0px 14px 10px rgba(0, 0, 0, 0.35));
 }
 
-/* ZONA 1: DAWN SPRINGS (Paling Atas: z-index 4) */
-.zone-dawn {
-  background-image: url('/images/journey-curve-1.webp'), url('/images/journey-curve-1.jpg');
+.bg-sunrise {
+  background-image: url('/images/journey-fix-1.webp'), url('/assets/journey-fix-1.webp');
+  z-index: 5;
+  margin-top: 0;
+  filter: drop-shadow(0px 15px 10px rgba(0, 0, 0, 0.2));
+}
+
+.bg-desert {
+  background-image: url('/images/journey-fix-2.webp'), url('/assets/journey-fix-2.webp');
   z-index: 4;
-  padding: 25px 0 210px 0; /* Padding bawah besar agar Juz 5 tidak terkena area transparan */
+  margin-top: -140px;
+  filter: drop-shadow(0px 15px 10px rgba(0, 0, 0, 0.22));
 }
 
-/* ZONA 2: PALM VALLEY (Di bawah Dawn: z-index 3) */
-.zone-palm {
-  background-image: url('/images/journey-curve-2.webp');
+.bg-valley {
+  background-image: url('/images/journey-fix-3.webp'), url('/assets/journey-fix-3.webp');
   z-index: 3;
-  margin-top: -240px; /* Ditarik jauh ke atas masuk ke balik lekukan transparan Zona 1 */
-  padding: 230px 0 310px 0; /* Padding bawah ekstra karena zona ini tinggi (10 Juz) */
+  margin-top: -140px;
+  filter: drop-shadow(0px 15px 10px rgba(0, 0, 0, 0.24));
 }
 
-/* ZONA 3: LANTERN TRAIL (Di bawah Palm: z-index 2) */
-.zone-lantern {
-  background-image: url('/images/journey-curve-3.webp');
+.bg-lantern {
+  background-image: url('/images/journey-fix-4.webp'), url('/assets/journey-fix-4.webp');
   z-index: 2;
-  margin-top: -340px; /* Ditarik jauh ke atas menutup seluruh area transparan Zona 2 */
-  padding: 320px 0 310px 0;
+  margin-top: -140px;
+  filter: drop-shadow(0px 15px 10px rgba(0, 0, 0, 0.26));
 }
 
-/* ZONA 4: STARRY SKY (Paling Bawah: z-index 1) */
-.zone-starry {
-  background-image: url('/images/journey-curve-4.webp');
+.bg-stars {
+  background-image: url('/images/journey-fix-5.webp'), url('/assets/journey-fix-5.webp');
   z-index: 1;
-  margin-top: -340px; /* Ditarik jauh ke atas menutup seluruh area transparan Zona 3 */
-  padding: 320px 0 180px 0;
-  filter: none;
+  height: 820px;
+  margin-top: -140px;
 }
 
 /* =========================================
-   HEADER TIAP ZONA
+   RIBBON TAG (PITA KERTAS PENANDA SEKSI)
 ========================================= */
-.zone-header {
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-  padding-left: 25px;
-  gap: 15px;
-  margin: 0 0 25px 0;
-  position: relative;
-  z-index: 20;
+.ribbon-tag {
+  position: absolute;
+  top: 22px;
+  left: -4px;
+  padding: 8px 22px 8px 18px;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  color: #FFFDF9;
+  clip-path: polygon(0% 0%, 90% 0%, 100% 50%, 90% 100%, 0% 100%);
+  box-shadow: 2px 3px 0px rgba(0, 0, 0, 0.15);
+  z-index: 15;
 }
 
-.zone-icon {
-  background: rgba(255, 255, 255, 0.75);
-  padding: 10px;
-  border-radius: 14px;
-  font-size: 1.5rem;
-  box-shadow: 3px 4px 8px rgba(0, 0, 0, 0.15);
+/* Untuk Seksi 2-5, turunkan posisi ribbon melewati area 140px yang ditindih seksi atasnya */
+.bg-desert .ribbon-tag,
+.bg-valley .ribbon-tag,
+.bg-lantern .ribbon-tag,
+.bg-stars .ribbon-tag {
+  top: 155px;
 }
 
-.zone-title {
-  font-size: 1.15rem;
-  font-weight: 900;
-  letter-spacing: 2px;
-  color: #652b0d;
-  margin: 0;
-  text-shadow: 0px 1px 6px rgba(255, 255, 255, 0.85);
+.ribbon-sunrise {
+  background-color: #DDA15E;
+  border-left: 5px solid #BC6C25;
 }
 
-.zone-palm .zone-title {
-  color: #143d29;
+.ribbon-desert {
+  background-color: #E29578;
+  border-left: 5px solid #B56576;
 }
 
-.zone-starry .zone-title {
-  color: #fef08a;
-  text-shadow: 0px 2px 6px rgba(0, 0, 0, 0.8);
+.ribbon-valley {
+  background-color: #606C38;
+  border-left: 5px solid #283618;
+}
+
+.ribbon-lantern {
+  background-color: #457B9D;
+  border-left: 5px solid #1D3557;
+}
+
+.ribbon-stars {
+  background-color: #2A9D8F;
+  border-left: 5px solid #264653;
 }
 
 /* =========================================
-   JALUR STITCHED THREAD & TITIK JUZ PRESISI
+   LAYER KONTEN JALUR & TITIK JUZ
 ========================================= */
-.journey-path-container {
-  position: relative;
+.nodes-scroller {
+  position: absolute;
+  top: 0;
+  left: 0;
   width: 100%;
+  height: 100%;
+  z-index: 10;
 }
 
-.dashed-path-svg {
+.continuous-path-svg {
   position: absolute;
   top: 0;
   left: 0;
@@ -173,52 +203,49 @@
   filter: drop-shadow(2px 2px 3px rgba(0, 0, 0, 0.25));
 }
 
-.juz-node-wrapper {
-  position: relative;
-  width: 100%;
-  height: 100px;
-  z-index: 2;
+.juz-node-point {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  z-index: 5;
+  transition: transform 0.3s ease;
+}
+
+/* Efek membesar & berbinar pada titik Juz yang sedang aktif */
+.juz-node-point.active-node {
+  transform: translate(-50%, -50%) scale(1.1);
+  z-index: 12;
+}
+
+.juz-node-point.active-node .organic-ring {
+  box-shadow: 0px 0px 0px 4px rgba(231, 111, 81, 0.85), 4px 6px 14px rgba(0, 0, 0, 0.35);
 }
 
 /* LINGKARAN OASIS PAPER-CUT */
 .organic-ring {
-  position: absolute;
-  top: 50%;
-  transform: translate(-50%, -50%); /* Mengunci titik tengah lingkaran tepat di koordinat left */
-  width: 76px;
-  height: 76px;
+  width: 66px;
+  height: 66px;
   border-radius: 45% 55% 42% 58% / 53% 45% 58% 42%;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 4px 5px 8px rgba(0, 0, 0, 0.35);
+  box-shadow: 3px 3px 0px #D1C7B7, 5px 5px 8px rgba(0, 0, 0, 0.22);
   transition: all 0.3s;
-  z-index: 3;
-}
-
-/* Mengunci posisi X persis di 25% dan 75% sesuai rumus garis SVG */
-.pos-left .organic-ring {
-  left: 25%;
-}
-
-.pos-right .organic-ring {
-  left: 75%;
 }
 
 .organic-inner {
-  width: 60px;
-  height: 60px;
+  width: 52px;
+  height: 52px;
   border-radius: 45% 55% 42% 58% / 53% 45% 58% 42%;
-  background: #fdfcf8;
+  background: #FFFDF9;
   display: flex;
   justify-content: center;
   align-items: center;
   position: relative;
-  box-shadow: inset 3px 3px 5px rgba(0, 0, 0, 0.15);
+  box-shadow: inset 2px 2px 4px rgba(0, 0, 0, 0.12);
 }
 
 .juz-number {
-  font-size: 1.4rem;
+  font-size: 1.25rem;
   font-weight: 900;
   color: #2b7a5f;
 }
@@ -237,16 +264,16 @@
 
 .lock-overlay {
   position: absolute;
-  bottom: -2px;
-  right: -2px;
+  bottom: -3px;
+  right: -3px;
   background: white;
   border-radius: 50%;
-  width: 22px;
-  height: 22px;
+  width: 20px;
+  height: 20px;
   display: flex;
   justify-content: center;
   align-items: center;
-  font-size: 0.8rem;
+  font-size: 0.7rem;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
   z-index: 5;
 }
@@ -260,21 +287,42 @@
 }
 
 /* =========================================
-   BURUNG BANGAU ORIGAMI 3D
+   ANIMASI BURUNG ORIGAMI & BAYANGAN MENGECIL
 ========================================= */
-.origami-bird {
+.origami-bird-marker {
   position: absolute;
-  right: -15px;
-  top: -30px;
-  width: 50px;
-  height: 50px;
-  filter: drop-shadow(4px 8px 6px rgba(0, 0, 0, 0.4));
-  animation: floatingOrigami 2.5s ease-in-out infinite;
-  z-index: 100;
+  top: -48px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  z-index: 25;
+  pointer-events: none;
 }
 
-@keyframes floatingOrigami {
-  0% { transform: translateY(0) rotate(0deg); }
-  50% { transform: translateY(-10px) rotate(-8deg); }
-  100% { transform: translateY(0) rotate(0deg); }
+.bird-svg-wrapper {
+  width: 48px;
+  height: 48px;
+  filter: drop-shadow(3px 5px 5px rgba(0, 0, 0, 0.35));
+  animation: paperFloat 2.4s ease-in-out infinite;
+}
+
+.shadow-cast {
+  width: 18px;
+  height: 5px;
+  background: rgba(0, 0, 0, 0.25);
+  border-radius: 50%;
+  margin-top: -4px;
+  animation: shadowShrink 2.4s ease-in-out infinite;
+}
+
+@keyframes paperFloat {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-9px) rotate(-6deg); }
+}
+
+@keyframes shadowShrink {
+  0%, 100% { transform: scale(1); opacity: 0.9; }
+  50% { transform: scale(0.55); opacity: 0.35; }
 }
