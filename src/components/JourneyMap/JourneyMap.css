@@ -118,7 +118,7 @@
   background-image: url('/images/journey-fix-4.webp'), url('/assets/journey-fix-4.webp');
   z-index: 2;
   margin-top: -140px;
-  filter: drop-shadow(0px 15px 10px rgba(0, 0, 0, 0.26));
+  filter: drop-shadow(0px 15px 10px rgba(0, 0, 0, 0.45));
 }
 
 .bg-stars {
