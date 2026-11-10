@@ -7,7 +7,9 @@ body {
   color: #333;
 }
 
-/* Header Lengkung */
+/* =========================================
+   HEADER & NAVBAR BAWAH (FONDASI)
+========================================= */
 .curved-header {
   background: #2b7a5f; /* Emerald Green */
   color: white;
@@ -16,159 +18,12 @@ body {
   border-bottom-right-radius: 40px;
   text-align: center;
   box-shadow: 0 10px 20px rgba(43, 122, 95, 0.2);
+  position: relative;
+  z-index: 10;
 }
 
-/* Bookmark Melayang */
-.floating-bookmark {
-  background: white;
-  margin: -30px 1.5rem 2rem 1.5rem;
-  padding: 1rem;
-  border-radius: 15px;
-  box-shadow: 0 8px 15px rgba(0,0,0,0.05);
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  border-left: 5px solid #e5b05c; /* Gold */
-}
-
-/* Efek Paper Cut Pop-Out (Kertas Bertumpuk) */
-.paper-cut-card {
-  background: #fff;
-  border-radius: 20px;
-  padding: 1rem;
-  text-align: center;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  /* Bayangan berjenjang mirip tumpukan kertas */
-  box-shadow: 
-    4px 4px 0px #e0d8c8, 
-    8px 8px 0px #c2dfd1, 
-    12px 12px 0px #2b7a5f;
-  border: 2px solid #e0d8c8;
-}
-
-.paper-cut-card:hover {
-  transform: translateY(-5px) translateX(-5px);
-  box-shadow: 
-    6px 6px 0px #e0d8c8, 
-    12px 12px 0px #c2dfd1, 
-    18px 18px 0px #2b7a5f;
-}
-
-/* Gambar Kotak Canva */
-.surah-image {
-  width: 100%;
-  aspect-ratio: 1/1;
-  border-radius: 12px;
-  object-fit: contain;
-  margin-bottom: 10px;
-}
-
-/* Modal Pop-up */
-.modal-overlay {
-  position: fixed;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(0,0,0,0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 100;
-}
-
-.modal-content {
-  background: white;
-  padding: 2rem;
-  border-radius: 25px;
-  width: 90%;
-  max-width: 400px;
-  max-height: 80vh;
-  overflow-y: auto;
-}
-
-/* Progress Bar Horizontal */
-.progress-bar-bg {
-  background: #e2e8f0;
-  border-radius: 10px;
-  height: 12px;
-  width: 100%;
-  overflow: hidden;
-  margin-top: 10px;
-}
-.progress-bar-fill {
-  background: #e5b05c;
-  height: 100%;
-  transition: width 0.5s ease;
-}
-
-.input-field {
-  width: 100%;
-  padding: 10px;
-  margin: 5px 0 15px 0;
-  border: 2px solid #e0d8c8;
-  border-radius: 10px;
-  font-family: inherit;
-  box-sizing: border-box;
-}
-
-.btn-primary {
-  background: #2b7a5f;
-  color: white;
-  border: none;
-  padding: 10px 20px;
-  border-radius: 10px;
-  font-weight: bold;
-  cursor: pointer;
-  width: 100%;
-}
-.btn-gold {
-  background: #e5b05c;
-  color: white;
-  border: none;
-  padding: 10px 20px;
-  border-radius: 10px;
-  font-weight: bold;
-  cursor: pointer;
-  width: 100%;
-  margin-top: 10px;
-}
-/* Progress Bar di Header Utama */
-.header-progress-bg {
-  background: rgba(255, 255, 255, 0.2);
-  border-radius: 10px;
-  height: 12px;
-  width: 80%;
-  max-width: 400px;
-  margin: 15px auto 5px auto;
-  overflow: hidden;
-}
-.header-progress-fill {
-  background: #e5b05c; /* Warna Emas Pastel */
-  height: 100%;
-  transition: width 0.5s ease;
-}
-
-/* Tombol Silang (Close) di Modal */
-.modal-content {
-  position: relative; /* Penting untuk tombol close */
-}
-.close-btn {
-  position: absolute;
-  top: 15px;
-  right: 20px;
-  font-size: 1.5rem;
-  font-weight: bold;
-  color: #888;
-  cursor: pointer;
-  background: none;
-  border: none;
-}
-.close-btn:hover {
-  color: #e53e3e;
-}
-
-/* Tambahan untuk Navigasi Bawah dan Statistik */
 .app-container {
-  padding-bottom: 80px; /* Jarak agar konten tidak tertutup nav bawah */
+  padding-bottom: 80px; 
 }
 
 .bottom-nav {
@@ -201,63 +56,116 @@ body {
   color: #2b7a5f;
 }
 
-/* Grafik Mingguan (Bar) */
-.chart-card {
+/* =========================================
+   DASHBOARD & SURAH CARDS
+========================================= */
+.floating-bookmark {
   background: white;
-  border-radius: 20px;
-  padding: 20px;
-  margin: 15px;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.03);
-}
-.chart-container {
+  margin: -30px 1.5rem 2rem 1.5rem;
+  padding: 1rem;
+  border-radius: 15px;
+  box-shadow: 0 8px 15px rgba(0,0,0,0.05);
   display: flex;
-  align-items: flex-end;
   justify-content: space-between;
-  height: 120px;
-  margin-top: 20px;
-}
-.bar-wrapper {
-  display: flex;
-  flex-direction: column;
   align-items: center;
-  width: 12%;
-  gap: 5px;
-}
-.bar-bg {
-  height: 90px;
-  width: 15px;
-  background: #f7f3ec;
-  border-radius: 10px;
+  border-left: 5px solid #e5b05c; /* Gold */
   position: relative;
-  display: flex;
-  align-items: flex-end;
-}
-.bar-fill {
-  width: 100%;
-  background: #e5b05c;
-  border-radius: 10px;
-  transition: height 0.5s ease;
+  z-index: 20; 
 }
 
-/* Heatmap Grid */
-.heatmap-grid {
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  gap: 8px;
-  margin-top: 15px;
+.paper-cut-card {
+  background: #fff;
+  border-radius: 20px;
+  padding: 1rem;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 4px 4px 0px #e0d8c8, 8px 8px 0px #c2dfd1, 12px 12px 0px #2b7a5f;
+  border: 2px solid #e0d8c8;
 }
-.heatmap-box {
-  aspect-ratio: 1;
-  border-radius: 6px;
-  background: #f7f3ec;
+
+.paper-cut-card:hover {
+  transform: translateY(-5px) translateX(-5px);
+  box-shadow: 6px 6px 0px #e0d8c8, 12px 12px 0px #c2dfd1, 18px 18px 0px #2b7a5f;
+}
+
+.surah-image {
+  width: 100%;
+  aspect-ratio: 1/1;
+  border-radius: 12px;
+  object-fit: contain;
+  margin-bottom: 10px;
+}
+
+/* =========================================
+   GLOBAL COMPONENTS (MODAL, BUTTON, DLL)
+========================================= */
+.modal-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.5);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.6rem;
-  color: white;
-  font-weight: bold;
+  z-index: 1000;
 }
-/* Container Estetik di Header */
+
+.modal-content {
+  background: white;
+  padding: 2rem;
+  border-radius: 25px;
+  width: 90%;
+  max-width: 400px;
+  max-height: 80vh;
+  overflow-y: auto;
+  position: relative;
+}
+
+.close-btn {
+  position: absolute;
+  top: 10px;
+  right: 15px;
+  font-size: 2.5rem; 
+  font-weight: bold;
+  color: #aaa;
+  cursor: pointer;
+  background: none;
+  border: none;
+  line-height: 1;
+}
+.close-btn:hover { color: #e53e3e; }
+
+.progress-bar-bg {
+  background: #e2e8f0;
+  border-radius: 10px;
+  height: 12px;
+  width: 100%;
+  overflow: hidden;
+  margin-top: 10px;
+}
+.progress-bar-fill {
+  background: #e5b05c;
+  height: 100%;
+  transition: width 0.5s ease;
+}
+
+.input-field {
+  width: 100%;
+  padding: 10px;
+  margin: 5px 0 15px 0;
+  border: 2px solid #e0d8c8;
+  border-radius: 10px;
+  font-family: inherit;
+  box-sizing: border-box;
+}
+
+.btn-primary { background: #2b7a5f; color: white; border: none; padding: 10px 20px; border-radius: 10px; font-weight: bold; cursor: pointer; width: 100%; }
+.btn-gold { background: #e5b05c; color: white; border: none; padding: 10px 20px; border-radius: 10px; font-weight: bold; cursor: pointer; width: 100%; margin-top: 10px; }
+
+.search-container { padding: 0 1.5rem; margin-bottom: 20px; }
+.search-input { width: 100%; padding: 12px 20px; border-radius: 15px; border: 1px solid #ddd; background: white; font-size: 0.95rem; font-family: inherit; box-shadow: 0 4px 10px rgba(0,0,0,0.02); outline: none; box-sizing: border-box;}
+.search-input:focus { border-color: #2b7a5f; }
+
 .glass-stat-card {
   background: rgba(255, 255, 255, 0.15);
   backdrop-filter: blur(10px);
@@ -282,305 +190,24 @@ body {
   border-bottom: 1px solid rgba(255,255,255,0.2);
   padding-bottom: 5px;
 }
+.stat-row:last-child { border-bottom: none; }
 
-.stat-row:last-child {
-  border-bottom: none;
-}
+.header-progress-bg { background: rgba(255, 255, 255, 0.2); border-radius: 10px; height: 12px; width: 80%; max-width: 400px; margin: 15px auto 5px auto; overflow: hidden; }
+.header-progress-fill { background: #e5b05c; height: 100%; transition: width 0.5s ease; }
 
-/* Modifikasi Heatmap & Bar Chart untuk Kalender Asli */
-.heatmap-box {
-  aspect-ratio: 1;
-  border-radius: 6px;
-  background: #f7f3ec;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 0.65rem;
-  color: #fff; /* Warna angka */
-  font-weight: bold;
-}
-
-.date-label {
-  font-size: 0.6rem;
-  color: #888;
-  margin-top: 5px;
-  text-align: center;
-  line-height: 1.2;
-}
-
-/* Modal Target */
-.target-modal {
-  background: white;
-  padding: 25px;
-  border-radius: 20px;
-  width: 90%;
-  max-width: 400px;
-  color: #333;
-}
-/* --- SEARCH BAR --- */
-.search-container {
-  padding: 0 1.5rem;
-  margin-bottom: 20px;
-}
-.search-input {
-  width: 100%;
-  padding: 12px 20px;
-  border-radius: 15px;
-  border: 1px solid #ddd;
-  background: white;
-  font-size: 0.95rem;
-  font-family: inherit;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.02);
-  outline: none;
-}
-.search-input:focus {
-  border-color: #2b7a5f;
-}
-
-/* --- PERBAIKAN HEATMAP --- */
-.heatmap-box {
-  aspect-ratio: 1;
-  border-radius: 4px;
-  background: #f7f3ec;
-  /* Angka dihilangkan, jadi tidak perlu flex center & text styling */
-  transition: transform 0.2s;
-}
-.heatmap-box:hover {
-  transform: scale(1.1);
-  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-}
-.heatmap-legend {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 5px;
-  font-size: 0.7rem;
-  color: #888;
-  margin-top: 15px;
-}
-.legend-box {
-  width: 12px;
-  height: 12px;
-  border-radius: 2px;
-}
-
-/* --- ACTIVITY LOG (RIWAYAT GLOBAL) --- */
-.filter-toggle {
-  display: flex;
-  background: #f7f3ec;
-  border-radius: 10px;
-  margin-bottom: 15px;
-  overflow: hidden;
-}
-.filter-btn {
-  flex: 1;
-  padding: 8px;
-  border: none;
-  background: transparent;
-  color: #888;
-  font-size: 0.8rem;
-  cursor: pointer;
-  font-weight: bold;
-}
-.filter-btn.active {
-  background: #2b7a5f;
-  color: white;
-}
-.log-card {
-  background: white;
-  border-radius: 12px;
-  padding: 12px 15px;
-  margin-bottom: 10px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.03);
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  border-left: 4px solid #2b7a5f;
-}
-.log-info h5 {
-  margin: 0 0 4px 0;
-  color: #333;
-  font-size: 0.95rem;
-}
-.log-info p {
-  margin: 0;
-  color: #888;
-  font-size: 0.75rem;
-}
-.log-badge {
-  background: #e6f2ed;
-  color: #2b7a5f;
-  padding: 5px 10px;
-  border-radius: 8px;
-  font-weight: bold;
-  font-size: 0.8rem;
-}
-/* --- DESAIN STRUK NOTA UNTUK RIWAYAT --- */
-.receipt-container {
-  background: #faf9f5;
-  border: 2px dashed #d1cbbd;
-  border-radius: 8px;
-  padding: 10px 15px;
-  margin-top: 10px;
-  max-height: 250px;
-  overflow-y: auto;
-  box-shadow: inset 0 0 10px rgba(0,0,0,0.02);
-}
-.receipt-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 10px 0;
-  border-bottom: 1px dashed #d1cbbd;
-  font-family: 'Courier New', Courier, monospace; /* Font ala struk */
-}
-.receipt-item:last-child {
-  border-bottom: none;
-}
-.receipt-date {
-  color: #888;
-  display: block;
-  font-size: 0.75rem;
-  margin-bottom: 3px;
-  font-family: sans-serif;
-}
-.receipt-note {
-  color: #2b7a5f;
-  font-weight: bold;
-  font-size: 0.95rem;
-}
-
-/* --- PERBAIKAN TOMBOL X & HEATMAP --- */
-.close-btn {
-  position: absolute;
-  top: 10px;
-  right: 15px;
-  font-size: 2.5rem; /* Diperbesar! */
-  font-weight: bold;
-  color: #aaa;
-  cursor: pointer;
-  background: none;
-  border: none;
-  line-height: 1;
-}
-.close-btn:hover {
-  color: #e53e3e;
-}
-.heatmap-box {
-  aspect-ratio: 1;
-  border-radius: 4px;
-  background: #f7f3ec;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 0.65rem;
-  font-weight: bold;
-  transition: transform 0.2s;
-}
-/* --- HALAMAN LOGIN GLASSMORPHISM --- */
-.login-page {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  min-height: 100vh;
-  /* Default untuk Laptop */
-  background-image: url('/images/pc-bg2.webp');
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-  padding: 20px;
-}
-
-/* Deteksi Layar HP */
-@media (max-width: 768px) {
-  .login-page {
-    background-image: url('/images/hp-bg2.webp');
-  }
-}
-
-.login-glass-box {
-  background: rgba(255, 255, 255, 0.15); /* Transparan */
-  backdrop-filter: blur(12px); /* Efek Kaca Buram */
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.4);
-  border-radius: 20px;
-  padding: 40px 30px;
-  width: 90%;
-  max-width: 450px;
-  text-align: center;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-}
-
-.login-hadith {
-  font-size: 0.95rem;
-  font-style: italic;
-  color: #333;
-  line-height: 1.6;
-  margin-bottom: 20px;
-  text-shadow: 0 1px 2px rgba(255,255,255,0.5); /* Supaya teks tetap terbaca */
-}
-
-.login-motivation {
-  font-size: 0.9rem;
-  color: #1e5441;
-  font-weight: bold;
-  margin-bottom: 30px;
-}
-
-/* Desain Tombol Google yang Elegan */
-.btn-google {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  background: white;
-  color: #555;
-  border: none;
-  padding: 12px 25px;
-  border-radius: 25px;
-  font-size: 1rem;
-  font-weight: bold;
-  cursor: pointer;
-  box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-  transition: transform 0.2s, box-shadow 0.2s;
-}
-
-.btn-google:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 12px rgba(0,0,0,0.1);
-}
-
-.btn-google img {
-  width: 20px;
-  height: 20px;
-}
-/* --- FIX BOOKMARK TERTUTUP HEADER --- */
-.curved-header {
-  position: relative;
-  z-index: 10;
-}
-
-.floating-bookmark {
-  position: relative;
-  z-index: 20; /* Angka lebih besar memaksa bookmark maju ke depan */
-  margin-top: -15px; /* Sedikit overlap dengan header biar estetik */
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1); /* Tambahan bayangan biar makin pop-out */
-}
 
 /* =========================================
-   QURAN JOURNEY MAP (PAPER-CUT DUOLINGO STYLE)
+   QURAN JOURNEY MAP (SHADOW BOX & PAPER CUT)
 ========================================= */
-.map-container {
+.map-paper-box {
   padding: 0;
   background: #fdfcf8;
   min-height: 100vh;
-  overflow-x: hidden; /* Mencegah scroll menyamping */
+  overflow-x: hidden;
 }
 
-/* --- KOTAK PENGATURAN DI ATAS --- */
 .mode-toggle-box {
-  background: rgba(255, 255, 255, 0.95);
+  background: rgba(255, 255, 255, 0.9);
   backdrop-filter: blur(10px);
   padding: 15px;
   border-radius: 20px;
@@ -590,48 +217,43 @@ body {
   position: relative;
   z-index: 100;
 }
-
 .mode-buttons { display: flex; gap: 10px; margin-top: 10px; background: #f1f0ea; padding: 5px; border-radius: 15px; }
 .btn-mode { flex: 1; padding: 10px; border: none; border-radius: 12px; font-weight: bold; font-size: 0.85rem; color: #888; background: transparent; cursor: pointer; transition: all 0.3s; }
 .btn-mode.active { background: #2b7a5f; color: white; box-shadow: 0 4px 10px rgba(43, 122, 95, 0.3); }
 
-/* --- TEMA BUKIT BERTUMPUK (PAPER-CUT ZONES) --- */
+/* --- TEMA WARNA BUKIT (DARI TERANG KE GELAP) --- */
 .journey-zones-wrapper {
   display: flex;
   flex-direction: column;
 }
-
 .zone-section {
   position: relative;
   padding: 40px 0 60px 0;
-  /* Hapus margin negatif, kita pakai transisi SVG agar organik */
 }
 
-/* Palet Warna Pastel yang Kalem & Elegan */
-.zone-dawn { background-color: #fceea7; z-index: 4; padding-top: 0; }     /* Kuning Pastel Kalem */
-.zone-palm { background-color: #a7f3d0; z-index: 3; }                     /* Hijau Mint Pastel */
-.zone-lantern { background-color: #fecdd3; z-index: 2; }                  /* Pink Rose Pastel */
-.zone-starry { background-color: #1e3a8a; z-index: 1; padding-bottom: 120px; } /* Biru Malam tetap gelap agar kontras */
+/* Z-Index menyusut ke bawah supaya layer atas menindih layer bawah */
+.zone-dawn { background-color: #fde047; z-index: 4; padding-top: 0; }     /* Kuning Emas */
+.zone-palm { background-color: #86efac; z-index: 3; padding-top: 60px;}   /* Hijau Mint Kalem */
+.zone-lantern { background-color: #fca5a5; z-index: 2; padding-top: 60px;}/* Pink Kemerahan Kalem */
+.zone-starry { background-color: #1e3a8a; z-index: 1; padding-top: 60px; padding-bottom: 120px; } /* Biru Malam */
 
-/* --- EFEK PAPER-CUT GELOMBANG (SVG TRANSITION) --- */
-/* Ini yang bikin efek kertas melengkung random dan berbayang */
+/* --- EFEK KERTAS BERTUMPUK (GELOMBANG SVG) --- */
 .wave-divider {
   position: absolute;
-  top: -40px; /* Tarik ke atas menutupi zona sebelumnya */
+  bottom: 0; 
   left: 0;
   width: 100%;
+  transform: translateY(99%); /* Turunkan menindih zona bawahnya */
   z-index: 10;
-  /* Shadow ini kunci dari efek Paper-Cut! */
-  filter: drop-shadow(0px -8px 6px rgba(0,0,0,0.1)); 
+  filter: drop-shadow(0px 8px 6px rgba(0,0,0,0.15)); /* BAYANGAN PAPER CUT YANG TEGAS */
 }
-
 .wave-svg {
   width: 100%;
-  height: 45px;
+  height: 50px;
   display: block;
 }
 
-/* Judul Zona */
+/* --- JUDUL ZONA --- */
 .zone-header {
   display: flex;
   align-items: center;
@@ -646,81 +268,66 @@ body {
   padding: 8px;
   border-radius: 12px;
   font-size: 1.5rem;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+  box-shadow: 3px 3px 6px rgba(0,0,0,0.1);
 }
 .zone-title {
   font-size: 1.1rem;
   font-weight: 900;
   letter-spacing: 2px;
-  color: #854d0e; /* Coklat keemasan yang lebih membaur */
+  color: #78350f; /* Coklat tua membaur */
   margin: 0;
 }
-.zone-starry .zone-title { color: #fef08a; } /* Kuning pucat untuk malam */
+.zone-starry .zone-title { color: #fef08a; } 
 
-/* --- JALUR PETA MELIUK (ZIG-ZAG OTOMATIS) --- */
-.journey-path-container {
-  position: relative;
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  /* Menghilangkan margin-top berlebih */
-}
-
-/* Garis Bezier Penghubung (Kini TEPAT di TENGAH NODE) */
-.dashed-path-svg {
-  position: absolute;
-  top: 35px; /* Mulai tepat dari tengah node pertama (node height 70 / 2) */
-  left: 0;
-  width: 100%;
-  height: calc(100% - 70px); /* Berakhir tepat di tengah node terakhir */
-  z-index: 0; /* Harus di bawah node */
-  pointer-events: none;
-}
-
+/* --- JALUR JAHITAN BENANG (STITCHED THREAD) --- */
 .juz-node-wrapper {
   position: relative;
   width: 100%;
-  display: flex;
-  margin: 15px 0; /* Jarak vertikal dipersempit */
-  height: 70px; /* Tinggi wrapper disamakan dengan lingkaran */
-  z-index: 2; /* Harus di atas garis putus-putus */
-}
-
-/* Posisi Node Meliuk-liuk agar Garisnya Membentuk "S" */
-.pos-left { justify-content: flex-start; padding-left: 20%; }
-.pos-right { justify-content: flex-end; padding-right: 20%; }
-
-/* --- LINGKARAN NODE JUZ --- */
-.juz-node-circle {
-  position: relative;
-  width: 70px; /* Diperbesar sedikit agar icon tidak sesak */
-  height: 70px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  /* Shadow untuk efek tombol menonjol */
-  filter: drop-shadow(0 4px 6px rgba(0,0,0,0.15));
-}
-
-/* Cincin Progres SVG */
-.progress-svg {
-  position: absolute;
-  top: 0; left: 0;
-  z-index: 1;
-}
-
-/* Bagian Tengah Lingkaran */
-.node-content {
-  width: 54px;
-  height: 54px;
-  background: white;
-  border-radius: 50%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  position: relative;
+  height: 100px; /* Jarak vertikal */
   z-index: 2;
+}
+
+/* Garis SVG ini pasti 100% pas nyambung di tengah nomor! */
+.stitched-line {
+  position: absolute;
+  top: 50%; /* Presisi dari tengah node saat ini */
+  left: 0;
+  width: 100%;
+  height: 100px; /* Merentang ke node berikutnya */
+  z-index: -1;
+  overflow: visible;
+  filter: drop-shadow(2px 2px 2px rgba(0,0,0,0.1));
+}
+
+/* --- OASIS ORGANIK (LINGKARAN TIDAK SEMPURNA) --- */
+.organic-ring {
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%); /* Menahan di kordinat X yg tepat */
+  width: 76px;
+  height: 76px;
+  /* Bentuk potongan gunting tidak beraturan */
+  border-radius: 45% 55% 42% 58% / 53% 45% 58% 42%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* Bayangan Shadow Box */
+  box-shadow: 4px 5px 8px rgba(0,0,0,0.2);
+  transition: all 0.3s;
+}
+
+.organic-inner {
+  width: 60px;
+  height: 60px;
+  /* Ikuti bentuk potongan luar */
+  border-radius: 45% 55% 42% 58% / 53% 45% 58% 42%;
+  background: #fdfcf8;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  /* Bayangan ke dalam (Cut-out hole) */
+  box-shadow: inset 3px 3px 5px rgba(0,0,0,0.08);
 }
 
 .juz-number {
@@ -730,45 +337,85 @@ body {
 }
 
 /* KONDISI TERKUNCI (FOG OF WAR) */
-/* Tetap tampilkan angka, tapi beri ikon gembok kecil */
-.lock-overlay {
-  position: absolute;
-  bottom: -2px;
-  right: -2px;
-  background: white;
-  border-radius: 50%;
-  width: 20px;
-  height: 20px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  font-size: 0.7rem;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-  z-index: 5;
+.organic-ring.locked { background: #e5e7eb; }
+.organic-ring.locked .organic-inner { background: #f3f4f6; }
+.organic-ring.locked .juz-number { color: #9ca3af; } 
+
+.lock-icon {
+  font-size: 1rem;
+  filter: grayscale(100%);
+  opacity: 0.6;
 }
 
-.juz-node-circle.locked .node-content { background-color: #f3f4f6; }
-.juz-node-circle.locked .juz-number { color: #9ca3af; } /* Angka jadi abu-abu */
-.juz-node-circle.locked .progress-svg { display: none; } /* Sembunyikan ring jika terkunci */
-
 /* KONDISI SELESAI */
-.juz-node-circle.completed .node-content { background-color: #fef08a; }
-.juz-node-circle.completed .juz-number { color: #b45309; }
+.organic-ring.completed .organic-inner { background: #fef08a; }
+.organic-ring.completed .juz-number { color: #b45309; }
 
-/* --- MASKOT BURUNG ORIGAMI 3D --- */
+/* --- BURUNG BANGAU ORIGAMI 3D --- */
 .origami-bird {
   position: absolute;
-  right: -20px;
-  top: -25px;
-  width: 48px;
-  height: 48px;
-  filter: drop-shadow(0 6px 6px rgba(0,0,0,0.3));
+  right: -15px;
+  top: -30px;
+  width: 50px;
+  height: 50px;
+  filter: drop-shadow(4px 8px 6px rgba(0,0,0,0.3));
   animation: floatingOrigami 2.5s ease-in-out infinite;
   z-index: 100;
 }
 
 @keyframes floatingOrigami {
   0% { transform: translateY(0) rotate(0deg); }
-  50% { transform: translateY(-8px) rotate(-5deg); }
+  50% { transform: translateY(-10px) rotate(-8deg); }
   100% { transform: translateY(0) rotate(0deg); }
 }
+
+
+/* =========================================
+   STATISTIK & RIWAYAT (DARI INDEX ASLI)
+========================================= */
+.chart-card { background: white; border-radius: 20px; padding: 20px; margin: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); }
+.chart-container { display: flex; align-items: flex-end; justify-content: space-between; height: 120px; margin-top: 20px; }
+.bar-wrapper { display: flex; flex-direction: column; align-items: center; width: 12%; gap: 5px; }
+.bar-bg { height: 90px; width: 15px; background: #f7f3ec; border-radius: 10px; position: relative; display: flex; align-items: flex-end; }
+.bar-fill { width: 100%; background: #e5b05c; border-radius: 10px; transition: height 0.5s ease; }
+
+.heatmap-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; margin-top: 15px; }
+.heatmap-box { aspect-ratio: 1; border-radius: 4px; background: #f7f3ec; display: flex; align-items: center; justify-content: center; font-size: 0.65rem; color: #fff; font-weight: bold; transition: transform 0.2s; }
+.heatmap-box:hover { transform: scale(1.1); box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
+.heatmap-legend { display: flex; align-items: center; justify-content: flex-end; gap: 5px; font-size: 0.7rem; color: #888; margin-top: 15px; }
+.legend-box { width: 12px; height: 12px; border-radius: 2px; }
+
+.filter-toggle { display: flex; background: #f7f3ec; border-radius: 10px; margin-bottom: 15px; overflow: hidden; }
+.filter-btn { flex: 1; padding: 8px; border: none; background: transparent; color: #888; font-size: 0.8rem; cursor: pointer; font-weight: bold; }
+.filter-btn.active { background: #2b7a5f; color: white; }
+
+.receipt-container { background: #faf9f5; border: 2px dashed #d1cbbd; border-radius: 8px; padding: 10px 15px; margin-top: 10px; max-height: 250px; overflow-y: auto; box-shadow: inset 0 0 10px rgba(0,0,0,0.02); }
+.receipt-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px dashed #d1cbbd; font-family: 'Courier New', Courier, monospace; }
+.receipt-item:last-child { border-bottom: none; }
+.receipt-date { color: #888; display: block; font-size: 0.75rem; margin-bottom: 3px; font-family: sans-serif; }
+.receipt-note { color: #2b7a5f; font-weight: bold; font-size: 0.95rem; }
+
+/* =========================================
+   HALAMAN LOGIN GLASSMORPHISM
+========================================= */
+.login-page {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  background-image: url('/images/pc-bg2.webp');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  padding: 20px;
+}
+@media (max-width: 768px) {
+  .login-page { background-image: url('/images/hp-bg2.webp'); }
+}
+.login-glass-box { background: rgba(255, 255, 255, 0.15); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.4); border-radius: 20px; padding: 40px 30px; width: 90%; max-width: 450px; text-align: center; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1); }
+.login-hadith { font-size: 0.95rem; font-style: italic; color: #333; line-height: 1.6; margin-bottom: 20px; text-shadow: 0 1px 2px rgba(255,255,255,0.5); }
+.login-motivation { font-size: 0.9rem; color: #1e5441; font-weight: bold; margin-bottom: 30px; }
+.btn-google { display: inline-flex; align-items: center; justify-content: center; gap: 10px; background: white; color: #555; border: none; padding: 12px 25px; border-radius: 25px; font-size: 1rem; font-weight: bold; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.05); transition: transform 0.2s, box-shadow 0.2s; }
+.btn-google:hover { transform: translateY(-2px); box-shadow: 0 6px 12px rgba(0,0,0,0.1); }
+.btn-google img { width: 20px; height: 20px; }
