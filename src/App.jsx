@@ -2,7 +2,10 @@ import React, { useState, useEffect, useMemo } from "react";
 import { auth, db } from "./firebase";
 import { signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "firebase/auth";
 import { doc, setDoc, onSnapshot } from "firebase/firestore";
-import { JUZ_DATA, getJuzFromSurahAndAyah, calculateJuzProgress } from "./juzUtils";
+import { JUZ_DATA, getJuzFromSurahAndAyah } from "./juzUtils";
+
+// Import komponen JourneyMap yang baru dibuat
+import JourneyMap from "./components/JourneyMap/JourneyMap";
 
 const SURAHS = [
   { id: 1, name: "Al-Fatihah", meaning: "Pembukaan", ayahs: 7, juz: "Juz 1" },
@@ -143,16 +146,6 @@ const getLastNDays = (n) => {
   return dates;
 };
 
-// =====================================
-// DATA 4 ZONA TEMA PAPER-CUT Z-INDEX
-// Diurutkan: Sand Dunes -> Midnight Blue
-// =====================================
-const ZONES = [
-  { id: 1, title: "THE DAWN SPRINGS", icon: "🌅", startJuz: 1, endJuz: 5, bgClass: "zone-dawn", waveFill: "#fde047" },
-  { id: 2, title: "THE PALM VALLEY", icon: "🌴", startJuz: 6, endJuz: 15, bgClass: "zone-palm", waveFill: "#86efac" },
-  { id: 3, title: "THE LANTERN TRAIL", icon: "🏮", startJuz: 16, endJuz: 25, bgClass: "zone-lantern", waveFill: "#fca5a5" },
-  { id: 4, title: "THE STARRY SKY FINALE", icon: "✨", startJuz: 26, endJuz: 30, bgClass: "zone-starry", waveFill: "#1e3a8a" } // Zona terakhir tidak butuh wave ke bawah
-];
 
 export default function App() {
   const [user, setUser] = useState(null);
@@ -174,6 +167,10 @@ export default function App() {
   
   const [journeyMode, setJourneyMode] = useState("FREE"); 
   const [activeJuz, setActiveJuz] = useState(1);
+  
+  // State untuk Pop-up Animasi Milestone
+  const [showMilestone, setShowMilestone] = useState(false);
+  const [milestoneZone, setMilestoneZone] = useState(null);
 
   // OTAK KALKULASI JUZ
   const juzProgress = useMemo(() => {
@@ -269,11 +266,29 @@ export default function App() {
     const updatedProgress = { ...progress, [selectedSurah.id]: { read: readCount, history: newHistory } };   
     
     let newActiveJuz = activeJuz;
-    if (ayahsAdded > 0 && journeyMode === 'FREE') {
-      const targetEnd = isComplete ? selectedSurah.ayahs : parseInt(endAyah);
-      const targetJuzData = getJuzFromSurahAndAyah(selectedSurah.id, targetEnd);
-      if (targetJuzData) newActiveJuz = targetJuzData.juz;
+    const targetEnd = isComplete ? selectedSurah.ayahs : parseInt(endAyah);
+    const targetJuzData = getJuzFromSurahAndAyah(selectedSurah.id, targetEnd);
+    
+    if (targetJuzData) {
+      const targetJuzNumber = targetJuzData.juz;
+      if (ayahsAdded > 0 && journeyMode === 'FREE') {
+        newActiveJuz = targetJuzNumber;
+      }
+      
+      // LOGIKA POP-UP MILESTONE
+      if ([5, 15, 25, 30].includes(targetJuzNumber) && isComplete) {
+         // Data statis untuk modal saja
+         const zones = [
+           { id: 1, title: "THE DAWN SPRINGS", icon: "🌅", endJuz: 5 },
+           { id: 2, title: "THE PALM VALLEY", icon: "🌴", endJuz: 15 },
+           { id: 3, title: "THE LANTERN TRAIL", icon: "🏮", endJuz: 25 },
+           { id: 4, title: "THE STARRY SKY FINALE", icon: "✨", endJuz: 30 }
+         ];
+         setMilestoneZone(zones.find(z => z.endJuz === targetJuzNumber));
+         setShowMilestone(true);
+      }
     }
+    
     setActiveJuz(newActiveJuz);
 
     await setDoc(doc(db, "users", user.uid), { 
@@ -281,6 +296,8 @@ export default function App() {
       journeyMode: journeyMode,
       activeJuz: newActiveJuz
     }, { merge: true });
+    
+    setSelectedSurah(null); 
   };
 
   const deleteHistory = async (indexToDelete, surahId) => {
@@ -370,7 +387,6 @@ export default function App() {
   const maxAyahs7D = Math.max(...last7Days.map(d => dailyStats[d.fullDate] || 0), 10);
   const filteredSurahs = SURAHS.filter(s => s.name.toLowerCase().includes(searchQuery.toLowerCase()) || s.meaning.toLowerCase().includes(searchQuery.toLowerCase()));
 
-  // PENENTUAN POSISI BURUNG
   let displayActiveJuz = activeJuz;
   if (journeyMode === 'LINEAR') {
     const firstUnfinished = juzProgress.find(j => !j.isCompleted);
@@ -469,115 +485,32 @@ export default function App() {
         </>
       )}
 
-      {/* ============================================== */}
-      {/* QURAN JOURNEY MAP (SHADOW BOX STYLE)           */}
-      {/* ============================================== */}
+      {/* COMPONENT JOURNEY MAP DIPANGGIL DI SINI */}
       {activeTab === "peta" && (
-        <div className="map-paper-box">
-          <div className="mode-toggle-box">
-            <h3 style={{ margin: '0 0 5px 0', color: '#1e5441' }}>Pengaturan Perjalanan</h3>
-            <p style={{ margin: 0, fontSize: '0.8rem', color: '#666' }}>Pilih gayamu menaklukkan 30 Juz</p>
-            <div className="mode-buttons">
-              <button className={`btn-mode ${journeyMode === 'LINEAR' ? 'active' : ''}`} onClick={() => toggleJourneyMode('LINEAR')}>⛺ Ekspedisi Linear</button>
-              <button className={`btn-mode ${journeyMode === 'FREE' ? 'active' : ''}`} onClick={() => toggleJourneyMode('FREE')}>🦅 Jelajah Bebas</button>
-            </div>
-          </div>
-
-          <div className="journey-zones-wrapper">
-            {ZONES.map((zone, zIndex) => {
-              const zoneJuzData = juzProgress.filter(j => j.juz >= zone.startJuz && j.juz <= zone.endJuz);
-              
-              // Tentukan gaya Stitched Thread (Lebih terang di Starry Sky)
-              const threadColor = zone.id === 4 ? "rgba(255,255,255,0.4)" : "rgba(120,60,0,0.25)";
-
-              return (
-                <div key={zone.id} className={`zone-section ${zone.bgClass}`}>
-                  
-                  {/* ZONE HEADER */}
-                  <div className="zone-header">
-                    <div className="zone-icon">{zone.icon}</div>
-                    <h2 className="zone-title">{zone.title}</h2>
-                  </div>
-
-                  {zoneJuzData.map((juz, idx) => {
-                    const totalAyah = JUZ_DATA[juz.juz - 1].totalAyahs;
-                    const progressData = calculateJuzProgress(juz.ayatRead, totalAyah);
-                    const isLocked = journeyMode === 'LINEAR' && juz.juz > displayActiveJuz;
-                    
-                    // Menghitung Posisi ZigZag (Pola Kiri, Tengah, Kanan, Tengah)
-                    const xPositions = [25, 50, 75, 50]; 
-                    const currentX = xPositions[(juz.juz - 1) % 4];
-                    const nextX = xPositions[juz.juz % 4];
-                    
-                    // Derajat Cincin Organik (1/4 = 90deg, 2/4 = 180deg)
-                    const completedQuarters = progressData.quarters.filter(Boolean).length;
-                    const progressDegrees = completedQuarters * 90;
-
-                    return (
-                      <div key={juz.juz} className="juz-node-wrapper">
-                        
-                        {/* GARIS PUTUS-PUTUS SVG YANG 100% RESPONSIVE MENGHUBUNGKAN TITIK */}
-                        {juz.juz < 30 && (
-                          <svg className="stitched-line" viewBox="0 0 100 100" preserveAspectRatio="none">
-                            <path 
-                              d={`M ${currentX} 0 C ${currentX} 50, ${nextX} 50, ${nextX} 100`} 
-                              fill="none" 
-                              stroke={threadColor} 
-                              strokeWidth="3" 
-                              strokeDasharray="6 6" 
-                              strokeLinecap="round" 
-                              vectorEffect="non-scaling-stroke"
-                            />
-                          </svg>
-                        )}
-
-                        {/* TITIK OASIS ORGANIK (MENGUNCI DI POSISI X %) */}
-                        <div className={`organic-ring ${isLocked ? 'locked' : ''} ${juz.isCompleted ? 'completed' : ''}`}
-                             style={{ 
-                               left: `${currentX}%`, 
-                               background: isLocked ? '#e5e7eb' : `conic-gradient(#f59e0b ${progressDegrees}deg, #e5e7eb 0deg)`
-                             }}>
-                          
-                          <div className="organic-inner">
-                            {isLocked ? (
-                                <span className="lock-icon">🔒</span>
-                            ) : (
-                                <span className="juz-number">{juz.juz}</span>
-                            )}
-                          </div>
-
-                          {/* BURUNG BANGAU ORIGAMI 3D (Tampil di Juz Aktif) */}
-                          {displayActiveJuz === juz.juz && !juz.isCompleted && (
-                            <div className="origami-bird" title="Posisi Anda Saat Ini">
-                              <svg viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
-                                <polygon fill="#fde047" points="394.6,183.3 226,306.9 285.4,117.7"/>
-                                <polygon fill="#facc15" points="394.6,183.3 496.1,232.7 226,306.9"/>
-                                <polygon fill="#eab308" points="226,306.9 148.9,252.3 35.5,233.1"/>
-                                <polygon fill="#ca8a04" points="226,306.9 313.2,465 313.2,351"/>
-                                <polygon fill="#a16207" points="226,306.9 176.6,393 216.5,335.7"/>
-                                <polygon fill="#fef08a" points="226,306.9 285.4,117.7 148.9,252.3"/>
-                              </svg>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    );
-                  })}
-                  
-                  {/* GELOMBANG SVG PAPER-CUT DI BAGIAN BAWAH ZONA (KECUALI ZONA TERAKHIR) */}
-                  {zone.id < 4 && (
-                    <div className="wave-divider">
-                      <svg viewBox="0 0 1440 120" preserveAspectRatio="none" className="wave-svg">
-                        <path fill={zone.waveFill} d="M0,64L80,74.7C160,85,320,107,480,101.3C640,96,800,64,960,53.3C1120,43,1280,53,1360,58.7L1440,64L1440,0L1360,0C1280,0,1120,0,960,0C800,0,640,0,480,0C320,0,160,0,80,0L0,0Z" />
-                      </svg>
-                    </div>
-                  )}
-
+        <>
+          {showMilestone && milestoneZone && (
+            <div className="milestone-overlay" onClick={() => setShowMilestone(false)}>
+              <div className="milestone-popup">
+                <div className="popup-book-effect">
+                   <div className="sticker-badge">
+                     <span className="badge-icon">{milestoneZone.icon}</span>
+                   </div>
+                   <h2 style={{ color: '#2b7a5f', marginTop: '20px' }}>Alhamdulillah!</h2>
+                   <p>Kamu berhasil menamatkan zona<br/><b>{milestoneZone.title}</b></p>
+                   <p style={{ fontSize: '0.85rem', color: '#888' }}>(Juz {milestoneZone.startJuz} s/d {milestoneZone.endJuz})</p>
+                   <button className="btn-primary" onClick={() => setShowMilestone(false)}>Lanjutkan Perjalanan</button>
                 </div>
-              );
-            })}
-          </div>
-        </div>
+              </div>
+            </div>
+          )}
+          
+          <JourneyMap 
+            juzProgress={juzProgress} 
+            journeyMode={journeyMode} 
+            displayActiveJuz={displayActiveJuz} 
+            toggleJourneyMode={toggleJourneyMode} 
+          />
+        </>
       )}
 
       {/* STATISTIK TAB */}
@@ -664,7 +597,7 @@ export default function App() {
         <button className={`nav-btn ${activeTab === 'log' ? 'active' : ''}`} onClick={() => setActiveTab('log')}><span style={{ fontSize: '1.4rem' }}>📜</span> Riwayat</button>
       </div>
 
-      {/* MODAL SURAH */}
+      {/* MODAL SURAH TETAP SAMA */}
       {selectedSurah && (
         <div className="modal-overlay" onClick={(e) => e.target.className === 'modal-overlay' && setSelectedSurah(null)}>
           <div className="modal-content">
@@ -685,17 +618,6 @@ export default function App() {
               <div style={{ display: 'flex', gap: '10px' }}><div style={{ flex: 1 }}><label>Dari Ayat:</label><input type="number" className="input-field" value={startAyah} onChange={(e) => setStartAyah(e.target.value)} /></div><div style={{ flex: 1 }}><label>Sampai Ayat:</label><input type="number" className="input-field" value={endAyah} onChange={(e) => setEndAyah(e.target.value)} /></div></div>
               <button onClick={() => saveTracking(false)} className="btn-primary">Simpan Progress</button>
               <button onClick={() => saveTracking(true)} className="btn-gold" style={{ background: '#2b7a5f' }}>Tandai Selesai 100%</button>
-            </div>
-            <div style={{ marginTop: '20px', borderTop: '1px solid #eee', paddingTop: '10px' }}>
-              <h4 style={{ marginBottom: '5px' }}>Riwayat Surat Ini</h4>
-              <div className="receipt-container">
-                {(progress[selectedSurah.id]?.history || []).map((hist, i) => (
-                  <div key={i} className="receipt-item">
-                    <div><span className="receipt-date">{hist.date}</span><span className="receipt-note">{hist.note}</span></div>
-                    <button onClick={() => deleteHistory(i, selectedSurah.id)} style={{ background: 'none', border: 'none', color: '#e53e3e', cursor: 'pointer', fontSize: '1.2rem', padding: '5px' }} title="Hapus">🗑️</button>
-                  </div>
-                ))}
-              </div>
             </div>
           </div>
         </div>
