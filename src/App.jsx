@@ -3,8 +3,6 @@ import { auth, db } from "./firebase";
 import { signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "firebase/auth";
 import { doc, setDoc, onSnapshot } from "firebase/firestore";
 import { JUZ_DATA, getJuzFromSurahAndAyah } from "./juzUtils";
-
-// Import komponen JourneyMap yang baru dibuat
 import JourneyMap from "./components/JourneyMap/JourneyMap";
 
 const SURAHS = [
@@ -146,33 +144,30 @@ const getLastNDays = (n) => {
   return dates;
 };
 
-
 export default function App() {
   const [user, setUser] = useState(null);
   const [progress, setProgress] = useState({});
   const [stats, setStats] = useState({ khatamCount: 1, startDate: new Date().toISOString().split('T')[0] });
-  const [target, setTarget] = useState({ type: 'daily', value: 20 }); 
-  
+  const [target, setTarget] = useState({ type: 'daily', value: 20 });
+
   const [selectedSurah, setSelectedSurah] = useState(null);
-  const [activeTab, setActiveTab] = useState("dashboard"); 
+  const [activeTab, setActiveTab] = useState("dashboard");
   const [showTargetModal, setShowTargetModal] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const [historyFilter, setHistoryFilter] = useState("7"); 
+  const [historyFilter, setHistoryFilter] = useState("7");
 
   const [date, setDate] = useState("");
   const [startAyah, setStartAyah] = useState("");
   const [endAyah, setEndAyah] = useState("");
   const [tempTargetType, setTempTargetType] = useState("daily");
   const [tempTargetValue, setTempTargetValue] = useState("");
-  
-  const [journeyMode, setJourneyMode] = useState("FREE"); 
+
+  const [journeyMode, setJourneyMode] = useState("FREE");
   const [activeJuz, setActiveJuz] = useState(1);
-  
-  // State untuk Pop-up Animasi Milestone
+
   const [showMilestone, setShowMilestone] = useState(false);
   const [milestoneZone, setMilestoneZone] = useState(null);
 
-  // OTAK KALKULASI JUZ
   const juzProgress = useMemo(() => {
     const newJuzMap = Array.from({ length: 30 }, (_, i) => ({
       juz: i + 1, ayatRead: 0, isCompleted: false
@@ -235,7 +230,7 @@ export default function App() {
   };
 
   const toggleJourneyMode = async (mode) => {
-    setJourneyMode(mode); 
+    setJourneyMode(mode);
     if (!user) return;
     await setDoc(doc(db, "users", user.uid), { journeyMode: mode }, { merge: true });
   };
@@ -245,14 +240,14 @@ export default function App() {
     let readCount = progress[selectedSurah.id]?.read || 0;
     let newHistory = progress[selectedSurah.id]?.history || [];
     const currentTime = Date.now();
-    let ayahsAdded = 0; 
-    const historyId = currentTime.toString(); 
+    let ayahsAdded = 0;
+    const historyId = currentTime.toString();
     const end = parseInt(endAyah);
     const start = parseInt(startAyah);
 
     if (isComplete || end === selectedSurah.ayahs) {
       ayahsAdded = isComplete ? (selectedSurah.ayahs - readCount) : ((end - start) + 1);
-      if(ayahsAdded < 0) ayahsAdded = 0;
+      if (ayahsAdded < 0) ayahsAdded = 0;
       readCount = selectedSurah.ayahs;
       newHistory.unshift({ id: historyId, date, note: "Selesai 100%", timestamp: currentTime, ayahsAdded });
     } else {
@@ -263,41 +258,39 @@ export default function App() {
       newHistory.unshift({ id: historyId, date, note: `Ayat ${startAyah} - ${endAyah}`, timestamp: currentTime, ayahsAdded });
     }
 
-    const updatedProgress = { ...progress, [selectedSurah.id]: { read: readCount, history: newHistory } };   
-    
+    const updatedProgress = { ...progress, [selectedSurah.id]: { read: readCount, history: newHistory } };
+
     let newActiveJuz = activeJuz;
     const targetEnd = isComplete ? selectedSurah.ayahs : parseInt(endAyah);
     const targetJuzData = getJuzFromSurahAndAyah(selectedSurah.id, targetEnd);
-    
+
     if (targetJuzData) {
       const targetJuzNumber = targetJuzData.juz;
       if (ayahsAdded > 0 && journeyMode === 'FREE') {
         newActiveJuz = targetJuzNumber;
       }
-      
-      // LOGIKA POP-UP MILESTONE
+
       if ([5, 15, 25, 30].includes(targetJuzNumber) && isComplete) {
-         // Data statis untuk modal saja
-         const zones = [
-           { id: 1, title: "THE DAWN SPRINGS", icon: "🌅", endJuz: 5 },
-           { id: 2, title: "THE PALM VALLEY", icon: "🌴", endJuz: 15 },
-           { id: 3, title: "THE LANTERN TRAIL", icon: "🏮", endJuz: 25 },
-           { id: 4, title: "THE STARRY SKY FINALE", icon: "✨", endJuz: 30 }
-         ];
-         setMilestoneZone(zones.find(z => z.endJuz === targetJuzNumber));
-         setShowMilestone(true);
+        const zones = [
+          { id: 1, title: "THE DAWN SPRINGS", icon: "🌅", startJuz: 1, endJuz: 5 },
+          { id: 2, title: "THE PALM VALLEY", icon: "🌴", startJuz: 6, endJuz: 15 },
+          { id: 3, title: "THE LANTERN TRAIL", icon: "🏮", startJuz: 16, endJuz: 25 },
+          { id: 4, title: "THE STARRY SKY FINALE", icon: "✨", startJuz: 26, endJuz: 30 }
+        ];
+        setMilestoneZone(zones.find(z => z.endJuz === targetJuzNumber));
+        setShowMilestone(true);
       }
     }
-    
+
     setActiveJuz(newActiveJuz);
 
-    await setDoc(doc(db, "users", user.uid), { 
+    await setDoc(doc(db, "users", user.uid), {
       progress: updatedProgress,
       journeyMode: journeyMode,
       activeJuz: newActiveJuz
     }, { merge: true });
-    
-    setSelectedSurah(null); 
+
+    setSelectedSurah(null);
   };
 
   const deleteHistory = async (indexToDelete, surahId) => {
@@ -306,11 +299,11 @@ export default function App() {
     const updatedHistory = currentHistory.filter((_, idx) => idx !== indexToDelete);
     let recalculatedReadCount = 0;
     updatedHistory.forEach(hist => {
-        if (hist.note === "Selesai 100%") recalculatedReadCount = SURAHS.find(s => s.id === surahId).ayahs;
-        else {
-            const match = hist.note.match(/Ayat \d+ - (\d+)/);
-            if (match && parseInt(match[1]) > recalculatedReadCount) recalculatedReadCount = parseInt(match[1]);
-        }
+      if (hist.note === "Selesai 100%") recalculatedReadCount = SURAHS.find(s => s.id === surahId).ayahs;
+      else {
+        const match = hist.note.match(/Ayat \d+ - (\d+)/);
+        if (match && parseInt(match[1]) > recalculatedReadCount) recalculatedReadCount = parseInt(match[1]);
+      }
     });
     const updatedProgress = { ...progress, [surahId]: { read: recalculatedReadCount, history: updatedHistory } };
     await setDoc(doc(db, "users", user.uid), { progress: updatedProgress }, { merge: true });
@@ -325,7 +318,7 @@ export default function App() {
 
   const resetKhatam = async () => {
     if (!user) return;
-    if(window.confirm("Alhamdulillah! Yakin ingin mengulang khataman baru? Progress akan di-reset jadi 0%.")) {
+    if (window.confirm("Alhamdulillah! Yakin ingin mengulang khataman baru? Progress akan di-reset jadi 0%.")) {
       const todayDate = new Date().toISOString().split('T')[0];
       const newKhatamRecord = { khatamKe: stats.khatamCount, startDate: stats.startDate, endDate: todayDate };
       const existingHistory = stats.khatamHistory || [];
@@ -343,9 +336,9 @@ export default function App() {
   let maxTimestamp = 0;
   Object.entries(progress).forEach(([strId, data]) => {
     if (data.history && data.history.length > 0 && data.history[0].timestamp > maxTimestamp) {
-        maxTimestamp = data.history[0].timestamp;
-        latestSurahObj = SURAHS.find(s => s.id === parseInt(strId));
-        latestNote = data.history[0].note;
+      maxTimestamp = data.history[0].timestamp;
+      latestSurahObj = SURAHS.find(s => s.id === parseInt(strId));
+      latestNote = data.history[0].note;
     }
   });
 
@@ -368,7 +361,7 @@ export default function App() {
       const surah = SURAHS.find(s => s.id === parseInt(strId));
       if (data.history && surah) data.history.forEach(hist => all.push({ ...hist, surahName: surah.name, surahId: surah.id, totalAyahs: surah.ayahs }));
     });
-    return all.sort((a, b) => b.timestamp - a.timestamp); 
+    return all.sort((a, b) => b.timestamp - a.timestamp);
   }, [progress]);
 
   const filteredGlobalHistory = useMemo(() => {
@@ -399,7 +392,17 @@ export default function App() {
         <div className="login-glass-box">
           <h1 style={{ color: '#1e5441', margin: '0 0 10px 0', fontSize: '2rem' }}>Tilawah Tracker</h1>
           <div style={{ width: '50px', height: '3px', background: '#2b7a5f', margin: '15px auto' }}></div>
-          <button onClick={handleLogin} className="btn-google">Lanjutkan dengan Google</button>
+          <p className="login-hadith">
+            "Bacalah Al-Qur`an, sebab Al-Qur`an akan datang di hari kiamat kelak sebagai pemberi syafaat kepada para pembacanya." <br />
+            <span style={{ fontSize: '0.8rem', color: '#555' }}>— HR Muslim No. 804</span>
+          </p>
+          <p className="login-motivation">
+            Catat progress tilawah Qur'anmu setiap hari, ayat demi ayat, surat demi surat, dan bangun kebiasaan indah yang mendekatkan hatimu pada-Nya.
+          </p>
+          <button onClick={handleLogin} className="btn-google">
+            <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google Logo" />
+            Lanjutkan dengan Google
+          </button>
         </div>
       </div>
     );
@@ -408,8 +411,14 @@ export default function App() {
   return (
     <div className="app-container">
       {/* HEADER DASHBOARD */}
-      <div className="curved-header" style={{ position: 'relative' }}>
-        <button onClick={() => signOut(auth)} style={{ position: 'absolute', top: '20px', right: '20px', background: 'rgba(255,255,255,0.2)', border: '1px solid rgba(255,255,255,0.4)', color: 'white', padding: '6px 12px', borderRadius: '20px', fontSize: '0.75rem', cursor: 'pointer', backdropFilter: 'blur(5px)' }} title="Keluar">Keluar</button>
+      <div className="curved-header">
+        <button
+          onClick={() => signOut(auth)}
+          style={{ position: 'absolute', top: '20px', right: '20px', background: 'rgba(255,255,255,0.2)', border: '1px solid rgba(255,255,255,0.4)', color: 'white', padding: '6px 12px', borderRadius: '20px', fontSize: '0.75rem', cursor: 'pointer', backdropFilter: 'blur(5px)' }}
+          title="Keluar"
+        >
+          Keluar
+        </button>
         <h1 style={{ margin: '0 0 10px 0', fontSize: '1.8rem' }}>Tilawah Tracker</h1>
         <h3 style={{ margin: '0', fontWeight: 'normal' }}>Assalamu'alaikum, {user.displayName.split(" ")[0]}!</h3>
         <div className="glass-stat-card">
@@ -421,7 +430,9 @@ export default function App() {
           <div style={{ textAlign: 'center', marginTop: '15px' }}>
             <h1 style={{ fontSize: '3rem', margin: '5px 0', color: 'white' }}>{globalPercentage}%</h1>
             <p style={{ margin: '0 0 10px 0', fontSize: '0.85rem' }}>{readAyahs} / 6.236 Ayat</p>
-            <div className="header-progress-bg" style={{ width: '100%', margin: '0' }}><div className="header-progress-fill" style={{ width: `${globalPercentage}%`, background: getProgressBarColor(globalPercentage) }}></div></div>
+            <div className="header-progress-bg">
+              <div className="header-progress-fill" style={{ width: `${globalPercentage}%`, background: getProgressBarColor(globalPercentage) }}></div>
+            </div>
           </div>
           <div style={{ display: 'flex', justifyContent: 'center', gap: '10px', marginTop: '15px' }}>
             <button onClick={() => { setTempTargetType(target.type); setTempTargetValue(target.value); setShowTargetModal(true); }} style={{ background: 'rgba(255,255,255,0.2)', border: 'none', color: 'white', padding: '5px 15px', borderRadius: '20px', fontSize: '0.8rem', cursor: 'pointer' }}>⚙️ Set Target</button>
@@ -431,41 +442,49 @@ export default function App() {
       </div>
 
       {showTargetModal && (
-         <div className="modal-overlay" onClick={(e) => e.target.className === 'modal-overlay' && setShowTargetModal(false)}>
-           <div className="target-modal">
-             <h3 style={{ marginTop: 0, color: '#2b7a5f' }}>Pilih Mode Target</h3>
-             <label style={{ display: 'block', margin: '15px 0 5px 0' }}>Tipe Target:</label>
-             <select className="input-field" value={tempTargetType} onChange={(e) => setTempTargetType(e.target.value)}>
-               <option value="daily">1. Target Harian (Micro-habit)</option>
-               <option value="date">2. Target Waktu Khatam (Kalkulator)</option>
-             </select>
-             {tempTargetType === "daily" ? (
-               <>
-                 <label style={{ display: 'block', margin: '15px 0 5px 0' }}>Jumlah Ayat per Hari:</label>
-                 <input type="number" className="input-field" value={tempTargetValue} onChange={(e) => setTempTargetValue(e.target.value)} />
-               </>
-             ) : (
-               <>
-                 <label style={{ display: 'block', margin: '15px 0 5px 0' }}>Tanggal Ingin Khatam:</label>
-                 <input type="date" className="input-field" value={tempTargetValue} onChange={(e) => setTempTargetValue(e.target.value)} />
-               </>
-             )}
-             <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
-               <button onClick={() => setShowTargetModal(false)} className="btn-primary" style={{ flex: 1, background: '#ff9ebd', color: 'white' }}>Batal</button>
-               <button onClick={saveTarget} className="btn-primary" style={{ flex: 1 }}>Simpan</button>
-             </div>
-           </div>
-         </div>
-       )}
+        <div className="modal-overlay" onClick={(e) => e.target.className === 'modal-overlay' && setShowTargetModal(false)}>
+          <div className="target-modal">
+            <h3 style={{ marginTop: 0, color: '#2b7a5f' }}>Pilih Mode Target</h3>
+            <label style={{ display: 'block', margin: '15px 0 5px 0' }}>Tipe Target:</label>
+            <select className="input-field" value={tempTargetType} onChange={(e) => setTempTargetType(e.target.value)}>
+              <option value="daily">1. Target Harian (Micro-habit)</option>
+              <option value="date">2. Target Waktu Khatam (Kalkulator)</option>
+            </select>
+            {tempTargetType === "daily" ? (
+              <>
+                <label style={{ display: 'block', margin: '15px 0 5px 0' }}>Jumlah Ayat per Hari:</label>
+                <input type="number" className="input-field" value={tempTargetValue} onChange={(e) => setTempTargetValue(e.target.value)} />
+              </>
+            ) : (
+              <>
+                <label style={{ display: 'block', margin: '15px 0 5px 0' }}>Tanggal Ingin Khatam:</label>
+                <input type="date" className="input-field" value={tempTargetValue} onChange={(e) => setTempTargetValue(e.target.value)} />
+              </>
+            )}
+            <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
+              <button onClick={() => setShowTargetModal(false)} className="btn-primary" style={{ flex: 1, background: '#ff9ebd', color: 'white' }}>Batal</button>
+              <button onClick={saveTarget} className="btn-primary" style={{ flex: 1 }}>Simpan</button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* DASHBOARD TAB */}
       {activeTab === "dashboard" && (
         <>
           <div className="floating-bookmark">
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}><span style={{ fontSize: '1.5rem' }}>🔖</span><div><h4 style={{ margin: 0, color: '#2b7a5f' }}>Lanjut {latestSurahObj ? latestSurahObj.name : "Baca"}</h4><p style={{ margin: 0, fontSize: '0.9rem', color: '#666' }}>{latestNote}</p></div></div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <span style={{ fontSize: '1.5rem' }}>🔖</span>
+              <div>
+                <h4 style={{ margin: 0, color: '#2b7a5f' }}>Lanjut {latestSurahObj ? latestSurahObj.name : "Baca"}</h4>
+                <p style={{ margin: 0, fontSize: '0.9rem', color: '#666' }}>{latestNote}</p>
+              </div>
+            </div>
             <button onClick={() => openSurah(latestSurahObj)} className="btn-primary" style={{ width: 'auto' }}>Buka</button>
           </div>
-          <div className="search-container"><input type="text" className="search-input" placeholder="🔍 Cari nama surat atau artinya..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} /></div>
+          <div className="search-container">
+            <input type="text" className="search-input" placeholder="🔍 Cari nama surat atau artinya..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
+          </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: '20px', padding: '0 1.5rem 1rem 1.5rem' }}>
             {filteredSurahs.map((surah) => {
               const surahProgress = progress[surah.id]?.read || 0;
@@ -476,7 +495,10 @@ export default function App() {
                   <div style={{ position: 'absolute', top: '10px', left: '10px', background: 'rgba(255,255,255,0.8)', color: '#888', padding: '2px 6px', borderRadius: '5px', fontSize: '0.65rem', fontWeight: 'bold' }}>{surah.juz}</div>
                   <img src={`/images/${String(surah.id).padStart(2, '0')}.webp`} alt={surah.name} className="surah-image" />
                   <h4 style={{ margin: '5px 0 0 0' }}>{surah.id}. {surah.name}</h4>
-                  <div className="progress-bar-bg" style={{ height: '6px', margin: '5px 0' }}><div className="progress-bar-fill" style={{ width: `${percent}%`, background: getProgressBarColor(percent) }}></div></div>
+                  <p style={{ fontSize: '0.75rem', color: '#666', fontStyle: 'italic', margin: '0 0 8px 0' }}>"{surah.meaning}"</p>
+                  <div className="progress-bar-bg" style={{ height: '6px', margin: '5px 0' }}>
+                    <div className="progress-bar-fill" style={{ width: `${percent}%`, background: getProgressBarColor(percent) }}></div>
+                  </div>
                   <p style={{ fontSize: '0.8rem', margin: 0, color: '#888' }}>{percent}% ({surahProgress}/{surah.ayahs})</p>
                 </div>
               );
@@ -485,30 +507,30 @@ export default function App() {
         </>
       )}
 
-      {/* COMPONENT JOURNEY MAP DIPANGGIL DI SINI */}
+      {/* JOURNEY MAP TAB */}
       {activeTab === "peta" && (
         <>
           {showMilestone && milestoneZone && (
             <div className="milestone-overlay" onClick={() => setShowMilestone(false)}>
               <div className="milestone-popup">
                 <div className="popup-book-effect">
-                   <div className="sticker-badge">
-                     <span className="badge-icon">{milestoneZone.icon}</span>
-                   </div>
-                   <h2 style={{ color: '#2b7a5f', marginTop: '20px' }}>Alhamdulillah!</h2>
-                   <p>Kamu berhasil menamatkan zona<br/><b>{milestoneZone.title}</b></p>
-                   <p style={{ fontSize: '0.85rem', color: '#888' }}>(Juz {milestoneZone.startJuz} s/d {milestoneZone.endJuz})</p>
-                   <button className="btn-primary" onClick={() => setShowMilestone(false)}>Lanjutkan Perjalanan</button>
+                  <div className="sticker-badge">
+                    <span className="badge-icon">{milestoneZone.icon}</span>
+                  </div>
+                  <h2 style={{ color: '#2b7a5f', marginTop: '20px' }}>Alhamdulillah!</h2>
+                  <p>Kamu berhasil menamatkan zona<br /><b>{milestoneZone.title}</b></p>
+                  <p style={{ fontSize: '0.85rem', color: '#888' }}>(Juz {milestoneZone.startJuz} s/d {milestoneZone.endJuz})</p>
+                  <button className="btn-primary" onClick={() => setShowMilestone(false)}>Lanjutkan Perjalanan</button>
                 </div>
               </div>
             </div>
           )}
-          
-          <JourneyMap 
-            juzProgress={juzProgress} 
-            journeyMode={journeyMode} 
-            displayActiveJuz={displayActiveJuz} 
-            toggleJourneyMode={toggleJourneyMode} 
+
+          <JourneyMap
+            juzProgress={juzProgress}
+            journeyMode={journeyMode}
+            displayActiveJuz={displayActiveJuz}
+            toggleJourneyMode={toggleJourneyMode}
           />
         </>
       )}
@@ -526,7 +548,7 @@ export default function App() {
                   <div key={index} className="bar-wrapper">
                     <span style={{ fontSize: '0.7rem', color: '#2b7a5f', fontWeight: 'bold' }}>{ayahs > 0 ? ayahs : ''}</span>
                     <div className="bar-bg"><div className="bar-fill" style={{ height: `${ayahs > 0 ? barHeight : 0}%` }}></div></div>
-                    <div className="date-label"><b>{dObj.dayName}</b><br/>{dObj.dateNum}/{dObj.monthNum}</div>
+                    <div className="date-label"><b>{dObj.dayName}</b><br />{dObj.dateNum}/{dObj.monthNum}</div>
                   </div>
                 );
               })}
@@ -537,13 +559,22 @@ export default function App() {
             <div className="heatmap-grid">
               {last28Days.map((dObj, index) => {
                 const ayahs = dailyStats[dObj.fullDate] || 0;
-                let bgColor = "#ebedf0"; let textColor = "#888"; 
+                let bgColor = "#ebedf0"; let textColor = "#888";
                 if (ayahs > 0 && ayahs <= 15) { bgColor = "#c2dfd1"; textColor = "#2b7a5f"; }
                 else if (ayahs > 15 && ayahs <= 40) { bgColor = "#7ebc9f"; textColor = "white"; }
                 else if (ayahs > 40 && ayahs <= 80) { bgColor = "#2b7a5f"; textColor = "white"; }
                 else if (ayahs > 80) { bgColor = "#1e5441"; textColor = "white"; }
                 return (<div key={index} className="heatmap-box" style={{ background: bgColor, color: textColor }} title={`${dObj.fullDate}: ${ayahs} Ayat`}>{dObj.dateNum}</div>);
               })}
+            </div>
+            <div className="heatmap-legend">
+              <span>Sedikit</span>
+              <div className="legend-box" style={{ background: '#ebedf0' }}></div>
+              <div className="legend-box" style={{ background: '#c2dfd1' }}></div>
+              <div className="legend-box" style={{ background: '#7ebc9f' }}></div>
+              <div className="legend-box" style={{ background: '#2b7a5f' }}></div>
+              <div className="legend-box" style={{ background: '#1e5441' }}></div>
+              <span>Banyak</span>
             </div>
           </div>
         </div>
@@ -597,7 +628,7 @@ export default function App() {
         <button className={`nav-btn ${activeTab === 'log' ? 'active' : ''}`} onClick={() => setActiveTab('log')}><span style={{ fontSize: '1.4rem' }}>📜</span> Riwayat</button>
       </div>
 
-      {/* MODAL SURAH TETAP SAMA */}
+      {/* MODAL SURAH */}
       {selectedSurah && (
         <div className="modal-overlay" onClick={(e) => e.target.className === 'modal-overlay' && setSelectedSurah(null)}>
           <div className="modal-content">
@@ -608,16 +639,32 @@ export default function App() {
               <p style={{ margin: '5px 0 0 0', color: '#666', fontStyle: 'italic' }}>"{selectedSurah.meaning}"</p>
               <div style={{ display: 'inline-block', background: '#e2e8f0', color: '#555', padding: '3px 10px', borderRadius: '10px', fontSize: '0.8rem', marginTop: '5px', fontWeight: 'bold' }}>{selectedSurah.juz}</div>
               <h3 style={{ margin: '15px 0 5px 0', color: '#2b7a5f', fontSize: '1.5rem' }}>
-                {Math.round(((progress[selectedSurah.id]?.read || 0) / selectedSurah.ayahs) * 100)}% 
+                {Math.round(((progress[selectedSurah.id]?.read || 0) / selectedSurah.ayahs) * 100)}%
                 <span style={{ fontSize: '0.9rem', color: '#888', fontWeight: 'normal', marginLeft: '8px' }}>({progress[selectedSurah.id]?.read || 0} / {selectedSurah.ayahs} Ayat)</span>
               </h3>
             </div>
-            <div className="progress-bar-bg"><div className="progress-bar-fill" style={{ width: `${(progress[selectedSurah.id]?.read || 0) / selectedSurah.ayahs * 100}%`, background: getProgressBarColor((progress[selectedSurah.id]?.read || 0) / selectedSurah.ayahs * 100) }}></div></div>
+            <div className="progress-bar-bg">
+              <div className="progress-bar-fill" style={{ width: `${(progress[selectedSurah.id]?.read || 0) / selectedSurah.ayahs * 100}%`, background: getProgressBarColor((progress[selectedSurah.id]?.read || 0) / selectedSurah.ayahs * 100) }}></div>
+            </div>
             <div style={{ marginTop: '20px' }}>
               <label>Tanggal:</label><input type="date" className="input-field" value={date} onChange={(e) => setDate(e.target.value)} />
-              <div style={{ display: 'flex', gap: '10px' }}><div style={{ flex: 1 }}><label>Dari Ayat:</label><input type="number" className="input-field" value={startAyah} onChange={(e) => setStartAyah(e.target.value)} /></div><div style={{ flex: 1 }}><label>Sampai Ayat:</label><input type="number" className="input-field" value={endAyah} onChange={(e) => setEndAyah(e.target.value)} /></div></div>
+              <div style={{ display: 'flex', gap: '10px' }}>
+                <div style={{ flex: 1 }}><label>Dari Ayat:</label><input type="number" className="input-field" value={startAyah} onChange={(e) => setStartAyah(e.target.value)} /></div>
+                <div style={{ flex: 1 }}><label>Sampai Ayat:</label><input type="number" className="input-field" value={endAyah} onChange={(e) => setEndAyah(e.target.value)} /></div>
+              </div>
               <button onClick={() => saveTracking(false)} className="btn-primary">Simpan Progress</button>
               <button onClick={() => saveTracking(true)} className="btn-gold" style={{ background: '#2b7a5f' }}>Tandai Selesai 100%</button>
+            </div>
+            <div style={{ marginTop: '20px', borderTop: '1px solid #eee', paddingTop: '10px' }}>
+              <h4 style={{ marginBottom: '5px' }}>Riwayat Surat Ini</h4>
+              <div className="receipt-container">
+                {(progress[selectedSurah.id]?.history || []).map((hist, i) => (
+                  <div key={i} className="receipt-item">
+                    <div><span className="receipt-date">{hist.date}</span><span className="receipt-note">{hist.note}</span></div>
+                    <button onClick={() => deleteHistory(i, selectedSurah.id)} style={{ background: 'none', border: 'none', color: '#e53e3e', cursor: 'pointer', fontSize: '1.2rem', padding: '5px' }} title="Hapus">🗑️</button>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </div>
