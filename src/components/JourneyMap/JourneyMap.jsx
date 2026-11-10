@@ -105,16 +105,6 @@ const JourneyMap = ({ juzProgress, journeyMode, displayActiveJuz, toggleJourneyM
                   );
                 })}
               </div>
-              
-              {/* EFEK PAPER-CUT GELOMBANG ANTAR BACKGROUND GAMBAR */}
-              {zone.id < 4 && (
-                <div className="wave-divider-image">
-                   <svg viewBox="0 0 1440 120" preserveAspectRatio="none" className="wave-svg">
-                      {/* Transparan karena menutupi gambar di bawahnya, hanya shadow yang bekerja */}
-                      <path fill="white" d="M0,64L80,74.7C160,85,320,107,480,101.3C640,96,800,64,960,53.3C1120,43,1280,53,1360,58.7L1440,64L1440,120L0,120Z" />
-                   </svg>
-                </div>
-              )}
             </div>
           );
         })}
