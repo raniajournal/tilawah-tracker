@@ -213,6 +213,9 @@ export default function App() {
   const [isHaidPaused, setIsHaidPaused] = useState(false);
   const [pausedDates, setPausedDates] = useState([]);
   const [lastPauseStart, setLastPauseStart] = useState(null);
+  const [showHaidModal, setShowHaidModal] = useState(false);
+  const [haidStartInput, setHaidStartInput] = useState("");
+  const [haidEndInput, setHaidEndInput] = useState("");
 
   const juzProgress = useMemo(() => computeJuzMapFromProgress(progress), [progress]);
 
