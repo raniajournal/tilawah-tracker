@@ -562,3 +562,126 @@ body {
     max-width: 650px;
   }
 }
+/* =========================================
+   STREAK HARIAN & TOMBOL PAUSE HAID (PAPER-CUT)
+========================================= */
+.streak-card-wrapper {
+  background: #FFFDF9;
+  border: 2px solid #E6DFD3;
+  border-radius: 20px;
+  padding: 18px 20px;
+  margin: 15px;
+  box-shadow: 
+    4px 4px 0px #E6DFD3, 
+    6px 6px 12px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+}
+
+.streak-card-wrapper.is-paused {
+  background: #FFF9F5;
+  border-color: #F4A261;
+  box-shadow: 
+    4px 4px 0px #Fceade, 
+    6px 6px 12px rgba(0, 0, 0, 0.04);
+}
+
+.streak-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.campfire-container {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.streak-logo-img {
+  width: 58px;
+  height: 58px;
+  object-fit: contain;
+  filter: drop-shadow(2px 4px 4px rgba(0, 0, 0, 0.12));
+}
+
+/* Animasi detak berkobar saat streak aktif */
+.mode-pulse {
+  animation: firePulse 2s infinite ease-in-out;
+}
+
+/* Animasi bernapas lambat saat mode istirahat haid */
+.mode-sleep {
+  animation: fireSleep 4s infinite ease-in-out;
+  opacity: 0.9;
+}
+
+.streak-counter {
+  display: flex;
+  flex-direction: column;
+}
+
+.streak-number {
+  font-size: 1.7rem;
+  font-weight: 900;
+  color: #E76F51;
+  line-height: 1.1;
+}
+
+.campfire-container.paused .streak-number {
+  color: #8D6E63;
+}
+
+.streak-label {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #888;
+  margin-top: 2px;
+}
+
+/* Tombol Pause Haid Empatik */
+.btn-pause-haid {
+  background-color: #FCEADE;
+  border: 1.5px solid #F4A261;
+  color: #E76F51;
+  padding: 9px 15px;
+  border-radius: 20px;
+  font-size: 0.78rem;
+  font-family: inherit;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 2px 3px 0px #F4A261;
+}
+
+.btn-pause-haid:hover {
+  transform: translateY(-1px);
+}
+
+.btn-pause-haid.active-paused {
+  background-color: #E9C46A;
+  border-color: #E76F51;
+  color: #264653;
+  box-shadow: inset 1px 2px 3px rgba(0, 0, 0, 0.12);
+  transform: translate(2px, 2px);
+}
+
+.streak-hint-text {
+  font-size: 0.78rem;
+  color: #666;
+  margin: 14px 0 0 0;
+  padding-top: 10px;
+  border-top: 1px dashed #E6DFD3;
+  line-height: 1.45;
+}
+
+@keyframes firePulse {
+  0%, 100% { transform: scale(1) rotate(0deg); }
+  50% { transform: scale(1.08) rotate(2deg); }
+}
+
+@keyframes fireSleep {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
+}
