@@ -144,7 +144,19 @@ const getLastNDays = (n) => {
   return dates;
 };
 
-// FUNGSI HELPER UNTUK MENGHITUNG STATUS 30 JUZ DARI OBJEK PROGRESS
+// Menghasilkan daftar tanggal YYYY-MM-DD di antara dua tanggal
+const getDatesBetween = (startDateStr, endDateStr) => {
+  const dates = [];
+  if (!startDateStr || !endDateStr) return dates;
+  let curr = new Date(startDateStr);
+  const end = new Date(endDateStr);
+  while (curr <= end) {
+    dates.push(curr.toISOString().split('T')[0]);
+    curr.setDate(curr.getDate() + 1);
+  }
+  return dates;
+};
+
 const computeJuzMapFromProgress = (progressObj) => {
   const newJuzMap = Array.from({ length: 30 }, (_, i) => ({
     juz: i + 1, ayatRead: 0, isCompleted: false
@@ -197,6 +209,11 @@ export default function App() {
   const [showMilestone, setShowMilestone] = useState(false);
   const [milestoneZone, setMilestoneZone] = useState(null);
 
+  // STATE STREAK & PAUSE HAID
+  const [isHaidPaused, setIsHaidPaused] = useState(false);
+  const [pausedDates, setPausedDates] = useState([]);
+  const [lastPauseStart, setLastPauseStart] = useState(null);
+
   const juzProgress = useMemo(() => computeJuzMapFromProgress(progress), [progress]);
 
   useEffect(() => {
@@ -212,6 +229,9 @@ export default function App() {
             setTarget(data.target || { type: 'daily', value: 20 });
             if (data.journeyMode) setJourneyMode(data.journeyMode);
             if (data.activeJuz) setActiveJuz(data.activeJuz);
+            if (typeof data.isHaidPaused === "boolean") setIsHaidPaused(data.isHaidPaused);
+            if (data.pausedDates) setPausedDates(data.pausedDates);
+            if (data.lastPauseStart !== undefined) setLastPauseStart(data.lastPauseStart);
           }
         });
       }
@@ -238,6 +258,48 @@ export default function App() {
     await setDoc(doc(db, "users", user.uid), { journeyMode: mode }, { merge: true });
   };
 
+  // FUNGSI TOGGLE PAUSE HAID
+  const toggleHaidPause = async () => {
+    if (!user) return;
+    const todayStr = new Date().toISOString().split('T')[0];
+    const nextPauseState = !isHaidPaused;
+    let updatedPausedDates = [...pausedDates];
+    let nextPauseStart = lastPauseStart;
+
+    if (nextPauseState) {
+      // Saat mengaktifkan Pause Haid
+      nextPauseStart = todayStr;
+      if (!updatedPausedDates.includes(todayStr)) {
+        updatedPausedDates.push(todayStr);
+      }
+    } else {
+      // Saat mematikan Pause Haid
+      if (lastPauseStart) {
+        if (lastPauseStart === todayStr) {
+          // Jika dinyalakan & dimatikan di hari yang sama, hapus hari ini dari daftar pause
+          updatedPausedDates = updatedPausedDates.filter(d => d !== todayStr);
+        } else {
+          // Simpan seluruh rentang hari istirahat haid sebelumnya
+          const range = getDatesBetween(lastPauseStart, todayStr);
+          range.forEach(d => {
+            if (!updatedPausedDates.includes(d)) updatedPausedDates.push(d);
+          });
+        }
+      }
+      nextPauseStart = null;
+    }
+
+    setIsHaidPaused(nextPauseState);
+    setPausedDates(updatedPausedDates);
+    setLastPauseStart(nextPauseStart);
+
+    await setDoc(doc(db, "users", user.uid), {
+      isHaidPaused: nextPauseState,
+      pausedDates: updatedPausedDates,
+      lastPauseStart: nextPauseStart
+    }, { merge: true });
+  };
+
   const saveTracking = async (isComplete = false) => {
     if (!user) return;
     let readCount = progress[selectedSurah.id]?.read || 0;
@@ -262,8 +324,6 @@ export default function App() {
     }
 
     const updatedProgress = { ...progress, [selectedSurah.id]: { read: readCount, history: newHistory } };
-
-    // Hitung status Juz terbaru setelah penambahan ayat ini
     const updatedJuzMap = computeJuzMapFromProgress(updatedProgress);
 
     let newActiveJuz = activeJuz;
@@ -274,8 +334,6 @@ export default function App() {
       newActiveJuz = targetJuzData.juz;
     }
 
-    // CEK MILESTONE 5 SEKSI (Juz 6, 12, 18, 24, 30)
-    // Memicu Pop-up Book jika Juz akhir seksi baru saja mencapai 100% ATAU batas ayat akhir Juz tersebut baru saja dilewati
     const milestoneZones = [
       { id: 1, title: "GOLDEN SUNRISE", icon: "🌅", startJuz: 1, endJuz: 6, boundarySurah: 5, boundaryAyah: 81 },
       { id: 2, title: "DAWN SPRINGS", icon: "🏜️", startJuz: 7, endJuz: 12, boundarySurah: 12, boundaryAyah: 52 },
@@ -303,8 +361,6 @@ export default function App() {
     }
 
     setActiveJuz(newActiveJuz);
-
-    // Update input ayat berikutnya tapi JANGAN tutup modal (biarkan user klik X)
     setStartAyah(readCount >= selectedSurah.ayahs ? selectedSurah.ayahs : readCount + 1);
     setEndAyah("");
 
@@ -392,11 +448,56 @@ export default function App() {
     return allGlobalHistory.filter(h => new Date(h.date) >= limitDate);
   }, [allGlobalHistory, historyFilter]);
 
-  const dailyStats = {};
-  allGlobalHistory.forEach(hist => {
-    if (!dailyStats[hist.date]) dailyStats[hist.date] = 0;
-    dailyStats[hist.date] += (hist.ayahsAdded || 0);
-  });
+  const dailyStats = useMemo(() => {
+    const map = {};
+    allGlobalHistory.forEach(hist => {
+      if (!map[hist.date]) map[hist.date] = 0;
+      map[hist.date] += (hist.ayahsAdded || 0);
+    });
+    return map;
+  }, [allGlobalHistory]);
+
+  // DAFTAR LENGKAP TANGGAL PAUSE HAID (Termasuk rentang aktif saat tombol sedang menyala)
+  const effectivePausedSet = useMemo(() => {
+    const set = new Set(pausedDates);
+    const todayStr = new Date().toISOString().split('T')[0];
+    if (isHaidPaused) {
+      set.add(todayStr);
+      if (lastPauseStart) {
+        getDatesBetween(lastPauseStart, todayStr).forEach(d => set.add(d));
+      }
+    }
+    return set;
+  }, [pausedDates, isHaidPaused, lastPauseStart]);
+
+  // KALKULASI STREAK HARIAN (MENGUNCI STREAK SAAT PAUSE HAID AKTIF)
+  const currentStreak = useMemo(() => {
+    let streak = 0;
+    const today = new Date();
+
+    for (let i = 0; i < 365; i++) {
+      const d = new Date(today);
+      d.setDate(today.getDate() - i);
+      const dateStr = d.toISOString().split('T')[0];
+
+      const hasRead = (dailyStats[dateStr] || 0) > 0;
+      const isPausedDay = effectivePausedSet.has(dateStr);
+
+      if (hasRead) {
+        streak++;
+      } else if (isPausedDay) {
+        // Streak aman dikunci (tidak hangus ke 0, tapi tidak bertambah)
+        continue;
+      } else {
+        // Jika hari ini (i === 0) belum sempat baca, jangan hanguskan streak kemarin dulu
+        if (i === 0) continue;
+        // Jika hari kemarin/sebelumnya kosong dan tidak di-pause, rantai streak berhenti di sini
+        break;
+      }
+    }
+    return streak;
+  }, [dailyStats, effectivePausedSet]);
+
   const last7Days = getLastNDays(7);
   const last28Days = getLastNDays(28);
   const maxAyahs7D = Math.max(...last7Days.map(d => dailyStats[d.fullDate] || 0), 10);
@@ -463,7 +564,7 @@ export default function App() {
         </div>
       </div>
 
-      {/* MODAL POP-UP BOOK MILESTONE (GLOBAL AGAR MUNCUL DI SEMUA TAB) */}
+      {/* MODAL POP-UP BOOK MILESTONE */}
       {showMilestone && milestoneZone && (
         <div className="milestone-overlay" onClick={() => setShowMilestone(false)}>
           <div className="milestone-popup" onClick={(e) => e.stopPropagation()}>
@@ -556,9 +657,43 @@ export default function App() {
         />
       )}
 
-      {/* STATISTIK TAB (50% CENTERED DI PC) */}
+      {/* STATISTIK TAB (DENGAN STREAK HARIAN & PAUSE HAID DI PALING ATAS) */}
       {activeTab === "statistik" && (
         <div className="stats-container">
+          
+          {/* 1. KARTU STREAK HARIAN & PAUSE HAID */}
+          <div className={`streak-card-wrapper ${isHaidPaused ? 'is-paused' : ''}`}>
+            <div className="streak-header">
+              <div className={`campfire-container ${isHaidPaused ? 'paused' : 'burning'}`}>
+                <img
+                  src={isHaidPaused ? "/images/fire-pause.webp" : "/images/fire-active.webp"}
+                  alt="Streak Status"
+                  className={`streak-logo-img ${isHaidPaused ? 'mode-sleep' : 'mode-pulse'}`}
+                />
+                <div className="streak-counter">
+                  <span className="streak-number">{currentStreak} Hari</span>
+                  <span className="streak-label">
+                    {isHaidPaused ? 'Streak Dikunci (Haid)' : 'Streak Tilawah Aktif'}
+                  </span>
+                </div>
+              </div>
+
+              <button
+                onClick={toggleHaidPause}
+                className={`btn-pause-haid ${isHaidPaused ? 'active-paused' : ''}`}
+              >
+                {isHaidPaused ? '⏸️ Mode Istirahat Aktif' : '🌸 Siklus Haid (Pause)'}
+              </button>
+            </div>
+
+            <p className="streak-hint-text">
+              {isHaidPaused
+                ? "Streak kamu dikunci dengan aman selama masa haid. Selamat beristirahat!"
+                : "Baca minimal 1 ayat setiap hari untuk menjaga api unggun tetap menyala!"}
+            </p>
+          </div>
+
+          {/* 2. GRAFIK 7 HARI TERAKHIR */}
           <div className="chart-card">
             <h4 style={{ margin: '0 0 15px 0', color: '#333' }}>Pencapaian 7 Hari Terakhir</h4>
             <div className="chart-container" style={{ height: '140px' }}>
@@ -575,20 +710,49 @@ export default function App() {
               })}
             </div>
           </div>
+
+          {/* 3. KALENDER KONSISTENSI 28 HARI (DENGAN WARNA KHUSUS HAID) */}
           <div className="chart-card">
             <h4 style={{ margin: '0 0 10px 0', color: '#333' }}>Kalender Konsistensi (28 Hari)</h4>
             <div className="heatmap-grid">
               {last28Days.map((dObj, index) => {
                 const ayahs = dailyStats[dObj.fullDate] || 0;
-                let bgColor = "#ebedf0"; let textColor = "#888";
+                const isPausedDate = effectivePausedSet.has(dObj.fullDate);
+
+                let bgColor = "#ebedf0";
+                let textColor = "#888";
+                let borderStyle = "none";
+                let tooltipText = `${dObj.fullDate}: ${ayahs} Ayat`;
+
                 if (ayahs > 0 && ayahs <= 15) { bgColor = "#c2dfd1"; textColor = "#2b7a5f"; }
                 else if (ayahs > 15 && ayahs <= 40) { bgColor = "#7ebc9f"; textColor = "white"; }
                 else if (ayahs > 40 && ayahs <= 80) { bgColor = "#2b7a5f"; textColor = "white"; }
                 else if (ayahs > 80) { bgColor = "#1e5441"; textColor = "white"; }
-                return (<div key={index} className="heatmap-box" style={{ background: bgColor, color: textColor }} title={`${dObj.fullDate}: ${ayahs} Ayat`}>{dObj.dateNum}</div>);
+                else if (isPausedDate) {
+                  // Warna pink pastel khusus hari istirahat haid
+                  bgColor = "#fceade";
+                  textColor = "#e76f51";
+                  borderStyle = "1.5px solid #f4a261";
+                  tooltipText = `${dObj.fullDate}: Mode Istirahat (Haid) 🌸`;
+                }
+
+                return (
+                  <div
+                    key={index}
+                    className="heatmap-box"
+                    style={{ background: bgColor, color: textColor, border: borderStyle, boxSizing: 'border-box' }}
+                    title={tooltipText}
+                  >
+                    {dObj.dateNum}
+                  </div>
+                );
               })}
             </div>
-            <div className="heatmap-legend">
+            <div className="heatmap-legend" style={{ flexWrap: 'wrap' }}>
+              <span style={{ marginRight: '6px', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                <div className="legend-box" style={{ background: '#fceade', border: '1px solid #f4a261' }}></div>
+                Istirahat (Haid)
+              </span>
               <span>Sedikit</span>
               <div className="legend-box" style={{ background: '#ebedf0' }}></div>
               <div className="legend-box" style={{ background: '#c2dfd1' }}></div>
@@ -649,7 +813,7 @@ export default function App() {
         <button className={`nav-btn ${activeTab === 'log' ? 'active' : ''}`} onClick={() => setActiveTab('log')}><span style={{ fontSize: '1.4rem' }}>📜</span> Riwayat</button>
       </div>
 
-      {/* MODAL SURAH (TETAP TERBUKA SAMPAI KLIK X) */}
+      {/* MODAL SURAH */}
       {selectedSurah && (
         <div className="modal-overlay" onClick={(e) => e.target.className === 'modal-overlay' && setSelectedSurah(null)}>
           <div className="modal-content">
