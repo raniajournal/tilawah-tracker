@@ -303,6 +303,27 @@ export default function App() {
     }, { merge: true });
   };
 
+  const saveManualHaid = async () => {
+    if (!user) return;
+    if (!haidStartInput || !haidEndInput) {
+      alert("Pilih tanggal awal dan akhir istirahatmu!");
+      return;
+    }
+    
+    // Ambil rentang tanggal dan gabungkan dengan data yang sudah ada
+    const range = getDatesBetween(haidStartInput, haidEndInput);
+    const newPausedDates = [...new Set([...pausedDates, ...range])]; // Set mencegah duplikat
+    
+    setPausedDates(newPausedDates);
+    await setDoc(doc(db, "users", user.uid), {
+      pausedDates: newPausedDates
+    }, { merge: true });
+
+    setShowHaidModal(false);
+    setHaidStartInput("");
+    setHaidEndInput("");
+  };
+  
   const saveTracking = async (isComplete = false) => {
     if (!user) return;
     let readCount = progress[selectedSurah.id]?.read || 0;
@@ -612,6 +633,26 @@ export default function App() {
         </div>
       )}
 
+{showHaidModal && (
+        <div className="modal-overlay" onClick={(e) => e.target.className === 'modal-overlay' && setShowHaidModal(false)}>
+          <div className="target-modal">
+            <h3 style={{ marginTop: 0, color: '#e76f51' }}>🌸 Input Manual Haid</h3>
+            <p style={{ fontSize: '0.8rem', color: '#666' }}>Lupa klik tombol pause kemarin? Masukkan rentang tanggalnya di sini agar streak kamu tidak hangus.</p>
+            
+            <label style={{ display: 'block', margin: '15px 0 5px 0' }}>Dari Tanggal:</label>
+            <input type="date" className="input-field" value={haidStartInput} onChange={(e) => setHaidStartInput(e.target.value)} />
+            
+            <label style={{ display: 'block', margin: '15px 0 5px 0' }}>Sampai Tanggal:</label>
+            <input type="date" className="input-field" value={haidEndInput} onChange={(e) => setHaidEndInput(e.target.value)} />
+            
+            <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
+              <button onClick={() => setShowHaidModal(false)} className="btn-primary" style={{ flex: 1, background: '#e2e8f0', color: '#555' }}>Batal</button>
+              <button onClick={saveManualHaid} className="btn-primary" style={{ flex: 1, background: '#e76f51' }}>Simpan Tanggal</button>
+            </div>
+          </div>
+        </div>
+      )}
+      
       {/* DASHBOARD TAB */}
       {activeTab === "dashboard" && (
         <>
@@ -681,12 +722,22 @@ export default function App() {
                 </div>
               </div>
 
-              <button
-                onClick={toggleHaidPause}
-                className={`btn-pause-haid ${isHaidPaused ? 'active-paused' : ''}`}
-              >
-                {isHaidPaused ? '⏸️ Mode Istirahat Aktif' : '🌸 Siklus Haid (Pause)'}
-              </button>
+              {/* BUNGKUS TOMBOL AGAR BERSEBELAHAN */}
+              <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                <button
+                  onClick={() => setShowHaidModal(true)}
+                  style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.2rem' }}
+                  title="Set Manual Tanggal Haid"
+                >
+                  ⚙️
+                </button>
+                <button
+                  onClick={toggleHaidPause}
+                  className={`btn-pause-haid ${isHaidPaused ? 'active-paused' : ''}`}
+                >
+                  {isHaidPaused ? '⏸️ Mode Istirahat' : '🌸 Siklus Haid'}
+                </button>
+              </div>
             </div>
 
             <p className="streak-hint-text">
