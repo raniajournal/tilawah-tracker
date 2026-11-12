@@ -718,7 +718,6 @@ export default function App() {
       )}
 
       {/* STATISTIK TAB (DENGAN STREAK HARIAN & PAUSE HAID DI PALING ATAS) */}
-      {{/* STATISTIK TAB (DENGAN STREAK HARIAN & PAUSE HAID DI PALING ATAS) */}
       {activeTab === "statistik" && (
         <div className="stats-container">
           
@@ -739,11 +738,11 @@ export default function App() {
                 </div>
               </div>
 
-              {/* BUNGKUS TOMBOL AGAR BERSEBELAHAN & BISA TURUN KE BAWAH JIKA LAYAR SEMPIT */}
+              {/* GRUP TOMBOL PAUSE & MANUAL */}
               <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
                 <button
                   onClick={() => setShowHaidModal(true)}
-                  style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.2rem', padding: 0 }}
+                  style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.2rem', padding: 0, opacity: 0.7 }}
                   title="Set Manual Tanggal Haid"
                 >
                   ⚙️ 
@@ -754,29 +753,31 @@ export default function App() {
                 >
                   {isHaidPaused ? '⏸️ Mode Istirahat' : '🌸 Siklus Haid'}
                 </button>
-                
-                {/* TOMBOL SEMENTARA UNTUK RESET UJI COBA HAID */}
-                {/* (Tambahan opsional chaining '?' untuk mencegah error jika data dari firebase kosong) */}
-                {(isHaidPaused || pausedDates?.length > 0) && (
-                  <button
-                    onClick={resetHaidTrial}
-                    style={{
-                      background: '#ffe0eb',
-                      border: '1.5px dashed #ff8fa3',
-                      color: '#c9184a',
-                      padding: '8px 12px',
-                      borderRadius: '20px',
-                      fontSize: '0.75rem',
-                      fontWeight: 'bold',
-                      cursor: 'pointer'
-                    }}
-                    title="Hapus data trial haid saja"
-                  >
-                    🔄 Reset Trial
-                  </button>
-                )}
               </div>
             </div>
+
+            {/* TOMBOL RESET TRIAL DIPISAH KE BAWAH AGAR TIDAK MERUSAK LAYOUT */}
+            {(isHaidPaused || (Array.isArray(pausedDates) && pausedDates.length > 0)) && (
+              <div style={{ marginTop: '15px', display: 'flex', justifyContent: 'flex-end' }}>
+                <button
+                  onClick={resetHaidTrial}
+                  style={{
+                    background: '#fff0f3',
+                    border: '1px solid #ffb3c6',
+                    color: '#c9184a',
+                    padding: '6px 12px',
+                    borderRadius: '15px',
+                    fontSize: '0.7rem',
+                    fontWeight: 'bold',
+                    cursor: 'pointer',
+                    boxShadow: '2px 2px 0px #ffb3c6'
+                  }}
+                  title="Bersihkan data uji coba haid"
+                >
+                  🔄 Reset Trial
+                </button>
+              </div>
+            )}
 
             <p className="streak-hint-text">
               {isHaidPaused
