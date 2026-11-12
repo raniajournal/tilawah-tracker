@@ -303,6 +303,22 @@ export default function App() {
     }, { merge: true });
   };
 
+  // FUNGSI SEMENTARA: RESET DATA HAID SAJA (TANPA HAPUS RIWAYAT TILAWAH)
+  const resetHaidTrial = async () => {
+    if (!user) return;
+    if (window.confirm("Reset data uji coba haid saja? (Riwayat tilawah tetap aman)")) {
+      setIsHaidPaused(false);
+      setPausedDates([]);
+      setLastPauseStart(null);
+
+      await setDoc(doc(db, "users", user.uid), {
+        isHaidPaused: false,
+        pausedDates: [],
+        lastPauseStart: null
+      }, { merge: true });
+    }
+  };
+
   const saveManualHaid = async () => {
     if (!user) return;
     if (!haidStartInput || !haidEndInput) {
@@ -729,7 +745,7 @@ export default function App() {
                   style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.2rem' }}
                   title="Set Manual Tanggal Haid"
                 >
-                  ⚙️
+                  ⚙️ 
                 </button>
                 <button
                   onClick={toggleHaidPause}
@@ -737,6 +753,26 @@ export default function App() {
                 >
                   {isHaidPaused ? '⏸️ Mode Istirahat' : '🌸 Siklus Haid'}
                 </button>
+                {/* TOMBOL SEMENTARA UNTUK RESET UJI COBA HAID */}
+                {(isHaidPaused || pausedDates.length > 0) && (
+                  <button
+                    onClick={resetHaidTrial}
+                    style={{
+                      background: '#ffe0eb',
+                      border: '1.5px dashed #ff8fa3',
+                      color: '#c9184a',
+                      padding: '8px 12px',
+                      borderRadius: '20px',
+                      fontSize: '0.75rem',
+                      fontWeight: 'bold',
+                      cursor: 'pointer'
+                    }}
+                    title="Hapus data trial haid saja"
+                  >
+                    🔄 Reset Trial
+                  </button>
+                     )}
+                </div>
               </div>
             </div>
 
@@ -784,9 +820,9 @@ export default function App() {
                 else if (ayahs > 80) { bgColor = "#1e5441"; textColor = "white"; }
                 else if (isPausedDate) {
                   // Warna pink pastel khusus hari istirahat haid
-                  bgColor = "#fceade";
-                  textColor = "#e76f51";
-                  borderStyle = "1.5px solid #f4a261";
+                  bgColor = "#ffd6e7"; 
+                  textColor = "#c9184a"; 
+                  borderStyle = "1.5px solid #ff8fa3";
                   tooltipText = `${dObj.fullDate}: Mode Istirahat (Haid) 🌸`;
                 }
 
@@ -804,7 +840,7 @@ export default function App() {
             </div>
             <div className="heatmap-legend" style={{ flexWrap: 'wrap' }}>
               <span style={{ marginRight: '6px', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-                <div className="legend-box" style={{ background: '#fceade', border: '1px solid #f4a261' }}></div>
+                <div className="legend-box" style={{ background: '#ffd6e7', border: '1px solid #ff8fa3' }}></div>
                 Istirahat (Haid)
               </span>
               <span>Sedikit</span>
