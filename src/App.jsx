@@ -718,6 +718,7 @@ export default function App() {
       )}
 
       {/* STATISTIK TAB (DENGAN STREAK HARIAN & PAUSE HAID DI PALING ATAS) */}
+      {{/* STATISTIK TAB (DENGAN STREAK HARIAN & PAUSE HAID DI PALING ATAS) */}
       {activeTab === "statistik" && (
         <div className="stats-container">
           
@@ -738,11 +739,11 @@ export default function App() {
                 </div>
               </div>
 
-              {/* BUNGKUS TOMBOL AGAR BERSEBELAHAN */}
-              <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+              {/* BUNGKUS TOMBOL AGAR BERSEBELAHAN & BISA TURUN KE BAWAH JIKA LAYAR SEMPIT */}
+              <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
                 <button
                   onClick={() => setShowHaidModal(true)}
-                  style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.2rem' }}
+                  style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.2rem', padding: 0 }}
                   title="Set Manual Tanggal Haid"
                 >
                   ⚙️ 
@@ -753,8 +754,10 @@ export default function App() {
                 >
                   {isHaidPaused ? '⏸️ Mode Istirahat' : '🌸 Siklus Haid'}
                 </button>
+                
                 {/* TOMBOL SEMENTARA UNTUK RESET UJI COBA HAID */}
-                {(isHaidPaused || pausedDates.length > 0) && (
+                {/* (Tambahan opsional chaining '?' untuk mencegah error jika data dari firebase kosong) */}
+                {(isHaidPaused || pausedDates?.length > 0) && (
                   <button
                     onClick={resetHaidTrial}
                     style={{
@@ -771,8 +774,7 @@ export default function App() {
                   >
                     🔄 Reset Trial
                   </button>
-                     )}
-                </div>
+                )}
               </div>
             </div>
 
