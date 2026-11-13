@@ -562,6 +562,7 @@ body {
     max-width: 650px;
   }
 }
+
 /* =========================================
    STREAK HARIAN & TOMBOL PAUSE HAID (PAPER-CUT)
 ========================================= */
@@ -569,85 +570,95 @@ body {
   background: #FFFDF9;
   border: 2px solid #E6DFD3;
   border-radius: 20px;
-  padding: 18px 20px;
+  padding: 20px;
   margin: 15px;
-  box-shadow: 
-    4px 4px 0px #E6DFD3, 
-    6px 6px 12px rgba(0, 0, 0, 0.05);
+  box-shadow: 4px 4px 0px #E6DFD3, 6px 6px 12px rgba(0, 0, 0, 0.05);
   transition: all 0.3s ease;
 }
 
 .streak-card-wrapper.is-paused {
-  background: ##d396d9;
+  background: #FFF9F5;
   border-color: #F4A261;
-  box-shadow: 
-    4px 4px 0px #Fceade, 
-    6px 6px 12px rgba(0, 0, 0, 0.04);
+  box-shadow: 4px 4px 0px #FCEADE, 6px 6px 12px rgba(0, 0, 0, 0.04);
 }
 
 .streak-header {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 12px;
+  align-items: flex-start; /* Sejajarkan ke atas */
 }
 
-.campfire-container {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-}
-
-.streak-logo-img {
-  width: 58px;
-  height: 58px;
-  object-fit: contain;
-  filter: drop-shadow(2px 4px 4px rgba(0, 0, 0, 0.12));
-}
-
-/* Animasi detak berkobar saat streak aktif */
-.mode-pulse {
-  animation: firePulse 2s infinite ease-in-out;
-}
-
-/* Animasi bernapas lambat saat mode istirahat haid */
-.mode-sleep {
-  animation: fireSleep 4s infinite ease-in-out;
-  opacity: 0.9;
-}
-
-.streak-counter {
+/* BAGIAN KIRI: INFO TEKS */
+.streak-info-left {
   display: flex;
   flex-direction: column;
+  justify-content: flex-start;
+  padding-top: 10px; /* Seimbangkan posisi teks dengan api */
 }
 
 .streak-number {
-  font-size: 1.7rem;
+  font-size: 2.2rem; /* Angka diperbesar sedikit */
   font-weight: 900;
   color: #E76F51;
   line-height: 1.1;
 }
 
-.campfire-container.paused .streak-number {
+.is-paused .streak-number {
   color: #8D6E63;
 }
 
 .streak-label {
-  font-size: 0.78rem;
+  font-size: 0.85rem;
   font-weight: 700;
-  color: #888;
-  margin-top: 2px;
+  color: #555;
+  margin-top: 5px;
 }
 
-/* Tombol Pause Haid Empatik */
+.longest-streak-label {
+  font-size: 0.75rem;
+  color: #888;
+  margin-top: 8px;
+  background: #f1f0ea;
+  padding: 4px 8px;
+  border-radius: 6px;
+  display: inline-block;
+  align-self: flex-start;
+}
+
+/* BAGIAN KANAN: API & TOMBOL */
+.streak-action-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end; /* Ratakan kanan */
+  gap: 12px;
+}
+
+.campfire-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.streak-logo-img {
+  width: 80px; /* Ikon api DIPERBESAR dari 58px ke 80px */
+  height: 80px;
+  object-fit: contain;
+  filter: drop-shadow(3px 5px 6px rgba(0, 0, 0, 0.15));
+}
+
+.streak-buttons-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .btn-pause-haid {
   background-color: #FCEADE;
   border: 1.5px solid #F4A261;
   color: #E76F51;
-  padding: 9px 15px;
+  padding: 8px 14px;
   border-radius: 20px;
-  font-size: 0.78rem;
+  font-size: 0.75rem;
   font-family: inherit;
   font-weight: 800;
   cursor: pointer;
@@ -655,9 +666,7 @@ body {
   box-shadow: 2px 3px 0px #F4A261;
 }
 
-.btn-pause-haid:hover {
-  transform: translateY(-1px);
-}
+.btn-pause-haid:hover { transform: translateY(-1px); }
 
 .btn-pause-haid.active-paused {
   background-color: #E9C46A;
@@ -667,18 +676,38 @@ body {
   transform: translate(2px, 2px);
 }
 
+.btn-reset-trial {
+  background: #fff0f3;
+  border: 1px solid #ffb3c6;
+  color: #c9184a;
+  padding: 6px 12px;
+  border-radius: 15px;
+  font-size: 0.7rem;
+  font-weight: bold;
+  cursor: pointer;
+  box-shadow: 2px 2px 0px #ffb3c6;
+  margin-top: 5px;
+}
+
 .streak-hint-text {
   font-size: 0.78rem;
   color: #666;
-  margin: 14px 0 0 0;
-  padding-top: 10px;
+  margin: 20px 0 0 0;
+  padding-top: 15px;
   border-top: 1px dashed #E6DFD3;
   line-height: 1.45;
+  text-align: center; /* Diposisikan di tengah bawah */
 }
+
+/* Animasi detak berkobar saat streak aktif */
+.mode-pulse { animation: firePulse 2s infinite ease-in-out; }
+
+/* Animasi bernapas lambat saat mode istirahat haid */
+.mode-sleep { animation: fireSleep 4s infinite ease-in-out; opacity: 0.9; }
 
 @keyframes firePulse {
   0%, 100% { transform: scale(1) rotate(0deg); }
-  50% { transform: scale(1.08) rotate(2deg); }
+  50% { transform: scale(1.08) rotate(3deg); } /* Putaran sedikit ditambah biar semangat */
 }
 
 @keyframes fireSleep {
