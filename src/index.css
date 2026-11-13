@@ -570,7 +570,7 @@ body {
   background: #FFFDF9;
   border: 2px solid #E6DFD3;
   border-radius: 20px;
-  padding: 20px;
+  padding: 20px 22px;
   margin: 15px;
   box-shadow: 4px 4px 0px #E6DFD3, 6px 6px 12px rgba(0, 0, 0, 0.05);
   transition: all 0.3s ease;
@@ -582,55 +582,67 @@ body {
   box-shadow: 4px 4px 0px #FCEADE, 6px 6px 12px rgba(0, 0, 0, 0.04);
 }
 
+.streak-card-wrapper.is-broken {
+  background: #F8FAFC;
+  border-color: #CBD5E1;
+  box-shadow: 4px 4px 0px #E2E8F0, 6px 6px 12px rgba(0, 0, 0, 0.04);
+}
+
 .streak-header {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start; /* Sejajarkan ke atas */
+  align-items: center;
+  gap: 15px;
 }
 
 /* BAGIAN KIRI: INFO TEKS */
 .streak-info-left {
   display: flex;
   flex-direction: column;
-  justify-content: flex-start;
-  padding-top: 10px; /* Seimbangkan posisi teks dengan api */
+  justify-content: center;
+  align-items: flex-start;
+  flex: 1;
 }
 
 .streak-number {
-  font-size: 2.2rem; /* Angka diperbesar sedikit */
+  font-size: 2.4rem;
   font-weight: 900;
   color: #E76F51;
-  line-height: 1.1;
+  line-height: 1.05;
 }
 
 .is-paused .streak-number {
   color: #8D6E63;
 }
 
+.is-broken .streak-number {
+  color: #64748B;
+}
+
 .streak-label {
-  font-size: 0.85rem;
-  font-weight: 700;
-  color: #555;
-  margin-top: 5px;
+  font-size: 0.9rem;
+  font-weight: 800;
+  color: #444;
+  margin-top: 6px;
 }
 
 .longest-streak-label {
-  font-size: 0.75rem;
-  color: #888;
-  margin-top: 8px;
+  font-size: 0.78rem;
+  color: #666;
+  margin-top: 10px;
   background: #f1f0ea;
-  padding: 4px 8px;
-  border-radius: 6px;
+  padding: 5px 10px;
+  border-radius: 8px;
   display: inline-block;
-  align-self: flex-start;
+  border: 1px solid #e2ddd2;
 }
 
-/* BAGIAN KANAN: API & TOMBOL */
+/* BAGIAN KANAN: API BESAR & TOMBOL DI BAWAHNYA */
 .streak-action-right {
   display: flex;
   flex-direction: column;
-  align-items: flex-end; /* Ratakan kanan */
-  gap: 12px;
+  align-items: center;
+  gap: 10px;
 }
 
 .campfire-container {
@@ -640,15 +652,16 @@ body {
 }
 
 .streak-logo-img {
-  width: 80px; /* Ikon api DIPERBESAR dari 58px ke 80px */
-  height: 80px;
+  width: 95px;
+  height: 95px;
   object-fit: contain;
-  filter: drop-shadow(3px 5px 6px rgba(0, 0, 0, 0.15));
+  filter: drop-shadow(3px 6px 8px rgba(0, 0, 0, 0.18));
 }
 
 .streak-buttons-group {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 8px;
 }
 
@@ -664,6 +677,7 @@ body {
   cursor: pointer;
   transition: all 0.2s ease;
   box-shadow: 2px 3px 0px #F4A261;
+  white-space: nowrap;
 }
 
 .btn-pause-haid:hover { transform: translateY(-1px); }
@@ -680,34 +694,36 @@ body {
   background: #fff0f3;
   border: 1px solid #ffb3c6;
   color: #c9184a;
-  padding: 6px 12px;
+  padding: 5px 12px;
   border-radius: 15px;
   font-size: 0.7rem;
   font-weight: bold;
   cursor: pointer;
   box-shadow: 2px 2px 0px #ffb3c6;
-  margin-top: 5px;
 }
 
 .streak-hint-text {
   font-size: 0.78rem;
   color: #666;
-  margin: 20px 0 0 0;
-  padding-top: 15px;
+  margin: 18px 0 0 0;
+  padding-top: 12px;
   border-top: 1px dashed #E6DFD3;
   line-height: 1.45;
-  text-align: center; /* Diposisikan di tengah bawah */
+  text-align: center;
 }
 
 /* Animasi detak berkobar saat streak aktif */
-.mode-pulse { animation: firePulse 2s infinite ease-in-out; }
+.mode-pulse { animation: firePulse 1.8s infinite ease-in-out; }
 
 /* Animasi bernapas lambat saat mode istirahat haid */
-.mode-sleep { animation: fireSleep 4s infinite ease-in-out; opacity: 0.9; }
+.mode-sleep { animation: fireSleep 4s infinite ease-in-out; opacity: 0.92; }
+
+/* Gaya statis/redup saat streak putus */
+.mode-broken { opacity: 0.85; transform: scale(0.96); }
 
 @keyframes firePulse {
   0%, 100% { transform: scale(1) rotate(0deg); }
-  50% { transform: scale(1.08) rotate(3deg); } /* Putaran sedikit ditambah biar semangat */
+  50% { transform: scale(1.1) rotate(3deg); }
 }
 
 @keyframes fireSleep {
