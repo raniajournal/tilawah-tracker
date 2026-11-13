@@ -218,6 +218,7 @@ export default function App() {
   const [haidEndInput, setHaidEndInput] = useState("");
 
   const juzProgress = useMemo(() => computeJuzMapFromProgress(progress), [progress]);
+  const [longestStreak, setLongestStreak] = useState(0);
 
   // STATE UNTUK HALAMAN LENCANA
   const [showBadgesOverlay, setShowBadgesOverlay] = useState(false);
@@ -239,6 +240,7 @@ export default function App() {
             if (typeof data.isHaidPaused === "boolean") setIsHaidPaused(data.isHaidPaused);
             if (data.pausedDates) setPausedDates(data.pausedDates);
             if (data.lastPauseStart !== undefined) setLastPauseStart(data.lastPauseStart);
+            if (data.longestStreak !== undefined) setLongestStreak(data.longestStreak);
           }
         });
       }
@@ -408,10 +410,26 @@ export default function App() {
     setStartAyah(readCount >= selectedSurah.ayahs ? selectedSurah.ayahs : readCount + 1);
     setEndAyah("");
 
+    // --- Kalkulasi untuk Longest Streak (Real-time update) ---
+    // Karena kita baru menambah data hari ini, currentStreak dari useMemo mungkin belum terupdate.
+    // Kita hitung manual estimasi streak baru jika hari ini membaca.
+    const todayStr = new Date().toISOString().split('T')[0];
+    let estimatedNewStreak = currentStreak;
+    if ((dailyStats[todayStr] || 0) === 0) {
+      estimatedNewStreak = currentStreak + 1; // Ditambah 1 karena hari ini baru baca
+    }
+    
+    let newLongestStreak = longestStreak;
+    if (estimatedNewStreak > longestStreak) {
+      newLongestStreak = estimatedNewStreak;
+      setLongestStreak(newLongestStreak);
+    }
+    
     await setDoc(doc(db, "users", user.uid), {
       progress: updatedProgress,
       journeyMode: journeyMode,
       activeJuz: newActiveJuz
+      longestStreak: newLongestStreak
     }, { merge: true });
   };
 
@@ -728,60 +746,58 @@ export default function App() {
           {/* 1. KARTU STREAK HARIAN & PAUSE HAID */}
           <div className={`streak-card-wrapper ${isHaidPaused ? 'is-paused' : ''}`}>
             <div className="streak-header">
-              <div className={`campfire-container ${isHaidPaused ? 'paused' : 'burning'}`}>
-                <img
-                  src={isHaidPaused ? "/images/fire-pause.webp" : "/images/fire-active.webp"}
-                  alt="Streak Status"
-                  className={`streak-logo-img ${isHaidPaused ? 'mode-sleep' : 'mode-pulse'}`}
-                />
-                <div className="streak-counter">
-                  <span className="streak-number">{currentStreak} Hari</span>
-                  <span className="streak-label">
-                    {isHaidPaused ? 'Streak Dikunci (Haid)' : 'Streak Tilawah Aktif'}
-                  </span>
+              
+              {/* KIRI: INFO STREAK */}
+              <div className="streak-info-left">
+                <span className="streak-number">{currentStreak} Hari</span>
+                <span className="streak-label">
+                  {isHaidPaused ? 'Streak Dikunci (Haid)' : 'Streak Tilawah Aktif'}
+                </span>
+                <span className="longest-streak-label">
+                  Rekor Terlama: <b>{longestStreak} Hari</b>
+                </span>
+              </div>
+
+              {/* KANAN: ANIMASI API & TOMBOL */}
+              <div className="streak-action-right">
+                <div className={`campfire-container ${isHaidPaused ? 'paused' : 'burning'}`}>
+                  <img
+                    src={isHaidPaused ? "/images/fire-pause.webp" : "/images/fire-active.webp"}
+                    alt="Streak Status"
+                    className={`streak-logo-img ${isHaidPaused ? 'mode-sleep' : 'mode-pulse'}`}
+                  />
                 </div>
+                
+                {/* GRUP TOMBOL DI BAWAH API */}
+                <div className="streak-buttons-group">
+                   <button
+                    onClick={() => setShowHaidModal(true)}
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.1rem', padding: 0, opacity: 0.7 }}
+                    title="Set Manual Tanggal Haid"
+                  >
+                    ⚙️
+                  </button>
+                  <button
+                    onClick={toggleHaidPause}
+                    className={`btn-pause-haid ${isHaidPaused ? 'active-paused' : ''}`}
+                  >
+                    {isHaidPaused ? '⏸️ Mode Istirahat' : '🌸 Siklus Haid'}
+                  </button>
+                </div>
+
+                {/* TOMBOL RESET TRIAL */}
+                {(isHaidPaused || (Array.isArray(pausedDates) && pausedDates.length > 0)) && (
+                   <button
+                     onClick={resetHaidTrial}
+                     className="btn-reset-trial"
+                     title="Bersihkan data uji coba haid"
+                   >
+                     🔄 Reset Trial
+                   </button>
+                )}
               </div>
 
-              {/* GRUP TOMBOL PAUSE & MANUAL */}
-              <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
-                <button
-                  onClick={() => setShowHaidModal(true)}
-                  style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.2rem', padding: 0, opacity: 0.7 }}
-                  title="Set Manual Tanggal Haid"
-                >
-                  ⚙️ 
-                </button>
-                <button
-                  onClick={toggleHaidPause}
-                  className={`btn-pause-haid ${isHaidPaused ? 'active-paused' : ''}`}
-                >
-                  {isHaidPaused ? '⏸️ Mode Istirahat' : '🌸 Siklus Haid'}
-                </button>
-              </div>
             </div>
-
-            {/* TOMBOL RESET TRIAL DIPISAH KE BAWAH AGAR TIDAK MERUSAK LAYOUT */}
-            {(isHaidPaused || (Array.isArray(pausedDates) && pausedDates.length > 0)) && (
-              <div style={{ marginTop: '15px', display: 'flex', justifyContent: 'flex-end' }}>
-                <button
-                  onClick={resetHaidTrial}
-                  style={{
-                    background: '#fff0f3',
-                    border: '1px solid #ffb3c6',
-                    color: '#c9184a',
-                    padding: '6px 12px',
-                    borderRadius: '15px',
-                    fontSize: '0.7rem',
-                    fontWeight: 'bold',
-                    cursor: 'pointer',
-                    boxShadow: '2px 2px 0px #ffb3c6'
-                  }}
-                  title="Bersihkan data uji coba haid"
-                >
-                  🔄 Reset Trial
-                </button>
-              </div>
-            )}
 
             <p className="streak-hint-text">
               {isHaidPaused
