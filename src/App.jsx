@@ -122,6 +122,102 @@ const SURAHS = [
   { id: 114, name: "An-Nas", meaning: "Manusia", ayahs: 6, juz: "Juz 30" }
 ];
 
+const PROPHET_SURAHS = [10, 11, 12, 14, 47, 71]; // Yunus, Hud, Yusuf, Ibrahim, Muhammad, Nuh
+
+const BADGES_CONFIG = [
+  // 1. KUANTITAS AYAT (Circle)
+  { id: "badge-100", category: "Kuantitas Ayat", shape: "circle", title: "Langkah Pertama", img: "/images/badge-100.webp", reqText: "Membaca 100 ayat pertama" },
+  { id: "badge-500", category: "Kuantitas Ayat", shape: "circle", title: "Musafir Gigih", img: "/images/badge-500.webp", reqText: "Membaca 500 ayat pertama" },
+  { id: "badge-1000", category: "Kuantitas Ayat", shape: "circle", title: "Pencari Cahaya", img: "/images/badge-1000.webp", reqText: "Membaca 1.000 ayat pertama" },
+  { id: "badge-3000", category: "Kuantitas Ayat", shape: "circle", title: "Separuh Jalan", img: "/images/badge-3000.webp", reqText: "Membaca 3.000 ayat pertama" },
+  { id: "badge-khatam", category: "Kuantitas Ayat", shape: "circle", title: "Pewaris Langit", img: "/images/badge-khatam.webp", reqText: "Menyelesaikan khatam pertama (6.236 ayat)" },
+
+  // 2. API ISTIQOMAH (Hexagon)
+  { id: "badge-7-hari", category: "Api Istiqomah", shape: "hexagon", title: "Api Pemanasan", img: "/images/badge-7-hari.webp", reqText: "7 hari tilawah berturut-turut" },
+  { id: "badge-30-hari", category: "Api Istiqomah", shape: "hexagon", title: "Purnama Istiqomah", img: "/images/badge-30-hari.webp", reqText: "30 hari tilawah berturut-turut" },
+  { id: "badge-100-hari", category: "Api Istiqomah", shape: "hexagon", title: "Bintang Keabadian", img: "/images/badge-100-hari.webp", reqText: "100 hari tilawah (berturut-turut ataupun tidak)" },
+
+  // 3. MISI SURAT (Shield)
+  { id: "badge-albaqarah", category: "Misi Surat", shape: "shield", title: "Penakluk Al-Baqarah", img: "/images/badge-albaqarah.webp", reqText: "Khatam Surat Al-Baqarah (286 ayat)" },
+  { id: "badge-yasin", category: "Misi Surat", shape: "shield", title: "Jantung Al-Qur'an", img: "/images/badge-yasin.webp", reqText: "Khatam Surat Yasin (83 ayat)" },
+  { id: "badge-2-cahaya", category: "Misi Surat", shape: "shield", title: "Penjaga Dua Cahaya", img: "/images/badge-2-cahaya.webp", reqText: "Khatam Surat Al-Baqarah & Ali 'Imran" },
+  { id: "badge-arrahman", category: "Misi Surat", shape: "shield", title: "Mutiara Syukur", img: "/images/badge-arrahman.webp", reqText: "Khatam Surat Ar-Rahman (78 ayat)" },
+  { id: "badge-almulk", category: "Misi Surat", shape: "shield", title: "Perisai Malam", img: "/images/badge-almulk.webp", reqText: "Khatam Surat Al-Mulk (30 ayat)" },
+  { id: "badge-alkahfi", category: "Misi Surat", shape: "shield", title: "Cahaya Gua", img: "/images/badge-alkahfi.webp", reqText: "Khatam Surat Al-Kahfi (110 ayat)" },
+  { id: "badge-nabi", category: "Misi Surat", shape: "shield", title: "Jejak Para Nabi", img: "/images/badge-nabi.webp", reqText: "Khatam 6 Surat Nama Nabi (Yunus, Hud, Yusuf, Ibrahim, Muhammad, Nuh)" },
+  { id: "badge-juzamma", category: "Misi Surat", shape: "shield", title: "Penjelajah Juz 'Amma", img: "/images/badge-juzamma.webp", reqText: "Khatam seluruh 37 surat di Juz 30" },
+
+  // 4. HIDDEN GEMS (Octagon - Kiasan saat terkunci)
+  {
+    id: "badge-sprinter",
+    category: "Hidden Gems",
+    shape: "octagon",
+    isHidden: true,
+    title: "Pelari Seratus Cahaya",
+    img: "/images/badge-sprinter.webp",
+    riddleText: "Bukan langkah kecil yang biasa, melainkan lari kencang menembus seratus cahaya dalam sekali duduk.",
+    reqText: "Sekali baca lebih dari atau sama dengan 100 ayat dalam satu waktu"
+  },
+  {
+    id: "badge-target",
+    category: "Hidden Gems",
+    shape: "octagon",
+    isHidden: true,
+    title: "Melampaui Batas",
+    img: "/images/badge-target.webp",
+    riddleText: "Saat janji harian tak lagi cukup, engkau melesat dua kali lebih jauh dari batas yang kau tetapkan sendiri.",
+    reqText: "Sekali baca mencapai 2x lipat dari target harian"
+  },
+  {
+    id: "badge-kembali",
+    category: "Hidden Gems",
+    shape: "octagon",
+    isHidden: true,
+    title: "Langkah Pulang",
+    img: "/images/badge-kembali.webp",
+    riddleText: "Setelah purnama berlalu dalam sunyi tanpa sapaan ayat, sebuah langkah pulang kembali mengetuk pintu langit.",
+    reqText: "Tilawah kembali setelah 30 hari tidak tilawah"
+  },
+  {
+    id: "badge-malam",
+    category: "Hidden Gems",
+    shape: "octagon",
+    isHidden: true,
+    title: "Penjaga Sepertiga Malam",
+    img: "/images/badge-malam.webp",
+    riddleText: "Ketika dunia terlelap di antara tengah malam hingga menjelang sahur, ada bisikan ayat yang terjaga dalam hening.",
+    reqText: "Tilawah di jam 00.00 - 03.00 dini hari"
+  },
+  {
+    id: "badge-subuh",
+    category: "Hidden Gems",
+    shape: "octagon",
+    isHidden: true,
+    title: "Saksi Embun Fajar",
+    img: "/images/badge-subuh.webp",
+    riddleText: "Menyambut embun dan semburat cahaya pertama di ufuk timur bersama lantunan kalam-Nya.",
+    reqText: "Tilawah di jam 04.00 - 06.00 pagi hari"
+  },
+  {
+    id: "badge-suci",
+    category: "Hidden Gems",
+    shape: "octagon",
+    isHidden: true,
+    title: "Jeda yang Bernilai",
+    img: "/images/badge-suci.webp",
+    riddleText: "Bahkan saat raga beristirahat karena fitrah wanita, niat yang terjaga tetap dicatat sebagai pahala.",
+    reqText: "Mengaktifkan jeda Pause Haid untuk pertama kalinya"
+  }
+];
+
+const ORIGAMI_BIRDS = [
+  { id: "Gold", name: "Gold Origami", reqText: "Default (Mulai Tilawah)", minAyahs: 0, colors: ["#f59e0b", "#fbbf24", "#fcd34d"] },
+  { id: "Amethyst", name: "Amethyst Origami", reqText: "Terbuka di 1.000 Ayat", minAyahs: 1000, colors: ["#7e22ce", "#a855f7", "#d8b4fe"] },
+  { id: "Lazuli", name: "Lazuli Origami", reqText: "Terbuka di 2.500 Ayat", minAyahs: 2500, colors: ["#1d4ed8", "#3b82f6", "#93c5fd"] },
+  { id: "Emerald", name: "Emerald Origami", reqText: "Terbuka di 5.000 Ayat", minAyahs: 5000, colors: ["#047857", "#10b981", "#6ee7b7"] },
+  { id: "Pearl Diamond", name: "Pearl Diamond", reqText: "Khatam Pertama (Bebas Pilih Warna)", minAyahs: 6236, requireKhatam: true, colors: ["#f8fafc", "#e2e8f0", "#fbbf24"] }
+];
+
 const getProgressBarColor = (percent) => {
   if (percent < 50) return "#fcd34d";
   if (percent < 100) return "#fb923c";
@@ -223,6 +319,10 @@ export default function App() {
   // STATE UNTUK HALAMAN LENCANA
   const [showBadgesOverlay, setShowBadgesOverlay] = useState(false);
   const [selectedBadge, setSelectedBadge] = useState(null);
+  const [showBadgesOverlay, setShowBadgesOverlay] = useState(false);
+  const [selectedBadge, setSelectedBadge] = useState(BADGES_CONFIG[0]);
+  const [earnedBadges, setEarnedBadges] = useState({}); // { "badge-100": "2026-11-09", ... }
+  const [selectedBirdSkin, setSelectedBirdSkin] = useState(null);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
@@ -241,6 +341,8 @@ export default function App() {
             if (data.pausedDates) setPausedDates(data.pausedDates);
             if (data.lastPauseStart !== undefined) setLastPauseStart(data.lastPauseStart);
             if (data.longestStreak !== undefined) setLongestStreak(data.longestStreak);
+            if (data.earnedBadges) setEarnedBadges(data.earnedBadges);
+            if (data.selectedBirdSkin) setSelectedBirdSkin(data.selectedBirdSkin);
           }
         });
       }
@@ -560,6 +662,204 @@ export default function App() {
     return streak;
   }, [dailyStats, effectivePausedSet]);
 
+  // KALKULASI PROGRESS & TANGGAL PEROLEHAN 22 LENCANA
+  const badgesStatus = useMemo(() => {
+    const isSurahDone = (id) => {
+      const s = SURAHS.find(x => x.id === id);
+      return s && (progress[id]?.read || 0) >= s.ayahs;
+    };
+
+    // Urutkan seluruh riwayat dari paling awal untuk melacak tanggal tercapainya syarat
+    const chronologicalHist = [...allGlobalHistory].sort((a, b) => a.timestamp - b.timestamp);
+    let runningAyahs = 0;
+    const milestoneDates = {};
+    let sprinterDate = null;
+    let targetCrusherDate = null;
+    let comebackDate = null;
+    let malamDate = null;
+    let subuhDate = null;
+    let prevDateObj = null;
+    const dailyTargetVal = target.type === "daily" ? parseInt(target.value || 20) : 20;
+
+    chronologicalHist.forEach((h) => {
+      const added = h.ayahsAdded || 0;
+      runningAyahs += added;
+      if (runningAyahs >= 100 && !milestoneDates["badge-100"]) milestoneDates["badge-100"] = h.date;
+      if (runningAyahs >= 500 && !milestoneDates["badge-500"]) milestoneDates["badge-500"] = h.date;
+      if (runningAyahs >= 1000 && !milestoneDates["badge-1000"]) milestoneDates["badge-1000"] = h.date;
+      if (runningAyahs >= 3000 && !milestoneDates["badge-3000"]) milestoneDates["badge-3000"] = h.date;
+      if (runningAyahs >= 6236 && !milestoneDates["badge-khatam"]) milestoneDates["badge-khatam"] = h.date;
+
+      if (added >= 100 && !sprinterDate) sprinterDate = h.date;
+      if (added >= dailyTargetVal * 2 && !targetCrusherDate) targetCrusherDate = h.date;
+
+      if (h.timestamp) {
+        const hour = new Date(h.timestamp).getHours();
+        if (hour >= 0 && hour <= 3 && !malamDate) malamDate = h.date;
+        if (hour >= 4 && hour <= 6 && !subuhDate) subuhDate = h.date;
+      }
+
+      if (h.date) {
+        const currD = new Date(h.date);
+        if (prevDateObj) {
+          const diffDays = Math.floor((currD - prevDateObj) / (1000 * 60 * 60 * 24));
+          if (diffDays >= 30 && !comebackDate) comebackDate = h.date;
+        }
+        prevDateObj = currD;
+      }
+    });
+
+    const uniqueReadDays = Object.keys(dailyStats).filter(d => dailyStats[d] > 0).length;
+    const maxStreakReached = Math.max(longestStreak, currentStreak);
+    const prophetDoneCount = PROPHET_SURAHS.filter(id => isSurahDone(id)).length;
+    const juz30Ids = Array.from({ length: 37 }, (_, i) => 78 + i);
+    const juz30DoneCount = juz30Ids.filter(id => isSurahDone(id)).length;
+    const twoLightsCount = (isSurahDone(2) ? 1 : 0) + (isSurahDone(3) ? 1 : 0);
+    const hasEverKhatam = (stats.khatamHistory && stats.khatamHistory.length > 0) || readAyahs >= 6236;
+    const todayStr = new Date().toISOString().split('T')[0];
+
+    return BADGES_CONFIG.map((b) => {
+      let unlocked = Boolean(earnedBadges[b.id]);
+      let detectedDate = earnedBadges[b.id] || null;
+      let progressText = "";
+
+      switch (b.id) {
+        case "badge-100":
+          if (readAyahs >= 100 || hasEverKhatam) unlocked = true;
+          detectedDate = detectedDate || milestoneDates["badge-100"] || todayStr;
+          progressText = `${Math.min(readAyahs, 100)} / 100 Ayat`;
+          break;
+        case "badge-500":
+          if (readAyahs >= 500 || hasEverKhatam) unlocked = true;
+          detectedDate = detectedDate || milestoneDates["badge-500"] || todayStr;
+          progressText = `${Math.min(readAyahs, 500)} / 500 Ayat`;
+          break;
+        case "badge-1000":
+          if (readAyahs >= 1000 || hasEverKhatam) unlocked = true;
+          detectedDate = detectedDate || milestoneDates["badge-1000"] || todayStr;
+          progressText = `${Math.min(readAyahs, 1000)} / 1.000 Ayat`;
+          break;
+        case "badge-3000":
+          if (readAyahs >= 3000 || hasEverKhatam) unlocked = true;
+          detectedDate = detectedDate || milestoneDates["badge-3000"] || todayStr;
+          progressText = `${Math.min(readAyahs, 3000)} / 3.000 Ayat`;
+          break;
+        case "badge-khatam":
+          if (hasEverKhatam) unlocked = true;
+          detectedDate = detectedDate || milestoneDates["badge-khatam"] || stats.khatamHistory?.[0]?.endDate || todayStr;
+          progressText = `${readAyahs} / 6.236 Ayat`;
+          break;
+        case "badge-7-hari":
+          if (maxStreakReached >= 7) unlocked = true;
+          detectedDate = detectedDate || todayStr;
+          progressText = `${Math.min(maxStreakReached, 7)} / 7 Hari`;
+          break;
+        case "badge-30-hari":
+          if (maxStreakReached >= 30) unlocked = true;
+          detectedDate = detectedDate || todayStr;
+          progressText = `${Math.min(maxStreakReached, 30)} / 30 Hari`;
+          break;
+        case "badge-100-hari":
+          if (uniqueReadDays >= 100 || maxStreakReached >= 100) unlocked = true;
+          detectedDate = detectedDate || todayStr;
+          progressText = `${Math.min(Math.max(uniqueReadDays, maxStreakReached), 100)} / 100 Hari`;
+          break;
+        case "badge-albaqarah":
+          if (isSurahDone(2)) unlocked = true;
+          detectedDate = detectedDate || progress[2]?.history?.[0]?.date || todayStr;
+          progressText = `${progress[2]?.read || 0} / 286 Ayat`;
+          break;
+        case "badge-yasin":
+          if (isSurahDone(36)) unlocked = true;
+          detectedDate = detectedDate || progress[36]?.history?.[0]?.date || todayStr;
+          progressText = `${progress[36]?.read || 0} / 83 Ayat`;
+          break;
+        case "badge-2-cahaya":
+          if (twoLightsCount === 2) unlocked = true;
+          detectedDate = detectedDate || todayStr;
+          progressText = `${twoLightsCount} / 2 Surat`;
+          break;
+        case "badge-arrahman":
+          if (isSurahDone(55)) unlocked = true;
+          detectedDate = detectedDate || progress[55]?.history?.[0]?.date || todayStr;
+          progressText = `${progress[55]?.read || 0} / 78 Ayat`;
+          break;
+        case "badge-almulk":
+          if (isSurahDone(67)) unlocked = true;
+          detectedDate = detectedDate || progress[67]?.history?.[0]?.date || todayStr;
+          progressText = `${progress[67]?.read || 0} / 30 Ayat`;
+          break;
+        case "badge-alkahfi":
+          if (isSurahDone(18)) unlocked = true;
+          detectedDate = detectedDate || progress[18]?.history?.[0]?.date || todayStr;
+          progressText = `${progress[18]?.read || 0} / 110 Ayat`;
+          break;
+        case "badge-nabi":
+          if (prophetDoneCount === 6) unlocked = true;
+          detectedDate = detectedDate || todayStr;
+          progressText = `${prophetDoneCount} / 6 Surat`;
+          break;
+        case "badge-juzamma":
+          if (juz30DoneCount === 37) unlocked = true;
+          detectedDate = detectedDate || todayStr;
+          progressText = `${juz30DoneCount} / 37 Surat`;
+          break;
+        case "badge-sprinter":
+          if (sprinterDate) unlocked = true;
+          detectedDate = detectedDate || sprinterDate || todayStr;
+          break;
+        case "badge-target":
+          if (targetCrusherDate) unlocked = true;
+          detectedDate = detectedDate || targetCrusherDate || todayStr;
+          break;
+        case "badge-kembali":
+          if (comebackDate) unlocked = true;
+          detectedDate = detectedDate || comebackDate || todayStr;
+          break;
+        case "badge-malam":
+          if (malamDate) unlocked = true;
+          detectedDate = detectedDate || malamDate || todayStr;
+          break;
+        case "badge-subuh":
+          if (subuhDate) unlocked = true;
+          detectedDate = detectedDate || subuhDate || todayStr;
+          break;
+        case "badge-suci":
+          if (isHaidPaused || (Array.isArray(pausedDates) && pausedDates.length > 0)) unlocked = true;
+          detectedDate = detectedDate || pausedDates?.[0] || todayStr;
+          break;
+        default:
+          break;
+      }
+
+      return {
+        ...b,
+        unlocked,
+        achievedDate: unlocked ? detectedDate : null,
+        progressText
+      };
+    });
+  }, [progress, allGlobalHistory, dailyStats, currentStreak, longestStreak, isHaidPaused, pausedDates, earnedBadges, readAyahs, stats, target]);
+
+  // SIMPAN PERMANEN TANGGAL PEROLEHAN LENCANA BARU KE FIREBASE
+  useEffect(() => {
+    if (!user) return;
+    let hasNewUnlock = false;
+    const updatedEarned = { ...earnedBadges };
+
+    badgesStatus.forEach((b) => {
+      if (b.unlocked && !updatedEarned[b.id]) {
+        updatedEarned[b.id] = b.achievedDate || new Date().toISOString().split('T')[0];
+        hasNewUnlock = true;
+      }
+    });
+
+    if (hasNewUnlock) {
+      setEarnedBadges(updatedEarned);
+      setDoc(doc(db, "users", user.uid), { earnedBadges: updatedEarned }, { merge: true });
+    }
+  }, [badgesStatus, user]);
+
   const last7Days = getLastNDays(7);
   const last28Days = getLastNDays(28);
   const maxAyahs7D = Math.max(...last7Days.map(d => dailyStats[d.fullDate] || 0), 10);
@@ -846,30 +1146,29 @@ export default function App() {
           {/* SPOILER ROW KOLEKSI LENCANA */}
           <div 
             className="spoiler-badges-card"
-            onClick={() => setShowBadgesOverlay(true)}
-            style={{ 
-              background: '#fff', 
-              borderRadius: '20px', 
-              padding: '18px 20px', 
-              margin: '15px', 
-              boxShadow: '0 4px 15px rgba(0, 0, 0, 0.03)',
-              cursor: 'pointer',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '12px'
+            onClick={() => {
+              const firstUnlocked = badgesStatus.find(b => b.unlocked) || badgesStatus[0];
+              setSelectedBadge(firstUnlocked);
+              setShowBadgesOverlay(true);
             }}
           >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <h4 style={{ margin: 0, color: '#333' }}>Koleksi Lencana</h4>
-              <span style={{ fontSize: '0.8rem', color: '#2b7a5f', fontWeight: 'bold' }}>Lihat Semua &gt;</span>
+              <span style={{ fontSize: '0.8rem', color: '#2b7a5f', fontWeight: '800' }}>
+                {badgesStatus.filter(b => b.unlocked).length} / {badgesStatus.length} &gt;
+              </span>
             </div>
             
-            {/* Deretan lencana contoh (sementara) */}
-            <div style={{ display: 'flex', gap: '15px', overflowX: 'auto', paddingBottom: '5px' }}>
-               <div style={{ width: '45px', height: '45px', background: '#f1f0ea', borderRadius: '50%', display: 'flex', justifyContent: 'center', alignItems: 'center', fontSize: '1.5rem', opacity: 0.5 }}>🏆</div>
-               <div style={{ width: '45px', height: '45px', background: '#f1f0ea', borderRadius: '50%', display: 'flex', justifyContent: 'center', alignItems: 'center', fontSize: '1.5rem', opacity: 0.5 }}>🏆</div>
-               <div style={{ width: '45px', height: '45px', background: '#f1f0ea', borderRadius: '50%', display: 'flex', justifyContent: 'center', alignItems: 'center', fontSize: '1.5rem', opacity: 0.5 }}>🏆</div>
-               <div style={{ width: '45px', height: '45px', background: '#f1f0ea', borderRadius: '50%', display: 'flex', justifyContent: 'center', alignItems: 'center', fontSize: '1.5rem', opacity: 0.5 }}>🏆</div>
+            <div className="spoiler-badges-row">
+              {badgesStatus.slice(0, 6).map((b) => (
+                <div key={b.id} className={`spoiler-badge-item ${b.unlocked ? 'unlocked' : 'locked'}`}>
+                  {b.isHidden && !b.unlocked ? (
+                    <span className="octagon-mystery">?</span>
+                  ) : (
+                    <img src={b.img} alt={b.title} className="spoiler-badge-img" />
+                  )}
+                </div>
+              ))}
             </div>
           </div>
           
@@ -1017,53 +1316,131 @@ export default function App() {
         </div>
       )}
       {/* OVERLAY PODIUM LENCANA (FULL SCREEN) */}
-      {showBadgesOverlay && (
-        <div className="badges-fullscreen-overlay">
-          
-          {/* HEADER NAVIGASI */}
-          <div className="badges-header">
-            <button onClick={() => setShowBadgesOverlay(false)} className="back-btn">
-              &larr; Kembali
-            </button>
-            <h2>Pencapaianku</h2>
-          </div>
+      {showBadgesOverlay && (() => {
+        const activeBadge = badgesStatus.find(b => b.id === selectedBadge?.id) || badgesStatus[0];
+        const hasFirstKhatam = badgesStatus.find(b => b.id === "badge-khatam")?.unlocked;
+        const autoBird = [...ORIGAMI_BIRDS].reverse().find(bird => 
+          bird.requireKhatam ? hasFirstKhatam : readAyahs >= bird.minAyahs
+        ) || ORIGAMI_BIRDS[0];
+        const activeBirdId = (hasFirstKhatam && selectedBirdSkin) ? selectedBirdSkin : autoBird.id;
 
-          {/* AREA PODIUM SPOTLIGHT */}
-          <div className="podium-section">
-            {/* Nanti lencana raksasa yang dipilih akan muncul di sini */}
-            <div className="spotlight-badge placeholder">
-              <span style={{ fontSize: '4rem', opacity: 0.3 }}>🏆</span>
+        return (
+          <div className="badges-fullscreen-overlay">
+            {/* HEADER NAVIGASI */}
+            <div className="badges-header">
+              <button onClick={() => setShowBadgesOverlay(false)} className="back-btn">
+                &larr; Kembali
+              </button>
+              <h2>Pencapaianku ({badgesStatus.filter(b => b.unlocked).length}/{badgesStatus.length})</h2>
             </div>
-            <div className="podium-stand"></div>
-            <h3 className="badge-title">Koleksi Lencana</h3>
-            <p className="badge-date">Terus tilawah untuk membuka lencana pertamamu!</p>
-          </div>
 
-          {/* GALERI KATEGORI */}
-          <div className="badges-gallery-scroll">
-            
-            <div className="badge-category">
-              <h4>Jejak Ayat</h4>
-              <div className="badge-grid">
-                {/* Kotak-kotak lencana */}
-                <div className="badge-item locked"></div>
-                <div className="badge-item locked"></div>
-                <div className="badge-item locked"></div>
+            {/* AREA PODIUM SPOTLIGHT */}
+            <div className="podium-section">
+              <div className={`spotlight-badge shape-${activeBadge.shape} ${activeBadge.unlocked ? 'is-unlocked' : 'is-locked'}`}>
+                {activeBadge.isHidden && !activeBadge.unlocked ? (
+                  <div className="mystery-octagon-large">?</div>
+                ) : (
+                  <img src={activeBadge.img} alt={activeBadge.title} className="spotlight-badge-img" />
+                )}
+              </div>
+              <div className="podium-stand"></div>
+
+              <h3 className="badge-title">
+                {activeBadge.isHidden && !activeBadge.unlocked ? "🔒 Lencana Rahasia" : activeBadge.title}
+              </h3>
+
+              {/* TANGGAL PEROLEHAN */}
+              <p className="badge-date">
+                {activeBadge.unlocked
+                  ? `✨ Diraih pada: ${activeBadge.achievedDate}`
+                  : "🔒 Belum Terbuka"}
+              </p>
+
+              {/* TULISAN SYARAT ATAU KALIMAT KIASAN */}
+              <div className="badge-req-box">
+                {activeBadge.isHidden && !activeBadge.unlocked ? (
+                  <p className="badge-riddle-text">"{activeBadge.riddleText}"</p>
+                ) : (
+                  <p className="badge-req-text">Syarat: {activeBadge.reqText}</p>
+                )}
+                {activeBadge.progressText && !activeBadge.isHidden && (
+                  <span className="badge-progress-pill">{activeBadge.progressText}</span>
+                )}
               </div>
             </div>
 
-            <div className="badge-category">
-              <h4>Misi Surat</h4>
-              <div className="badge-grid">
-                <div className="badge-item locked"></div>
-                <div className="badge-item locked"></div>
+            {/* GALERI KATEGORI & ORIGAMI BIRD */}
+            <div className="badges-gallery-scroll">
+              
+              {/* ETALASE ORIGAMI BIRD */}
+              <div className="badge-category">
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                  <h4 style={{ margin: 0 }}>🕊️ Evolusi Origami Bird</h4>
+                  <span style={{ fontSize: '0.72rem', color: '#94a3b8' }}>
+                    {hasFirstKhatam ? "Klik untuk ganti warna burung!" : "Tamatkan Khatam ke-1 untuk bebas pilih warna"}
+                  </span>
+                </div>
+                <div className="origami-showcase-row">
+                  {ORIGAMI_BIRDS.map((bird) => {
+                    const isBirdUnlocked = bird.requireKhatam ? hasFirstKhatam : (readAyahs >= bird.minAyahs || hasFirstKhatam);
+                    const isEquipped = activeBirdId === bird.id;
+                    return (
+                      <div
+                        key={bird.id}
+                        onClick={async () => {
+                          if (hasFirstKhatam && user) {
+                            setSelectedBirdSkin(bird.id);
+                            await setDoc(doc(db, "users", user.uid), { selectedBirdSkin: bird.id }, { merge: true });
+                          }
+                        }}
+                        className={`origami-card ${isBirdUnlocked ? 'unlocked' : 'locked'} ${isEquipped ? 'equipped' : ''}`}
+                        style={{ cursor: hasFirstKhatam ? 'pointer' : 'default' }}
+                      >
+                        <div className="origami-color-preview" style={{ background: `linear-gradient(135deg, ${bird.colors[0]}, ${bird.colors[2]})` }}>
+                          🕊️
+                        </div>
+                        <span className="origami-name">{bird.id}</span>
+                        <span className="origami-req">{isEquipped ? "✨ Dipakai" : bird.reqText}</span>
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
+
+              {/* 4 KATEGORI LENCANA */}
+              {["Kuantitas Ayat", "Api Istiqomah", "Misi Surat", "Hidden Gems"].map((catName) => (
+                <div key={catName} className="badge-category">
+                  <h4>{catName}</h4>
+                  <div className="badge-grid">
+                    {badgesStatus.filter(b => b.category === catName).map((b) => (
+                      <div
+                        key={b.id}
+                        onClick={() => setSelectedBadge(b)}
+                        className={`badge-item ${b.unlocked ? 'unlocked' : 'locked'} ${activeBadge.id === b.id ? 'selected' : ''}`}
+                      >
+                        <div className="badge-thumb-wrapper">
+                          {b.isHidden && !b.unlocked ? (
+                            <div className="mystery-octagon-small">?</div>
+                          ) : (
+                            <img src={b.img} alt={b.title} className="badge-thumb-img" />
+                          )}
+                        </div>
+                        <span className="badge-item-name">
+                          {b.isHidden && !b.unlocked ? "???" : b.title}
+                        </span>
+                        {b.progressText && !b.isHidden && (
+                          <span className="badge-item-progress">{b.progressText}</span>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+
             </div>
-
           </div>
-
-        </div>
-      )}
+        );
+      })()}
     </div>
   );
 }
