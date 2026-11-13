@@ -811,14 +811,14 @@ export default function App() {
                   onClick={toggleHaidPause}
                   className={`btn-pause-haid ${isHaidPaused ? 'active-paused' : ''}`}
                 >
-                  {isHaidPaused ? '⏸️ Mode Istirahat Aktif' : '🌸 Pause Haid Hari Ini'}
+                  {isHaidPaused ? '⏸️ Istirahat Aktif' : '🌸 Pause Hari Ini'}
                 </button>
 
                 <button
                   onClick={() => setShowHaidModal(true)}
                   className="btn-manual-haid"
                 >
-                  📅 Atur Tanggal Manual
+                  📅 Input Manual
                 </button>
               </div>
             </div>
