@@ -690,24 +690,31 @@ body {
 }
 
 .haid-panel-buttons {
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr 1fr; /* Bagi 2 kolom sama besar 50:50 */
   gap: 8px;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .btn-pause-haid {
-  flex: 1;
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
   background-color: #FCEADE;
   border: 1.5px solid #F4A261;
   color: #E76F51;
-  padding: 8px 10px;
+  padding: 8px 6px;
   border-radius: 12px;
-  font-size: 0.75rem;
+  font-size: 0.73rem;
   font-family: inherit;
   font-weight: 800;
   cursor: pointer;
   transition: all 0.2s ease;
   box-shadow: 2px 2px 0px #F4A261;
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .btn-pause-haid.active-paused {
@@ -719,19 +726,23 @@ body {
 }
 
 .btn-manual-haid {
-  flex: 1;
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
   background-color: #ffffff;
   border: 1.5px solid #d6ccc2;
   color: #555;
-  padding: 8px 10px;
+  padding: 8px 6px;
   border-radius: 12px;
-  font-size: 0.75rem;
+  font-size: 0.73rem;
   font-family: inherit;
   font-weight: 800;
   cursor: pointer;
   transition: all 0.2s ease;
   box-shadow: 2px 2px 0px #e6dfd3;
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .btn-manual-haid:hover {
