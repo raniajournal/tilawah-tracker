@@ -428,7 +428,7 @@ export default function App() {
     await setDoc(doc(db, "users", user.uid), {
       progress: updatedProgress,
       journeyMode: journeyMode,
-      activeJuz: newActiveJuz
+      activeJuz: newActiveJuz,
       longestStreak: newLongestStreak
     }, { merge: true });
   };
@@ -744,33 +744,49 @@ export default function App() {
         <div className="stats-container">
           
           {/* 1. KARTU STREAK HARIAN & PAUSE HAID */}
-          <div className={`streak-card-wrapper ${isHaidPaused ? 'is-paused' : ''}`}>
+          <div className={`streak-card-wrapper ${isHaidPaused ? 'is-paused' : currentStreak === 0 ? 'is-broken' : ''}`}>
             <div className="streak-header">
               
-              {/* KIRI: INFO STREAK */}
+              {/* KIRI: INFO STREAK & REKOR TERLAMA */}
               <div className="streak-info-left">
                 <span className="streak-number">{currentStreak} Hari</span>
                 <span className="streak-label">
-                  {isHaidPaused ? 'Streak Dikunci (Haid)' : 'Streak Tilawah Aktif'}
+                  {isHaidPaused
+                    ? 'Streak Dikunci (Haid)'
+                    : currentStreak === 0
+                    ? 'Streak Terputus / Belum Aktif'
+                    : 'Streak Tilawah Aktif 🔥'}
                 </span>
                 <span className="longest-streak-label">
-                  Rekor Terlama: <b>{longestStreak} Hari</b>
+                  🏆 Rekor Terlama: <b>{Math.max(longestStreak, currentStreak)} Hari</b>
                 </span>
               </div>
 
-              {/* KANAN: ANIMASI API & TOMBOL */}
+              {/* KANAN: IKON API BESAR & TOMBOL DI BAWAHNYA */}
               <div className="streak-action-right">
-                <div className={`campfire-container ${isHaidPaused ? 'paused' : 'burning'}`}>
+                <div className={`campfire-container ${isHaidPaused ? 'paused' : currentStreak === 0 ? 'broken' : 'burning'}`}>
                   <img
-                    src={isHaidPaused ? "/images/fire-pause.webp" : "/images/fire-active.webp"}
+                    src={
+                      isHaidPaused
+                        ? "/images/fire-pause.webp"
+                        : currentStreak === 0
+                        ? "/images/fire-broken.webp"
+                        : "/images/fire-active.webp"
+                    }
                     alt="Streak Status"
-                    className={`streak-logo-img ${isHaidPaused ? 'mode-sleep' : 'mode-pulse'}`}
+                    className={`streak-logo-img ${
+                      isHaidPaused
+                        ? 'mode-sleep'
+                        : currentStreak === 0
+                        ? 'mode-broken'
+                        : 'mode-pulse'
+                    }`}
                   />
                 </div>
                 
                 {/* GRUP TOMBOL DI BAWAH API */}
                 <div className="streak-buttons-group">
-                   <button
+                  <button
                     onClick={() => setShowHaidModal(true)}
                     style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.1rem', padding: 0, opacity: 0.7 }}
                     title="Set Manual Tanggal Haid"
@@ -787,13 +803,13 @@ export default function App() {
 
                 {/* TOMBOL RESET TRIAL */}
                 {(isHaidPaused || (Array.isArray(pausedDates) && pausedDates.length > 0)) && (
-                   <button
-                     onClick={resetHaidTrial}
-                     className="btn-reset-trial"
-                     title="Bersihkan data uji coba haid"
-                   >
-                     🔄 Reset Trial
-                   </button>
+                  <button
+                    onClick={resetHaidTrial}
+                    className="btn-reset-trial"
+                    title="Bersihkan data uji coba haid"
+                  >
+                    🔄 Reset Trial
+                  </button>
                 )}
               </div>
 
@@ -802,7 +818,9 @@ export default function App() {
             <p className="streak-hint-text">
               {isHaidPaused
                 ? "Streak kamu dikunci dengan aman selama masa haid. Selamat beristirahat!"
-                : "Baca minimal 1 ayat setiap hari untuk menjaga api unggun tetap menyala!"}
+                : currentStreak === 0
+                ? "Api unggunmu sedang padam. Yuk baca minimal 1 ayat hari ini untuk menyalakannya kembali!"
+                : "Pertahankan! Baca minimal 1 ayat setiap hari untuk menjaga api unggun tetap membara!"}
             </p>
           </div>
 
