@@ -318,8 +318,6 @@ export default function App() {
 
   // STATE UNTUK HALAMAN LENCANA
   const [showBadgesOverlay, setShowBadgesOverlay] = useState(false);
-  const [selectedBadge, setSelectedBadge] = useState(null);
-  const [showBadgesOverlay, setShowBadgesOverlay] = useState(false);
   const [selectedBadge, setSelectedBadge] = useState(BADGES_CONFIG[0]);
   const [earnedBadges, setEarnedBadges] = useState({}); // { "badge-100": "2026-11-09", ... }
   const [selectedBirdSkin, setSelectedBirdSkin] = useState(null);
