@@ -211,12 +211,55 @@ const BADGES_CONFIG = [
 ];
 
 const ORIGAMI_BIRDS = [
-  { id: "Gold", name: "Gold Origami", reqText: "Default (Mulai Tilawah)", minAyahs: 0, colors: ["#f59e0b", "#fbbf24", "#fcd34d"] },
-  { id: "Amethyst", name: "Amethyst Origami", reqText: "Terbuka di 1.000 Ayat", minAyahs: 1000, colors: ["#7e22ce", "#a855f7", "#d8b4fe"] },
-  { id: "Lazuli", name: "Lazuli Origami", reqText: "Terbuka di 2.500 Ayat", minAyahs: 2500, colors: ["#1d4ed8", "#3b82f6", "#93c5fd"] },
-  { id: "Emerald", name: "Emerald Origami", reqText: "Terbuka di 5.000 Ayat", minAyahs: 5000, colors: ["#047857", "#10b981", "#6ee7b7"] },
-  { id: "Pearl Diamond", name: "Pearl Diamond", reqText: "Khatam Pertama (Bebas Pilih Warna)", minAyahs: 6236, requireKhatam: true, colors: ["#f8fafc", "#e2e8f0", "#fbbf24"] }
+  {
+    id: "Gold",
+    name: "Gold Origami",
+    reqText: "Default (Mulai Tilawah)",
+    minAyahs: 0,
+    polys: ["#fde047", "#facc15", "#eab308", "#ca8a04", "#a16207", "#fef08a"]
+  },
+  {
+    id: "Amethyst",
+    name: "Amethyst Origami",
+    reqText: "Membaca 1.000 Ayat",
+    minAyahs: 1000,
+    polys: ["#c084fc", "#a855f7", "#9333ea", "#7e22ce", "#581c87", "#e9d5ff"]
+  },
+  {
+    id: "Lazuli",
+    name: "Lazuli Origami",
+    reqText: "Membaca 2.500 Ayat",
+    minAyahs: 2500,
+    polys: ["#60a5fa", "#3b82f6", "#2563eb", "#1d4ed8", "#1e3a8a", "#bfdbfe"]
+  },
+  {
+    id: "Emerald",
+    name: "Emerald Origami",
+    reqText: "Membaca 5.000 Ayat",
+    minAyahs: 5000,
+    polys: ["#34d399", "#10b981", "#059669", "#047857", "#064e3b", "#a7f3d0"]
+  },
+  {
+    id: "Pearl Diamond",
+    name: "Pearl Diamond Origami",
+    reqText: "Khatam Pertama (Putih Mutiara Ujung Sayap Emas & Bebas Pilih Warna)",
+    minAyahs: 6236,
+    requireKhatam: true,
+    // Putih mutiara dengan ujung sayap & ekor emas berkilau
+    polys: ["#fde68a", "#ffffff", "#f59e0b", "#e2e8f0", "#94a3b8", "#facc15"]
+  }
 ];
+
+const OrigamiBirdSvg = ({ polys, size = 54 }) => (
+  <svg width={size} height={size} viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg" style={{ filter: 'drop-shadow(2px 4px 6px rgba(0,0,0,0.35))' }}>
+    <polygon fill={polys[0]} points="394.6,183.3 226,306.9 285.4,117.7" />
+    <polygon fill={polys[1]} points="394.6,183.3 496.1,232.7 226,306.9" />
+    <polygon fill={polys[2]} points="226,306.9 148.9,252.3 35.5,233.1" />
+    <polygon fill={polys[3]} points="226,306.9 313.2,465 313.2,351" />
+    <polygon fill={polys[4]} points="226,306.9 176.6,393 216.5,335.7" />
+    <polygon fill={polys[5]} points="226,306.9 285.4,117.7 148.9,252.3" />
+  </svg>
+);
 
 const getProgressBarColor = (percent) => {
   if (percent < 50) return "#fcd34d";
@@ -318,8 +361,9 @@ export default function App() {
 
   // STATE UNTUK HALAMAN LENCANA
   const [showBadgesOverlay, setShowBadgesOverlay] = useState(false);
-  const [selectedBadge, setSelectedBadge] = useState(BADGES_CONFIG[0]);
-  const [earnedBadges, setEarnedBadges] = useState({}); // { "badge-100": "2026-11-09", ... }
+  const [podiumIndex, setPodiumIndex] = useState(0);
+  const [detailItem, setDetailItem] = useState(null); // Detail single badge / bird saat diklik
+  const [earnedBadges, setEarnedBadges] = useState({});
   const [selectedBirdSkin, setSelectedBirdSkin] = useState(null);
 
   useEffect(() => {
@@ -902,6 +946,13 @@ export default function App() {
     displayActiveJuz = firstUnfinished ? firstUnfinished.juz : 30;
   }
 
+  const hasFirstKhatamGlobal = Boolean(earnedBadges["badge-khatam"]) || (stats.khatamHistory && stats.khatamHistory.length > 0) || readAyahs >= 6236;
+  const autoBirdGlobal = [...ORIGAMI_BIRDS].reverse().find(bird =>
+    bird.requireKhatam ? hasFirstKhatamGlobal : readAyahs >= bird.minAyahs
+  ) || ORIGAMI_BIRDS[0];
+  const activeBirdIdGlobal = (hasFirstKhatamGlobal && selectedBirdSkin) ? selectedBirdSkin : autoBirdGlobal.id;
+  const activeBirdObjGlobal = ORIGAMI_BIRDS.find(b => b.id === activeBirdIdGlobal) || ORIGAMI_BIRDS[0];
+  
   if (!user) {
     return (
       <div className="login-page">
@@ -1067,6 +1118,7 @@ export default function App() {
           journeyMode={journeyMode}
           displayActiveJuz={displayActiveJuz}
           toggleJourneyMode={toggleJourneyMode}
+          birdPolys={activeBirdObjGlobal.polys}
         />
       )}
 
@@ -1174,26 +1226,26 @@ export default function App() {
             </div>
           </div>
           
-          {/* SPOILER ROW KOLEKSI LENCANA (OTOMATIS PAJANG YANG SUDAH TERBUKA DI DEPAN) */}
+          {/* SPOILER ROW KOLEKSI LENCANA (4 IKON BESAR & PRIORITAS YANG SUDAH DIRAIH) */}
           <div 
             className="spoiler-badges-card"
             onClick={() => {
-              const sorted = [...badgesStatus].sort((a, b) => Number(b.unlocked) - Number(a.unlocked));
-              setSelectedBadge(sorted[0]);
+              setPodiumIndex(0);
+              setDetailItem(null);
               setShowBadgesOverlay(true);
             }}
           >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <h4 style={{ margin: 0, color: '#333' }}>Koleksi Lencana</h4>
-              <span style={{ fontSize: '0.8rem', color: '#2b7a5f', fontWeight: '800' }}>
-                {badgesStatus.filter(b => b.unlocked).length} / {badgesStatus.length} Lencana &gt;
+              <span style={{ fontSize: '0.85rem', color: '#2b7a5f', fontWeight: '800' }}>
+                {badgesStatus.filter(b => b.unlocked).length} / {badgesStatus.length} &gt;
               </span>
             </div>
             
             <div className="spoiler-badges-row">
               {[...badgesStatus]
                 .sort((a, b) => Number(b.unlocked) - Number(a.unlocked))
-                .slice(0, 6)
+                .slice(0, 4)
                 .map((b) => (
                   <div key={b.id} className={`spoiler-badge-item ${b.unlocked ? 'unlocked' : 'locked'}`}>
                     {b.isHidden && !b.unlocked ? (
@@ -1349,18 +1401,14 @@ export default function App() {
           </div>
         </div>
       )}
+      
       {/* OVERLAY PODIUM LENCANA (FULL SCREEN) */}
       {showBadgesOverlay && (() => {
-        const hasFirstKhatam = badgesStatus.find(b => b.id === "badge-khatam")?.unlocked;
-        const autoBird = [...ORIGAMI_BIRDS].reverse().find(bird => 
-          bird.requireKhatam ? hasFirstKhatam : readAyahs >= bird.minAyahs
-        ) || ORIGAMI_BIRDS[0];
-        const activeBirdId = (hasFirstKhatam && selectedBirdSkin) ? selectedBirdSkin : autoBird.id;
-
-        const isViewingBird = selectedBadge?.isBird;
-        const activeBadge = isViewingBird
-          ? selectedBadge
-          : (badgesStatus.find(b => b.id === selectedBadge?.id) || badgesStatus[0]);
+        const unlockedBadges = badgesStatus.filter(b => b.unlocked);
+        const safePodiumIdx = unlockedBadges.length > 0
+          ? Math.min(podiumIndex, unlockedBadges.length - 1)
+          : 0;
+        const currentPodiumBadge = unlockedBadges[safePodiumIdx] || null;
 
         return (
           <div className="badges-fullscreen-overlay">
@@ -1369,115 +1417,130 @@ export default function App() {
               <button onClick={() => setShowBadgesOverlay(false)} className="back-btn">
                 &larr; Kembali
               </button>
-              <h2>Pencapaianku ({badgesStatus.filter(b => b.unlocked).length}/{badgesStatus.length})</h2>
+              <h2>Pencapaianku ({unlockedBadges.length}/{badgesStatus.length})</h2>
             </div>
 
-            {/* AREA PODIUM SPOTLIGHT (BISA MENAMPILKAN LENCANA ATAU ORIGAMI BIRD) */}
+            {/* AREA PODIUM SPOTLIGHT (KHUSUS YANG SUDAH DIRAIH & BISA DIGESER KANAN-KIRI) */}
             <div className="podium-section">
-              <div className={`spotlight-badge ${activeBadge.unlocked ? 'is-unlocked' : 'is-locked'}`}>
-                {isViewingBird ? (
-                  <div
-                    className="spotlight-bird-circle"
-                    style={{ background: `linear-gradient(135deg, ${activeBadge.colors[0]}, ${activeBadge.colors[2]})` }}
-                  >
-                    🕊️
-                  </div>
-                ) : activeBadge.isHidden && !activeBadge.unlocked ? (
-                  <div className="mystery-octagon-large">?</div>
-                ) : (
-                  <img src={activeBadge.img} alt={activeBadge.title} className="spotlight-badge-img" />
-                )}
-              </div>
-              <div className="podium-stand"></div>
+              {unlockedBadges.length > 0 ? (
+                <>
+                  <div className="podium-carousel-Controls">
+                    <button
+                      className="podium-nav-btn"
+                      onClick={() => setPodiumIndex((prev) => (prev > 0 ? prev - 1 : unlockedBadges.length - 1))}
+                      title="Sebelumnya"
+                    >
+                      &#8249;
+                    </button>
 
-              <h3 className="badge-title">
-                {!isViewingBird && activeBadge.isHidden && !activeBadge.unlocked
-                  ? "🔒 Lencana Rahasia"
-                  : activeBadge.title}
-              </h3>
-
-              {/* TANGGAL PEROLEHAN DENGAN FORMAT INDONESIA */}
-              <p className="badge-date">
-                {activeBadge.unlocked
-                  ? isViewingBird
-                    ? `✨ Warna Burung Terbuka`
-                    : `✨ Diraih pada: ${formatTanggalIndo(activeBadge.achievedDate)}`
-                  : "🔒 Belum Terbuka"}
-              </p>
-
-              {/* KOTAK SYARAT / KALIMAT KIASAN + VISUAL PROGRESS BAR */}
-              <div className="badge-req-box">
-                {!isViewingBird && activeBadge.isHidden && !activeBadge.unlocked ? (
-                  <p className="badge-riddle-text">"{activeBadge.riddleText}"</p>
-                ) : (
-                  <p className="badge-req-text">Syarat: {activeBadge.reqText}</p>
-                )}
-
-                {activeBadge.progressText && !activeBadge.isHidden && (
-                  <div style={{ marginTop: '10px' }}>
-                    <div className="badge-mini-bar-bg">
-                      <div
-                        className="badge-mini-bar-fill"
-                        style={{ width: `${activeBadge.progressPercent || 0}%` }}
-                      ></div>
+                    <div
+                      className="spotlight-badge is-unlocked"
+                      onClick={() => setDetailItem(currentPodiumBadge)}
+                    >
+                      <img
+                        src={currentPodiumBadge.img}
+                        alt={currentPodiumBadge.title}
+                        className="spotlight-badge-img"
+                      />
                     </div>
-                    <span className="badge-progress-pill">{activeBadge.progressText}</span>
+
+                    <button
+                      className="podium-nav-btn"
+                      onClick={() => setPodiumIndex((prev) => (prev < unlockedBadges.length - 1 ? prev + 1 : 0))}
+                      title="Berikutnya"
+                    >
+                      &#8250;
+                    </button>
                   </div>
-                )}
-              </div>
+
+                  <div className="podium-stand"></div>
+
+                  {/* INDIKATOR TITIK SLIDE PODIUM */}
+                  <div className="podium-dots">
+                    {unlockedBadges.map((ub, idx) => (
+                      <span
+                        key={ub.id}
+                        onClick={() => setPodiumIndex(idx)}
+                        className={`podium-dot ${idx === safePodiumIdx ? 'active' : ''}`}
+                      />
+                    ))}
+                  </div>
+
+                  <h3 className="badge-title">{currentPodiumBadge.title}</h3>
+                  <p className="badge-date">
+                    ✨ Diraih pada: {formatTanggalIndo(currentPodiumBadge.achievedDate)} ({safePodiumIdx + 1}/{unlockedBadges.length})
+                  </p>
+                  <div className="badge-req-box">
+                    <p className="badge-req-text">{currentPodiumBadge.reqText}</p>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="spotlight-badge is-locked">
+                    <div className="mystery-octagon-large">🏆</div>
+                  </div>
+                  <div className="podium-stand"></div>
+                  <h3 className="badge-title">Podium Masih Kosong</h3>
+                  <p className="badge-date">Yuk mulai tilawah untuk memajang lencana pertamamu di podium!</p>
+                </>
+              )}
             </div>
 
             {/* GALERI KATEGORI & ORIGAMI BIRD */}
             <div className="badges-gallery-scroll">
               
-              {/* ETALASE ORIGAMI BIRD */}
+              {/* ETALASE ORIGAMI BIRD (DENGAN BENTUK SVG BURUNG ASLI) */}
               <div className="badge-category">
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
                   <h4 style={{ margin: 0 }}>🕊️ Evolusi Origami Bird</h4>
-                  <span style={{ fontSize: '0.72rem', color: '#94a3b8' }}>
-                    {hasFirstKhatam ? "Klik untuk pakai warna burung!" : `Aktif: ${activeBirdId}`}
+                  <span style={{ fontSize: '0.75rem', color: '#94a3b8' }}>
+                    Aktif di Peta: <b style={{ color: '#fcd34d' }}>{activeBirdIdGlobal}</b>
                   </span>
                 </div>
                 <div className="origami-showcase-row">
                   {ORIGAMI_BIRDS.map((bird) => {
-                    const isBirdUnlocked = bird.requireKhatam ? hasFirstKhatam : (readAyahs >= bird.minAyahs || hasFirstKhatam);
-                    const isEquipped = activeBirdId === bird.id;
-                    const birdProgressPct = bird.minAyahs === 0 ? 100 : Math.min(Math.round((readAyahs / bird.minAyahs) * 100), 100);
+                    const isBirdUnlocked = bird.requireKhatam
+                      ? hasFirstKhatamGlobal
+                      : (readAyahs >= bird.minAyahs || hasFirstKhatamGlobal);
+                    const isEquipped = activeBirdIdGlobal === bird.id;
+                    const birdProgressPct = bird.minAyahs === 0
+                      ? 100
+                      : Math.min(Math.round((readAyahs / bird.minAyahs) * 100), 100);
 
                     return (
                       <div
                         key={bird.id}
-                        onClick={async () => {
-                          setSelectedBadge({
+                        onClick={() => {
+                          setDetailItem({
                             isBird: true,
                             id: bird.id,
                             title: bird.name,
                             reqText: bird.reqText,
-                            colors: bird.colors,
+                            polys: bird.polys,
                             unlocked: isBirdUnlocked,
-                            progressText: bird.minAyahs > 0 ? `${Math.min(readAyahs, bird.minAyahs)} / ${bird.minAyahs} Ayat` : "Terbuka sejak awal",
-                            progressPercent: hasFirstKhatam ? 100 : birdProgressPct
+                            isEquipped,
+                            progressText: bird.minAyahs > 0
+                              ? `${Math.min(readAyahs, bird.minAyahs)} / ${bird.minAyahs} Ayat`
+                              : "Terbuka sejak awal",
+                            progressPercent: hasFirstKhatamGlobal ? 100 : birdProgressPct
                           });
-                          if (hasFirstKhatam && user) {
-                            setSelectedBirdSkin(bird.id);
-                            await setDoc(doc(db, "users", user.uid), { selectedBirdSkin: bird.id }, { merge: true });
-                          }
                         }}
                         className={`origami-card ${isBirdUnlocked ? 'unlocked' : 'locked'} ${isEquipped ? 'equipped' : ''}`}
-                        style={{ cursor: 'pointer' }}
                       >
-                        <div className="origami-color-preview" style={{ background: `linear-gradient(135deg, ${bird.colors[0]}, ${bird.colors[2]})` }}>
-                          🕊️
+                        <div className="origami-svg-box">
+                          <OrigamiBirdSvg polys={bird.polys} size={52} />
                         </div>
                         <span className="origami-name">{bird.id}</span>
-                        <span className="origami-req">{isEquipped ? "✨ Dipakai" : bird.reqText}</span>
+                        <span className="origami-req">
+                          {isEquipped ? "✨ Dipakai" : isBirdUnlocked ? "Terbuka" : `${bird.minAyahs} Ayat`}
+                        </span>
                       </div>
                     );
                   })}
                 </div>
               </div>
 
-              {/* 4 KATEGORI LENCANA DENGAN MINI PROGRESS BAR */}
+              {/* 4 KATEGORI LENCANA (UKURAN BESAR & KLIK LANGSUNG BUKA DETAIL SINGLE BADGE) */}
               {["Kuantitas Ayat", "Api Istiqomah", "Misi Surat", "Hidden Gems"].map((catName) => (
                 <div key={catName} className="badge-category">
                   <h4>{catName}</h4>
@@ -1485,8 +1548,8 @@ export default function App() {
                     {badgesStatus.filter(b => b.category === catName).map((b) => (
                       <div
                         key={b.id}
-                        onClick={() => setSelectedBadge(b)}
-                        className={`badge-item ${b.unlocked ? 'unlocked' : 'locked'} ${!isViewingBird && activeBadge.id === b.id ? 'selected' : ''}`}
+                        onClick={() => setDetailItem(b)}
+                        className={`badge-item ${b.unlocked ? 'unlocked' : 'locked'}`}
                       >
                         <div className="badge-thumb-wrapper">
                           {b.isHidden && !b.unlocked ? (
@@ -1516,6 +1579,85 @@ export default function App() {
               ))}
 
             </div>
+
+            {/* LAYAR DETAIL SINGLE BADGE / ORIGAMI BIRD (BACKGROUND GELAP SAAT DIKLIK) */}
+            {detailItem && (
+              <div className="single-badge-modal-overlay" onClick={() => setDetailItem(null)}>
+                <div className="single-badge-modal-card" onClick={(e) => e.stopPropagation()}>
+                  <button className="single-badge-close" onClick={() => setDetailItem(null)}>&times;</button>
+
+                  <div className={`single-badge-spotlight ${detailItem.unlocked ? 'is-unlocked' : 'is-locked'}`}>
+                    {detailItem.isBird ? (
+                      <OrigamiBirdSvg polys={detailItem.polys} size={145} />
+                    ) : detailItem.isHidden && !detailItem.unlocked ? (
+                      <div className="mystery-octagon-large">?</div>
+                    ) : (
+                      <img src={detailItem.img} alt={detailItem.title} className="spotlight-badge-img" />
+                    )}
+                  </div>
+                  <div className="podium-stand" style={{ margin: '-6px auto 15px auto' }}></div>
+
+                  <h3 className="badge-title" style={{ marginTop: '5px' }}>
+                    {!detailItem.isBird && detailItem.isHidden && !detailItem.unlocked
+                      ? "🔒 Lencana Rahasia"
+                      : detailItem.title}
+                  </h3>
+
+                  <p className="badge-date">
+                    {detailItem.unlocked
+                      ? detailItem.isBird
+                        ? "✨ Warna Burung Sudah Terbuka"
+                        : `✨ Diraih pada: ${formatTanggalIndo(detailItem.achievedDate)}`
+                      : "🔒 Masih Terkunci"}
+                  </p>
+
+                  <div className="badge-req-box" style={{ width: '100%', boxSizing: 'border-box', marginTop: '10px' }}>
+                    {!detailItem.isBird && detailItem.isHidden && !detailItem.unlocked ? (
+                      <p className="badge-riddle-text">"{detailItem.riddleText}"</p>
+                    ) : (
+                      <p className="badge-req-text"><b>Syarat:</b> {detailItem.reqText}</p>
+                    )}
+
+                    {detailItem.progressText && !detailItem.isHidden && (
+                      <div style={{ marginTop: '12px' }}>
+                        <div className="badge-mini-bar-bg" style={{ height: '7px' }}>
+                          <div
+                            className="badge-mini-bar-fill"
+                            style={{ width: `${detailItem.progressPercent || 0}%` }}
+                          ></div>
+                        </div>
+                        <span className="badge-progress-pill">{detailItem.progressText}</span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* TOMBOL PAKAI WARNA BURUNG JIKA SUDAH KHATAM KE-1 */}
+                  {detailItem.isBird && hasFirstKhatamGlobal && (
+                    <button
+                      onClick={async () => {
+                        setSelectedBirdSkin(detailItem.id);
+                        if (user) {
+                          await setDoc(doc(db, "users", user.uid), { selectedBirdSkin: detailItem.id }, { merge: true });
+                        }
+                        setDetailItem(null);
+                      }}
+                      className="btn-primary"
+                      style={{ marginTop: '16px', background: '#10b981' }}
+                    >
+                      ✨ Pakai Warna Burung Ini di Peta
+                    </button>
+                  )}
+
+                  <button
+                    onClick={() => setDetailItem(null)}
+                    className="btn-primary"
+                    style={{ marginTop: '14px', background: 'rgba(255,255,255,0.12)' }}
+                  >
+                    Tutup Detail
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         );
       })()}
