@@ -592,20 +592,21 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 15px;
+  gap: 10px;
 }
 
-/* BAGIAN KIRI: INFO TEKS */
+/* BAGIAN KIRI: INFO TEKS LEGA TANPA KE-ENTER */
 .streak-info-left {
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: flex-start;
   flex: 1;
+  min-width: 0;
 }
 
 .streak-number {
-  font-size: 2.4rem;
+  font-size: 2.5rem;
   font-weight: 900;
   color: #E76F51;
   line-height: 1.05;
@@ -620,96 +621,134 @@ body {
 }
 
 .streak-label {
-  font-size: 0.9rem;
+  font-size: 0.92rem;
   font-weight: 800;
   color: #444;
   margin-top: 6px;
+  white-space: nowrap;
 }
 
 .longest-streak-label {
-  font-size: 0.78rem;
+  font-size: 0.8rem;
   color: #666;
   margin-top: 10px;
   background: #f1f0ea;
-  padding: 5px 10px;
+  padding: 5px 12px;
   border-radius: 8px;
   display: inline-block;
   border: 1px solid #e2ddd2;
+  white-space: nowrap; /* Mengunci agar tidak pernah turun baris */
 }
 
-/* BAGIAN KANAN: API BESAR & TOMBOL DI BAWAHNYA */
-.streak-action-right {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 10px;
-}
-
+/* BAGIAN KANAN: API RAKSASA MEMBARA */
 .campfire-container {
   display: flex;
   justify-content: center;
   align-items: center;
+  flex-shrink: 0;
 }
 
 .streak-logo-img {
-  width: 95px;
-  height: 95px;
+  width: 130px;
+  height: 130px;
+  margin: -12px -8px -12px 0; /* Memangkas jarak transparan bawaan gambar agar api tampak penuh */
   object-fit: contain;
   filter: drop-shadow(3px 6px 8px rgba(0, 0, 0, 0.18));
 }
 
-.streak-buttons-group {
+.streak-hint-text {
+  font-size: 0.78rem;
+  color: #666;
+  margin: 14px 0 0 0;
+  padding-top: 12px;
+  border-top: 1px dashed #E6DFD3;
+  line-height: 1.45;
+  text-align: center;
+}
+
+/* AREA KECIL KHUSUS KONTROL HAID DI BAWAH */
+.haid-control-panel {
+  margin-top: 14px;
+  background: #fdf6f0;
+  border: 1.5px solid #f3e3d3;
+  border-radius: 14px;
+  padding: 10px 12px;
+}
+
+.haid-panel-header {
   display: flex;
+  justify-content: space-between;
   align-items: center;
-  justify-content: center;
+  margin-bottom: 8px;
+}
+
+.haid-panel-title {
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: #9c6644;
+  letter-spacing: 0.3px;
+}
+
+.haid-panel-buttons {
+  display: flex;
   gap: 8px;
 }
 
 .btn-pause-haid {
+  flex: 1;
   background-color: #FCEADE;
   border: 1.5px solid #F4A261;
   color: #E76F51;
-  padding: 8px 14px;
-  border-radius: 20px;
+  padding: 8px 10px;
+  border-radius: 12px;
   font-size: 0.75rem;
   font-family: inherit;
   font-weight: 800;
   cursor: pointer;
   transition: all 0.2s ease;
-  box-shadow: 2px 3px 0px #F4A261;
+  box-shadow: 2px 2px 0px #F4A261;
   white-space: nowrap;
 }
-
-.btn-pause-haid:hover { transform: translateY(-1px); }
 
 .btn-pause-haid.active-paused {
   background-color: #E9C46A;
   border-color: #E76F51;
   color: #264653;
   box-shadow: inset 1px 2px 3px rgba(0, 0, 0, 0.12);
-  transform: translate(2px, 2px);
+  transform: translate(1px, 1px);
+}
+
+.btn-manual-haid {
+  flex: 1;
+  background-color: #ffffff;
+  border: 1.5px solid #d6ccc2;
+  color: #555;
+  padding: 8px 10px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-family: inherit;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 2px 2px 0px #e6dfd3;
+  white-space: nowrap;
+}
+
+.btn-manual-haid:hover {
+  border-color: #F4A261;
+  color: #E76F51;
 }
 
 .btn-reset-trial {
   background: #fff0f3;
   border: 1px solid #ffb3c6;
   color: #c9184a;
-  padding: 5px 12px;
-  border-radius: 15px;
-  font-size: 0.7rem;
+  padding: 3px 10px;
+  border-radius: 10px;
+  font-size: 0.68rem;
   font-weight: bold;
   cursor: pointer;
-  box-shadow: 2px 2px 0px #ffb3c6;
-}
-
-.streak-hint-text {
-  font-size: 0.78rem;
-  color: #666;
-  margin: 18px 0 0 0;
-  padding-top: 12px;
-  border-top: 1px dashed #E6DFD3;
-  line-height: 1.45;
-  text-align: center;
+  box-shadow: 1px 1px 0px #ffb3c6;
 }
 
 /* Animasi detak berkobar saat streak aktif */
@@ -730,7 +769,6 @@ body {
   0%, 100% { transform: translateY(0); }
   50% { transform: translateY(-5px); }
 }
-
 /* =========================================
    OVERLAY PODIUM LENCANA
 ========================================= */
