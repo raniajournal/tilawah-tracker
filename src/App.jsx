@@ -745,16 +745,16 @@ export default function App() {
           
           {/* 1. KARTU STREAK HARIAN & PAUSE HAID */}
           <div className={`streak-card-wrapper ${isHaidPaused ? 'is-paused' : currentStreak === 0 ? 'is-broken' : ''}`}>
+            
+            {/* BARIS ATAS: TEKS STREAK DI KIRI & API RAKSASA DI KANAN */}
             <div className="streak-header">
-              
-              {/* KIRI: INFO STREAK & REKOR TERLAMA */}
               <div className="streak-info-left">
                 <span className="streak-number">{currentStreak} Hari</span>
                 <span className="streak-label">
                   {isHaidPaused
                     ? 'Streak Dikunci (Haid)'
                     : currentStreak === 0
-                    ? 'Streak Terputus / Belum Aktif'
+                    ? 'Streak Belum Aktif'
                     : 'Streak Tilawah Aktif 🔥'}
                 </span>
                 <span className="longest-streak-label">
@@ -762,46 +762,39 @@ export default function App() {
                 </span>
               </div>
 
-              {/* KANAN: IKON API BESAR & TOMBOL DI BAWAHNYA */}
-              <div className="streak-action-right">
-                <div className={`campfire-container ${isHaidPaused ? 'paused' : currentStreak === 0 ? 'broken' : 'burning'}`}>
-                  <img
-                    src={
-                      isHaidPaused
-                        ? "/images/fire-pause.webp"
-                        : currentStreak === 0
-                        ? "/images/fire-broken.webp"
-                        : "/images/fire-active.webp"
-                    }
-                    alt="Streak Status"
-                    className={`streak-logo-img ${
-                      isHaidPaused
-                        ? 'mode-sleep'
-                        : currentStreak === 0
-                        ? 'mode-broken'
-                        : 'mode-pulse'
-                    }`}
-                  />
-                </div>
-                
-                {/* GRUP TOMBOL DI BAWAH API */}
-                <div className="streak-buttons-group">
-                  <button
-                    onClick={() => setShowHaidModal(true)}
-                    style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.1rem', padding: 0, opacity: 0.7 }}
-                    title="Set Manual Tanggal Haid"
-                  >
-                    ⚙️
-                  </button>
-                  <button
-                    onClick={toggleHaidPause}
-                    className={`btn-pause-haid ${isHaidPaused ? 'active-paused' : ''}`}
-                  >
-                    {isHaidPaused ? '⏸️ Mode Istirahat' : '🌸 Siklus Haid'}
-                  </button>
-                </div>
+              <div className={`campfire-container ${isHaidPaused ? 'paused' : currentStreak === 0 ? 'broken' : 'burning'}`}>
+                <img
+                  src={
+                    isHaidPaused
+                      ? "/images/fire-pause.webp"
+                      : currentStreak === 0
+                      ? "/images/fire-broken.webp"
+                      : "/images/fire-active.webp"
+                  }
+                  alt="Streak Status"
+                  className={`streak-logo-img ${
+                    isHaidPaused
+                      ? 'mode-sleep'
+                      : currentStreak === 0
+                      ? 'mode-broken'
+                      : 'mode-pulse'
+                  }`}
+                />
+              </div>
+            </div>
 
-                {/* TOMBOL RESET TRIAL */}
+            <p className="streak-hint-text">
+              {isHaidPaused
+                ? "Streak kamu dikunci dengan aman selama masa haid. Selamat beristirahat!"
+                : currentStreak === 0
+                ? "Api unggunmu sedang padam. Yuk baca minimal 1 ayat hari ini untuk menyalakannya kembali!"
+                : "Pertahankan! Baca minimal 1 ayat setiap hari untuk menjaga api unggun tetap membara!"}
+            </p>
+
+            {/* AREA KECIL KHUSUS KONTROL HAID & INPUT TANGGAL MANUAL */}
+            <div className="haid-control-panel">
+              <div className="haid-panel-header">
+                <span className="haid-panel-title">🌸 Pengaturan Istirahat Haid</span>
                 {(isHaidPaused || (Array.isArray(pausedDates) && pausedDates.length > 0)) && (
                   <button
                     onClick={resetHaidTrial}
@@ -813,15 +806,23 @@ export default function App() {
                 )}
               </div>
 
+              <div className="haid-panel-buttons">
+                <button
+                  onClick={toggleHaidPause}
+                  className={`btn-pause-haid ${isHaidPaused ? 'active-paused' : ''}`}
+                >
+                  {isHaidPaused ? '⏸️ Mode Istirahat Aktif' : '🌸 Pause Haid Hari Ini'}
+                </button>
+
+                <button
+                  onClick={() => setShowHaidModal(true)}
+                  className="btn-manual-haid"
+                >
+                  📅 Atur Tanggal Manual
+                </button>
+              </div>
             </div>
 
-            <p className="streak-hint-text">
-              {isHaidPaused
-                ? "Streak kamu dikunci dengan aman selama masa haid. Selamat beristirahat!"
-                : currentStreak === 0
-                ? "Api unggunmu sedang padam. Yuk baca minimal 1 ayat hari ini untuk menyalakannya kembali!"
-                : "Pertahankan! Baca minimal 1 ayat setiap hari untuk menjaga api unggun tetap membara!"}
-            </p>
           </div>
 
           {/* 2. GRAFIK 7 HARI TERAKHIR */}
