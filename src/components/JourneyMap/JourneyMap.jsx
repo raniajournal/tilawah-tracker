@@ -2,7 +2,6 @@ import React, { useEffect, useRef } from 'react';
 import './JourneyMap.css';
 import { JUZ_DATA, calculateJuzProgress } from '../../juzUtils';
 
-// METADATA 5 SEKSI WILAYAH (Seksi 3 & 4 di Kanan, sisanya di Kiri)
 const SEGMENTS = [
   { id: 1, title: '🌅 1. Golden Sunrise', startJuz: 1, endJuz: 6, className: 'bg-sunrise', ribbonClass: 'ribbon-sunrise', ribbonSide: 'left' },
   { id: 2, title: '🏜️ 2. Dawn Springs', startJuz: 7, endJuz: 12, className: 'bg-desert', ribbonClass: 'ribbon-desert', ribbonSide: 'left' },
@@ -42,8 +41,11 @@ const generateContinuousPath = () => {
   return d;
 };
 
-const JourneyMap = ({ juzProgress, journeyMode, displayActiveJuz, toggleJourneyMode }) => {
+const DEFAULT_GOLD_POLYS = ["#fde047", "#facc15", "#eab308", "#ca8a04", "#a16207", "#fef08a"];
+
+const JourneyMap = ({ juzProgress, journeyMode, displayActiveJuz, toggleJourneyMode, birdPolys = DEFAULT_GOLD_POLYS }) => {
   const activeNodeRef = useRef(null);
+  const polys = birdPolys && birdPolys.length === 6 ? birdPolys : DEFAULT_GOLD_POLYS;
 
   useEffect(() => {
     if (activeNodeRef.current) {
@@ -164,12 +166,12 @@ const JourneyMap = ({ juzProgress, journeyMode, displayActiveJuz, toggleJourneyM
                     <div className="origami-bird-marker" title="Posisi Tilawahmu Saat Ini">
                       <div className="bird-svg-wrapper">
                         <svg viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
-                          <polygon fill="#fde047" points="394.6,183.3 226,306.9 285.4,117.7" />
-                          <polygon fill="#facc15" points="394.6,183.3 496.1,232.7 226,306.9" />
-                          <polygon fill="#eab308" points="226,306.9 148.9,252.3 35.5,233.1" />
-                          <polygon fill="#ca8a04" points="226,306.9 313.2,465 313.2,351" />
-                          <polygon fill="#a16207" points="226,306.9 176.6,393 216.5,335.7" />
-                          <polygon fill="#fef08a" points="226,306.9 285.4,117.7 148.9,252.3" />
+                          <polygon fill={polys[0]} points="394.6,183.3 226,306.9 285.4,117.7" />
+                          <polygon fill={polys[1]} points="394.6,183.3 496.1,232.7 226,306.9" />
+                          <polygon fill={polys[2]} points="226,306.9 148.9,252.3 35.5,233.1" />
+                          <polygon fill={polys[3]} points="226,306.9 313.2,465 313.2,351" />
+                          <polygon fill={polys[4]} points="226,306.9 176.6,393 216.5,335.7" />
+                          <polygon fill={polys[5]} points="226,306.9 285.4,117.7 148.9,252.3" />
                         </svg>
                       </div>
                       <div className="shadow-cast" />
