@@ -219,6 +219,10 @@ export default function App() {
 
   const juzProgress = useMemo(() => computeJuzMapFromProgress(progress), [progress]);
 
+  // STATE UNTUK HALAMAN LENCANA
+  const [showBadgesOverlay, setShowBadgesOverlay] = useState(false);
+  const [selectedBadge, setSelectedBadge] = useState(null);
+
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
@@ -649,7 +653,7 @@ export default function App() {
         </div>
       )}
 
-{showHaidModal && (
+     {showHaidModal && (
         <div className="modal-overlay" onClick={(e) => e.target.className === 'modal-overlay' && setShowHaidModal(false)}>
           <div className="target-modal">
             <h3 style={{ marginTop: 0, color: '#e76f51' }}>🌸 Input Manual Haid</h3>
@@ -803,7 +807,37 @@ export default function App() {
               })}
             </div>
           </div>
-
+          
+          {/* SPOILER ROW KOLEKSI LENCANA */}
+          <div 
+            className="spoiler-badges-card"
+            onClick={() => setShowBadgesOverlay(true)}
+            style={{ 
+              background: '#fff', 
+              borderRadius: '20px', 
+              padding: '18px 20px', 
+              margin: '15px', 
+              boxShadow: '0 4px 15px rgba(0, 0, 0, 0.03)',
+              cursor: 'pointer',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '12px'
+            }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <h4 style={{ margin: 0, color: '#333' }}>Koleksi Lencana</h4>
+              <span style={{ fontSize: '0.8rem', color: '#2b7a5f', fontWeight: 'bold' }}>Lihat Semua &gt;</span>
+            </div>
+            
+            {/* Deretan lencana contoh (sementara) */}
+            <div style={{ display: 'flex', gap: '15px', overflowX: 'auto', paddingBottom: '5px' }}>
+               <div style={{ width: '45px', height: '45px', background: '#f1f0ea', borderRadius: '50%', display: 'flex', justifyContent: 'center', alignItems: 'center', fontSize: '1.5rem', opacity: 0.5 }}>🏆</div>
+               <div style={{ width: '45px', height: '45px', background: '#f1f0ea', borderRadius: '50%', display: 'flex', justifyContent: 'center', alignItems: 'center', fontSize: '1.5rem', opacity: 0.5 }}>🏆</div>
+               <div style={{ width: '45px', height: '45px', background: '#f1f0ea', borderRadius: '50%', display: 'flex', justifyContent: 'center', alignItems: 'center', fontSize: '1.5rem', opacity: 0.5 }}>🏆</div>
+               <div style={{ width: '45px', height: '45px', background: '#f1f0ea', borderRadius: '50%', display: 'flex', justifyContent: 'center', alignItems: 'center', fontSize: '1.5rem', opacity: 0.5 }}>🏆</div>
+            </div>
+          </div>
+          
           {/* 3. KALENDER KONSISTENSI 28 HARI (DENGAN WARNA KHUSUS HAID) */}
           <div className="chart-card">
             <h4 style={{ margin: '0 0 10px 0', color: '#333' }}>Kalender Konsistensi (28 Hari)</h4>
@@ -945,6 +979,54 @@ export default function App() {
               </div>
             </div>
           </div>
+        </div>
+      )}
+      {/* OVERLAY PODIUM LENCANA (FULL SCREEN) */}
+      {showBadgesOverlay && (
+        <div className="badges-fullscreen-overlay">
+          
+          {/* HEADER NAVIGASI */}
+          <div className="badges-header">
+            <button onClick={() => setShowBadgesOverlay(false)} className="back-btn">
+              &larr; Kembali
+            </button>
+            <h2>Pencapaianku</h2>
+          </div>
+
+          {/* AREA PODIUM SPOTLIGHT */}
+          <div className="podium-section">
+            {/* Nanti lencana raksasa yang dipilih akan muncul di sini */}
+            <div className="spotlight-badge placeholder">
+              <span style={{ fontSize: '4rem', opacity: 0.3 }}>🏆</span>
+            </div>
+            <div className="podium-stand"></div>
+            <h3 className="badge-title">Koleksi Lencana</h3>
+            <p className="badge-date">Terus tilawah untuk membuka lencana pertamamu!</p>
+          </div>
+
+          {/* GALERI KATEGORI */}
+          <div className="badges-gallery-scroll">
+            
+            <div className="badge-category">
+              <h4>Jejak Ayat</h4>
+              <div className="badge-grid">
+                {/* Kotak-kotak lencana */}
+                <div className="badge-item locked"></div>
+                <div className="badge-item locked"></div>
+                <div className="badge-item locked"></div>
+              </div>
+            </div>
+
+            <div className="badge-category">
+              <h4>Misi Surat</h4>
+              <div className="badge-grid">
+                <div className="badge-item locked"></div>
+                <div className="badge-item locked"></div>
+              </div>
+            </div>
+
+          </div>
+
         </div>
       )}
     </div>
