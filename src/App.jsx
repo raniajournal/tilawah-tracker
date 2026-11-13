@@ -660,14 +660,25 @@ export default function App() {
     return streak;
   }, [dailyStats, effectivePausedSet]);
 
-  // KALKULASI PROGRESS & TANGGAL PEROLEHAN 22 LENCANA
+  // HELPER FORMAT TANGGAL CANTIK (Contoh: "2026-11-10" -> "10 Nov 2026")
+  const formatTanggalIndo = (dateStr) => {
+    if (!dateStr) return "";
+    const months = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agu", "Sep", "Okt", "Nov", "Des"];
+    const parts = dateStr.split("-");
+    if (parts.length !== 3) return dateStr;
+    return `${parseInt(parts[2])} ${months[parseInt(parts[1]) - 1]} ${parts[0]}`;
+  };
+
+  // KALKULASI PROGRESS, PERSENTASE BAR & AUTO-BACKFILL TANGGAL 22 LENCANA
   const badgesStatus = useMemo(() => {
     const isSurahDone = (id) => {
       const s = SURAHS.find(x => x.id === id);
       return s && (progress[id]?.read || 0) >= s.ayahs;
     };
 
-    // Urutkan seluruh riwayat dari paling awal untuk melacak tanggal tercapainya syarat
+    const getSurahDoneDate = (id) => progress[id]?.history?.[0]?.date || null;
+
+    // Urutkan seluruh riwayat dari paling awal untuk melacak tanggal asli tercapainya syarat
     const chronologicalHist = [...allGlobalHistory].sort((a, b) => a.timestamp - b.timestamp);
     let runningAyahs = 0;
     const milestoneDates = {};
@@ -719,88 +730,106 @@ export default function App() {
     return BADGES_CONFIG.map((b) => {
       let unlocked = Boolean(earnedBadges[b.id]);
       let detectedDate = earnedBadges[b.id] || null;
-      let progressText = "";
+      let currentVal = 0;
+      let targetVal = 1;
+      let unit = "";
 
       switch (b.id) {
         case "badge-100":
-          if (readAyahs >= 100 || hasEverKhatam) unlocked = true;
+          currentVal = hasEverKhatam ? 100 : Math.min(readAyahs, 100);
+          targetVal = 100; unit = "Ayat";
+          if (currentVal >= 100) unlocked = true;
           detectedDate = detectedDate || milestoneDates["badge-100"] || todayStr;
-          progressText = `${Math.min(readAyahs, 100)} / 100 Ayat`;
           break;
         case "badge-500":
-          if (readAyahs >= 500 || hasEverKhatam) unlocked = true;
+          currentVal = hasEverKhatam ? 500 : Math.min(readAyahs, 500);
+          targetVal = 500; unit = "Ayat";
+          if (currentVal >= 500) unlocked = true;
           detectedDate = detectedDate || milestoneDates["badge-500"] || todayStr;
-          progressText = `${Math.min(readAyahs, 500)} / 500 Ayat`;
           break;
         case "badge-1000":
-          if (readAyahs >= 1000 || hasEverKhatam) unlocked = true;
+          currentVal = hasEverKhatam ? 1000 : Math.min(readAyahs, 1000);
+          targetVal = 1000; unit = "Ayat";
+          if (currentVal >= 1000) unlocked = true;
           detectedDate = detectedDate || milestoneDates["badge-1000"] || todayStr;
-          progressText = `${Math.min(readAyahs, 1000)} / 1.000 Ayat`;
           break;
         case "badge-3000":
-          if (readAyahs >= 3000 || hasEverKhatam) unlocked = true;
+          currentVal = hasEverKhatam ? 3000 : Math.min(readAyahs, 3000);
+          targetVal = 3000; unit = "Ayat";
+          if (currentVal >= 3000) unlocked = true;
           detectedDate = detectedDate || milestoneDates["badge-3000"] || todayStr;
-          progressText = `${Math.min(readAyahs, 3000)} / 3.000 Ayat`;
           break;
         case "badge-khatam":
+          currentVal = hasEverKhatam ? 6236 : Math.min(readAyahs, 6236);
+          targetVal = 6236; unit = "Ayat";
           if (hasEverKhatam) unlocked = true;
           detectedDate = detectedDate || milestoneDates["badge-khatam"] || stats.khatamHistory?.[0]?.endDate || todayStr;
-          progressText = `${readAyahs} / 6.236 Ayat`;
           break;
         case "badge-7-hari":
+          currentVal = unlocked ? 7 : Math.min(maxStreakReached, 7);
+          targetVal = 7; unit = "Hari";
           if (maxStreakReached >= 7) unlocked = true;
           detectedDate = detectedDate || todayStr;
-          progressText = `${Math.min(maxStreakReached, 7)} / 7 Hari`;
           break;
         case "badge-30-hari":
+          currentVal = unlocked ? 30 : Math.min(maxStreakReached, 30);
+          targetVal = 30; unit = "Hari";
           if (maxStreakReached >= 30) unlocked = true;
           detectedDate = detectedDate || todayStr;
-          progressText = `${Math.min(maxStreakReached, 30)} / 30 Hari`;
           break;
         case "badge-100-hari":
-          if (uniqueReadDays >= 100 || maxStreakReached >= 100) unlocked = true;
+          currentVal = unlocked ? 100 : Math.min(Math.max(uniqueReadDays, maxStreakReached), 100);
+          targetVal = 100; unit = "Hari";
+          if (currentVal >= 100) unlocked = true;
           detectedDate = detectedDate || todayStr;
-          progressText = `${Math.min(Math.max(uniqueReadDays, maxStreakReached), 100)} / 100 Hari`;
           break;
         case "badge-albaqarah":
+          currentVal = unlocked ? 286 : Math.min(progress[2]?.read || 0, 286);
+          targetVal = 286; unit = "Ayat";
           if (isSurahDone(2)) unlocked = true;
-          detectedDate = detectedDate || progress[2]?.history?.[0]?.date || todayStr;
-          progressText = `${progress[2]?.read || 0} / 286 Ayat`;
+          detectedDate = detectedDate || getSurahDoneDate(2) || todayStr;
           break;
         case "badge-yasin":
+          currentVal = unlocked ? 83 : Math.min(progress[36]?.read || 0, 83);
+          targetVal = 83; unit = "Ayat";
           if (isSurahDone(36)) unlocked = true;
-          detectedDate = detectedDate || progress[36]?.history?.[0]?.date || todayStr;
-          progressText = `${progress[36]?.read || 0} / 83 Ayat`;
+          detectedDate = detectedDate || getSurahDoneDate(36) || todayStr;
           break;
         case "badge-2-cahaya":
+          currentVal = unlocked ? 2 : twoLightsCount;
+          targetVal = 2; unit = "Surat";
           if (twoLightsCount === 2) unlocked = true;
-          detectedDate = detectedDate || todayStr;
-          progressText = `${twoLightsCount} / 2 Surat`;
+          detectedDate = detectedDate || getSurahDoneDate(3) || getSurahDoneDate(2) || todayStr;
           break;
         case "badge-arrahman":
+          currentVal = unlocked ? 78 : Math.min(progress[55]?.read || 0, 78);
+          targetVal = 78; unit = "Ayat";
           if (isSurahDone(55)) unlocked = true;
-          detectedDate = detectedDate || progress[55]?.history?.[0]?.date || todayStr;
-          progressText = `${progress[55]?.read || 0} / 78 Ayat`;
+          detectedDate = detectedDate || getSurahDoneDate(55) || todayStr;
           break;
         case "badge-almulk":
+          currentVal = unlocked ? 30 : Math.min(progress[67]?.read || 0, 30);
+          targetVal = 30; unit = "Ayat";
           if (isSurahDone(67)) unlocked = true;
-          detectedDate = detectedDate || progress[67]?.history?.[0]?.date || todayStr;
-          progressText = `${progress[67]?.read || 0} / 30 Ayat`;
+          detectedDate = detectedDate || getSurahDoneDate(67) || todayStr;
           break;
         case "badge-alkahfi":
+          currentVal = unlocked ? 110 : Math.min(progress[18]?.read || 0, 110);
+          targetVal = 110; unit = "Ayat";
           if (isSurahDone(18)) unlocked = true;
-          detectedDate = detectedDate || progress[18]?.history?.[0]?.date || todayStr;
-          progressText = `${progress[18]?.read || 0} / 110 Ayat`;
+          detectedDate = detectedDate || getSurahDoneDate(18) || todayStr;
           break;
         case "badge-nabi":
+          currentVal = unlocked ? 6 : prophetDoneCount;
+          targetVal = 6; unit = "Surat";
           if (prophetDoneCount === 6) unlocked = true;
           detectedDate = detectedDate || todayStr;
-          progressText = `${prophetDoneCount} / 6 Surat`;
           break;
         case "badge-juzamma":
+          currentVal = unlocked ? 37 : juz30DoneCount;
+          targetVal = 37; unit = "Surat";
           if (juz30DoneCount === 37) unlocked = true;
           detectedDate = detectedDate || todayStr;
-          progressText = `${juz30DoneCount} / 37 Surat`;
           break;
         case "badge-sprinter":
           if (sprinterDate) unlocked = true;
@@ -830,15 +859,19 @@ export default function App() {
           break;
       }
 
+      const progressPercent = b.isHidden ? (unlocked ? 100 : 0) : Math.min(Math.round((currentVal / targetVal) * 100), 100);
+      const progressText = b.isHidden ? "" : `${currentVal} / ${targetVal} ${unit}`;
+
       return {
         ...b,
         unlocked,
         achievedDate: unlocked ? detectedDate : null,
-        progressText
+        progressText,
+        progressPercent
       };
     });
   }, [progress, allGlobalHistory, dailyStats, currentStreak, longestStreak, isHaidPaused, pausedDates, earnedBadges, readAyahs, stats, target]);
-
+  
   // SIMPAN PERMANEN TANGGAL PEROLEHAN LENCANA BARU KE FIREBASE
   useEffect(() => {
     if (!user) return;
@@ -1141,32 +1174,35 @@ export default function App() {
             </div>
           </div>
           
-          {/* SPOILER ROW KOLEKSI LENCANA */}
+          {/* SPOILER ROW KOLEKSI LENCANA (OTOMATIS PAJANG YANG SUDAH TERBUKA DI DEPAN) */}
           <div 
             className="spoiler-badges-card"
             onClick={() => {
-              const firstUnlocked = badgesStatus.find(b => b.unlocked) || badgesStatus[0];
-              setSelectedBadge(firstUnlocked);
+              const sorted = [...badgesStatus].sort((a, b) => Number(b.unlocked) - Number(a.unlocked));
+              setSelectedBadge(sorted[0]);
               setShowBadgesOverlay(true);
             }}
           >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <h4 style={{ margin: 0, color: '#333' }}>Koleksi Lencana</h4>
               <span style={{ fontSize: '0.8rem', color: '#2b7a5f', fontWeight: '800' }}>
-                {badgesStatus.filter(b => b.unlocked).length} / {badgesStatus.length} &gt;
+                {badgesStatus.filter(b => b.unlocked).length} / {badgesStatus.length} Lencana &gt;
               </span>
             </div>
             
             <div className="spoiler-badges-row">
-              {badgesStatus.slice(0, 6).map((b) => (
-                <div key={b.id} className={`spoiler-badge-item ${b.unlocked ? 'unlocked' : 'locked'}`}>
-                  {b.isHidden && !b.unlocked ? (
-                    <span className="octagon-mystery">?</span>
-                  ) : (
-                    <img src={b.img} alt={b.title} className="spoiler-badge-img" />
-                  )}
-                </div>
-              ))}
+              {[...badgesStatus]
+                .sort((a, b) => Number(b.unlocked) - Number(a.unlocked))
+                .slice(0, 6)
+                .map((b) => (
+                  <div key={b.id} className={`spoiler-badge-item ${b.unlocked ? 'unlocked' : 'locked'}`}>
+                    {b.isHidden && !b.unlocked ? (
+                      <span className="octagon-mystery">?</span>
+                    ) : (
+                      <img src={b.img} alt={b.title} className="spoiler-badge-img" />
+                    )}
+                  </div>
+                ))}
             </div>
           </div>
           
@@ -1315,12 +1351,16 @@ export default function App() {
       )}
       {/* OVERLAY PODIUM LENCANA (FULL SCREEN) */}
       {showBadgesOverlay && (() => {
-        const activeBadge = badgesStatus.find(b => b.id === selectedBadge?.id) || badgesStatus[0];
         const hasFirstKhatam = badgesStatus.find(b => b.id === "badge-khatam")?.unlocked;
         const autoBird = [...ORIGAMI_BIRDS].reverse().find(bird => 
           bird.requireKhatam ? hasFirstKhatam : readAyahs >= bird.minAyahs
         ) || ORIGAMI_BIRDS[0];
         const activeBirdId = (hasFirstKhatam && selectedBirdSkin) ? selectedBirdSkin : autoBird.id;
+
+        const isViewingBird = selectedBadge?.isBird;
+        const activeBadge = isViewingBird
+          ? selectedBadge
+          : (badgesStatus.find(b => b.id === selectedBadge?.id) || badgesStatus[0]);
 
         return (
           <div className="badges-fullscreen-overlay">
@@ -1332,10 +1372,17 @@ export default function App() {
               <h2>Pencapaianku ({badgesStatus.filter(b => b.unlocked).length}/{badgesStatus.length})</h2>
             </div>
 
-            {/* AREA PODIUM SPOTLIGHT */}
+            {/* AREA PODIUM SPOTLIGHT (BISA MENAMPILKAN LENCANA ATAU ORIGAMI BIRD) */}
             <div className="podium-section">
-              <div className={`spotlight-badge shape-${activeBadge.shape} ${activeBadge.unlocked ? 'is-unlocked' : 'is-locked'}`}>
-                {activeBadge.isHidden && !activeBadge.unlocked ? (
+              <div className={`spotlight-badge ${activeBadge.unlocked ? 'is-unlocked' : 'is-locked'}`}>
+                {isViewingBird ? (
+                  <div
+                    className="spotlight-bird-circle"
+                    style={{ background: `linear-gradient(135deg, ${activeBadge.colors[0]}, ${activeBadge.colors[2]})` }}
+                  >
+                    🕊️
+                  </div>
+                ) : activeBadge.isHidden && !activeBadge.unlocked ? (
                   <div className="mystery-octagon-large">?</div>
                 ) : (
                   <img src={activeBadge.img} alt={activeBadge.title} className="spotlight-badge-img" />
@@ -1344,25 +1391,38 @@ export default function App() {
               <div className="podium-stand"></div>
 
               <h3 className="badge-title">
-                {activeBadge.isHidden && !activeBadge.unlocked ? "🔒 Lencana Rahasia" : activeBadge.title}
+                {!isViewingBird && activeBadge.isHidden && !activeBadge.unlocked
+                  ? "🔒 Lencana Rahasia"
+                  : activeBadge.title}
               </h3>
 
-              {/* TANGGAL PEROLEHAN */}
+              {/* TANGGAL PEROLEHAN DENGAN FORMAT INDONESIA */}
               <p className="badge-date">
                 {activeBadge.unlocked
-                  ? `✨ Diraih pada: ${activeBadge.achievedDate}`
+                  ? isViewingBird
+                    ? `✨ Warna Burung Terbuka`
+                    : `✨ Diraih pada: ${formatTanggalIndo(activeBadge.achievedDate)}`
                   : "🔒 Belum Terbuka"}
               </p>
 
-              {/* TULISAN SYARAT ATAU KALIMAT KIASAN */}
+              {/* KOTAK SYARAT / KALIMAT KIASAN + VISUAL PROGRESS BAR */}
               <div className="badge-req-box">
-                {activeBadge.isHidden && !activeBadge.unlocked ? (
+                {!isViewingBird && activeBadge.isHidden && !activeBadge.unlocked ? (
                   <p className="badge-riddle-text">"{activeBadge.riddleText}"</p>
                 ) : (
                   <p className="badge-req-text">Syarat: {activeBadge.reqText}</p>
                 )}
+
                 {activeBadge.progressText && !activeBadge.isHidden && (
-                  <span className="badge-progress-pill">{activeBadge.progressText}</span>
+                  <div style={{ marginTop: '10px' }}>
+                    <div className="badge-mini-bar-bg">
+                      <div
+                        className="badge-mini-bar-fill"
+                        style={{ width: `${activeBadge.progressPercent || 0}%` }}
+                      ></div>
+                    </div>
+                    <span className="badge-progress-pill">{activeBadge.progressText}</span>
+                  </div>
                 )}
               </div>
             </div>
@@ -1375,24 +1435,36 @@ export default function App() {
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
                   <h4 style={{ margin: 0 }}>🕊️ Evolusi Origami Bird</h4>
                   <span style={{ fontSize: '0.72rem', color: '#94a3b8' }}>
-                    {hasFirstKhatam ? "Klik untuk ganti warna burung!" : "Tamatkan Khatam ke-1 untuk bebas pilih warna"}
+                    {hasFirstKhatam ? "Klik untuk pakai warna burung!" : `Aktif: ${activeBirdId}`}
                   </span>
                 </div>
                 <div className="origami-showcase-row">
                   {ORIGAMI_BIRDS.map((bird) => {
                     const isBirdUnlocked = bird.requireKhatam ? hasFirstKhatam : (readAyahs >= bird.minAyahs || hasFirstKhatam);
                     const isEquipped = activeBirdId === bird.id;
+                    const birdProgressPct = bird.minAyahs === 0 ? 100 : Math.min(Math.round((readAyahs / bird.minAyahs) * 100), 100);
+
                     return (
                       <div
                         key={bird.id}
                         onClick={async () => {
+                          setSelectedBadge({
+                            isBird: true,
+                            id: bird.id,
+                            title: bird.name,
+                            reqText: bird.reqText,
+                            colors: bird.colors,
+                            unlocked: isBirdUnlocked,
+                            progressText: bird.minAyahs > 0 ? `${Math.min(readAyahs, bird.minAyahs)} / ${bird.minAyahs} Ayat` : "Terbuka sejak awal",
+                            progressPercent: hasFirstKhatam ? 100 : birdProgressPct
+                          });
                           if (hasFirstKhatam && user) {
                             setSelectedBirdSkin(bird.id);
                             await setDoc(doc(db, "users", user.uid), { selectedBirdSkin: bird.id }, { merge: true });
                           }
                         }}
                         className={`origami-card ${isBirdUnlocked ? 'unlocked' : 'locked'} ${isEquipped ? 'equipped' : ''}`}
-                        style={{ cursor: hasFirstKhatam ? 'pointer' : 'default' }}
+                        style={{ cursor: 'pointer' }}
                       >
                         <div className="origami-color-preview" style={{ background: `linear-gradient(135deg, ${bird.colors[0]}, ${bird.colors[2]})` }}>
                           🕊️
@@ -1405,7 +1477,7 @@ export default function App() {
                 </div>
               </div>
 
-              {/* 4 KATEGORI LENCANA */}
+              {/* 4 KATEGORI LENCANA DENGAN MINI PROGRESS BAR */}
               {["Kuantitas Ayat", "Api Istiqomah", "Misi Surat", "Hidden Gems"].map((catName) => (
                 <div key={catName} className="badge-category">
                   <h4>{catName}</h4>
@@ -1414,7 +1486,7 @@ export default function App() {
                       <div
                         key={b.id}
                         onClick={() => setSelectedBadge(b)}
-                        className={`badge-item ${b.unlocked ? 'unlocked' : 'locked'} ${activeBadge.id === b.id ? 'selected' : ''}`}
+                        className={`badge-item ${b.unlocked ? 'unlocked' : 'locked'} ${!isViewingBird && activeBadge.id === b.id ? 'selected' : ''}`}
                       >
                         <div className="badge-thumb-wrapper">
                           {b.isHidden && !b.unlocked ? (
@@ -1427,7 +1499,15 @@ export default function App() {
                           {b.isHidden && !b.unlocked ? "???" : b.title}
                         </span>
                         {b.progressText && !b.isHidden && (
-                          <span className="badge-item-progress">{b.progressText}</span>
+                          <div style={{ width: '100%', marginTop: '6px' }}>
+                            <div className="badge-mini-bar-bg">
+                              <div
+                                className="badge-mini-bar-fill"
+                                style={{ width: `${b.progressPercent}%` }}
+                              ></div>
+                            </div>
+                            <span className="badge-item-progress">{b.progressText}</span>
+                          </div>
                         )}
                       </div>
                     ))}
