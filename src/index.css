@@ -685,3 +685,111 @@ body {
   0%, 100% { transform: translateY(0); }
   50% { transform: translateY(-5px); }
 }
+
+/* =========================================
+   OVERLAY PODIUM LENCANA
+========================================= */
+.badges-fullscreen-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-color: #0B192C; /* Warna malam gelap elegan */
+  z-index: 2000;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  color: white;
+}
+
+.badges-header {
+  display: flex;
+  align-items: center;
+  padding: 20px;
+  gap: 15px;
+}
+
+.badges-header h2 {
+  margin: 0;
+  font-size: 1.2rem;
+  color: #fff;
+}
+
+.back-btn {
+  background: rgba(255,255,255,0.1);
+  border: none;
+  color: white;
+  padding: 8px 12px;
+  border-radius: 20px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.podium-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 40px 20px;
+  background: radial-gradient(circle at 50% 30%, rgba(255, 255, 255, 0.1) 0%, transparent 60%);
+}
+
+.spotlight-badge {
+  width: 120px;
+  height: 120px;
+  background: rgba(255,255,255,0.05);
+  border-radius: 20px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 10px;
+  z-index: 2;
+}
+
+.podium-stand {
+  width: 160px;
+  height: 20px;
+  background: linear-gradient(90deg, #112A46 0%, #1E4066 50%, #112A46 100%);
+  border-radius: 50%;
+  margin-top: -10px;
+  z-index: 1;
+  box-shadow: 0 15px 20px rgba(0,0,0,0.5);
+}
+
+.badge-title {
+  margin: 20px 0 5px 0;
+  font-size: 1.4rem;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+}
+
+.badge-date {
+  margin: 0;
+  font-size: 0.8rem;
+  color: #888;
+}
+
+.badges-gallery-scroll {
+  flex: 1;
+  background: #112A46;
+  border-top-left-radius: 30px;
+  border-top-right-radius: 30px;
+  padding: 30px 20px;
+}
+
+.badge-category h4 {
+  margin: 0 0 15px 0;
+  color: #f7e6c4;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.badge-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
+  gap: 15px;
+  margin-bottom: 30px;
+}
+
+.badge-item {
+  aspect-ratio: 1;
+  background: rgba(255,255,255,0.05);
+  border-radius: 15px;
+}
